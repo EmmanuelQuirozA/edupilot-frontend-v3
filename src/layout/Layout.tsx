@@ -14,7 +14,7 @@ export function Layout({ children, onNavigate }: LayoutProps) {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 992) {
-        setSidebarOpen(true)
+        setSidebarOpen(false)
       }
     }
 
@@ -26,11 +26,11 @@ export function Layout({ children, onNavigate }: LayoutProps) {
 
   return (
     <div className="app-shell d-flex flex-column" style={{ minHeight: '100vh' }}>
-      <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} />
       <div className="layout-grid flex-grow-1 position-relative">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
         {isSidebarOpen && window.innerWidth < 992 ? <div className="sidebar-backdrop d-lg-none" onClick={() => setSidebarOpen(false)} /> : null}
         <div className="layout-main d-flex flex-column">
+          <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} />
           <main className="flex-grow-1 content-area">{children}</main>
           <Footer />
         </div>

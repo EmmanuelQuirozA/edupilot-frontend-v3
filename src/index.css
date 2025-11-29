@@ -41,10 +41,9 @@ a:hover {
   width: var(--sidebar-width);
   min-height: calc(100vh - var(--header-height));
   background: #10194c;
-  height: calc(100vh - var(--header-height));
+  height: 100vh;
   color: var(--sidebar-text);
   position: sticky;
-  top: var(--header-height);
   padding: 1.25rem;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   z-index: 1040;
@@ -119,10 +118,10 @@ a:hover {
   }
 
   .sidebar {
+    width: 100%;
     position: fixed;
-    top: var(--header-height);
     left: 0;
-    height: calc(100vh - var(--header-height));
+    height: 100vh;
     transform: translateX(-110%);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   }
