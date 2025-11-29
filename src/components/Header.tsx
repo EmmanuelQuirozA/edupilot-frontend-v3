@@ -3,18 +3,24 @@ import { useAuth } from '../context/AuthContext'
 
 interface HeaderProps {
   onNavigate: (path: string) => void
+  onToggleSidebar?: () => void
 }
 
-export function Header({ onNavigate }: HeaderProps) {
+export function Header({ onNavigate, onToggleSidebar }: HeaderProps) {
   const { locale, setLocale, t } = useLanguage()
   const { user, logout, token } = useAuth()
 
   return (
     <header className="navbar navbar-expand-lg bg-white px-3 py-2 header-shadow" style={{ height: 'var(--header-height)' }}>
       <div className="container-fluid">
-        <div className="d-flex align-items-center gap-2">
-          <div className="logo-circle">EP</div>
-          <span className="fw-bold text-primary">EduPilot</span>
+        <div className="d-flex align-items-center gap-3">
+          <button className="btn btn-outline-primary d-lg-none" onClick={onToggleSidebar}>
+            ☰
+          </button>
+          <div className="d-flex align-items-center gap-2">
+            <div className="logo-circle">EP</div>
+            <span className="fw-bold text-primary">EduPilot</span>
+          </div>
         </div>
 
         <div className="d-flex align-items-center gap-3">
