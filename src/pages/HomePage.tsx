@@ -11,7 +11,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
 
   return (
     <div className="app-shell d-flex flex-column" style={{ minHeight: '100vh' }}>
-      <Header onNavigate={onNavigate} />
+      <Header onNavigate={onNavigate} pageTitle={t('homeTitle')} pageContext={t('heroCta')} />
       <main className="flex-grow-1">
         <div className="container py-5">
           <div className="hero-section mb-4">

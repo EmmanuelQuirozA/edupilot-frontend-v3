@@ -3,7 +3,7 @@
   --sidebar-bg: #0d6efd;
   --sidebar-text: #f8f9fa;
   --footer-bg: #f8f9fa;
-  --header-height: 64px;
+  --header-height: 104px;
   font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
@@ -129,10 +129,121 @@ a:hover {
   .sidebar.is-open {
     transform: translateX(0);
   }
+
+  .app-header {
+    padding: 1rem;
+  }
+
+  .header-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+  }
 }
 
-.header-shadow {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+
+.app-header {
+  background: linear-gradient(90deg, #f2f4ff, #f6f8ff);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.header-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1f2247;
+}
+
+.header-subtitle {
+  color: #4f6bff;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.header-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  min-width: 220px;
+  box-shadow: 0 8px 30px rgba(34, 42, 121, 0.08);
+}
+
+.header-search-input {
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.header-search-input:focus {
+  box-shadow: none;
+}
+
+.icon-pill,
+.language-pill {
+  border: none;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  box-shadow: 0 8px 30px rgba(34, 42, 121, 0.08);
+  font-weight: 700;
+  color: #1f2247;
+}
+
+.language-pill.dropdown-toggle::after {
+  margin-left: 0.4rem;
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: none;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  box-shadow: 0 8px 30px rgba(34, 42, 121, 0.08);
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6a5af9, #836bfa);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.user-name {
+  font-weight: 700;
+  color: #1f2247;
+  line-height: 1.1;
 }
 
 .content-area {
