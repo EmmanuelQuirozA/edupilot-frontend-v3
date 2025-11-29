@@ -1,0 +1,16 @@
+.datatable {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.datatable .table > :not(caption) > * > * {
+  padding: 0.75rem 1rem;
+}
+
+.datatable .table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.datatable .btn-group .btn {
+  min-width: 80px;
+}

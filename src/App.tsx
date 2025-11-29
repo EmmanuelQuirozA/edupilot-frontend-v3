@@ -9,6 +9,7 @@ import { DashboardScholarAdminPage } from './pages/DashboardScholarAdminPage'
 import { DashboardTeacherPage } from './pages/DashboardTeacherPage'
 import { DashboardStudentsPage } from './pages/DashboardStudentsPage'
 import { KitchenPage } from './pages/KitchenPage'
+import { SchoolsPage } from './pages/SchoolsPage'
 
 function getPathLocale(path: string): Locale | null {
   const match = path.match(/^\/(es|en)(?:\/|$)/)
@@ -21,7 +22,9 @@ function Router() {
   const { locale, setLocale } = useLanguage()
 
   const pathLocale = useMemo(() => getPathLocale(path), [path])
-  const isDashboardPath = /^\/(es|en)\/dashboard$/.test(path)
+  const isDashboardRootPath = /^\/(es|en)\/dashboard$/.test(path)
+  const isSchoolsPath = /^\/(es|en)\/dashboard\/schools$/.test(path)
+  const isDashboardAreaPath = /^\/(es|en)\/dashboard(?:\/.*)?$/.test(path)
   const isLoginPath = path === '/login' || /^\/(es|en)\/login$/.test(path)
   const dashboardPath = useMemo(() => `/${locale}/dashboard`, [locale])
   const localeRef = useRef(locale)
@@ -59,16 +62,16 @@ function Router() {
   }, [locale, navigate, path, pathLocale])
 
   useEffect(() => {
-    if (isDashboardPath && pathLocale && pathLocale !== locale) {
+    if (isDashboardRootPath && pathLocale && pathLocale !== locale) {
       navigate(`/${locale}/dashboard`)
     }
-  }, [isDashboardPath, locale, navigate, pathLocale])
+  }, [isDashboardRootPath, locale, navigate, pathLocale])
 
   useEffect(() => {
-    if (!token && isDashboardPath) {
+    if (!token && isDashboardAreaPath) {
       navigate('/login')
     }
-  }, [isDashboardPath, navigate, token])
+  }, [isDashboardAreaPath, navigate, token])
 
   useEffect(() => {
     if (token && isLoginPath) {
@@ -90,7 +93,15 @@ function Router() {
     return <LoginPage onNavigate={navigate} />
   }
 
-  if (isDashboardPath && token) {
+  if (isDashboardAreaPath && token) {
+    if (isSchoolsPath) {
+      return <SchoolsPage onNavigate={navigate} />
+    }
+
+    if (!isDashboardRootPath) {
+      return <DashboardAdminPage onNavigate={navigate} />
+    }
+
     switch (role) {
       case 'ADMIN':
         return <DashboardAdminPage onNavigate={navigate} />

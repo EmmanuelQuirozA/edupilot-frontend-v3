@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { API_BASE_URL } from '../config'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 import './sidebar.css'
 
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
+  onNavigate?: (path: string) => void
 }
 
 interface ModuleAccess {
@@ -17,7 +19,20 @@ interface ModuleAccess {
   enabled: boolean
 }
 
+interface SidebarItem {
+  key: string
+  label: string
+  path?: string
+}
+
 const menuIcons = {
+  schools: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 10 12 6l8 4v8H4Z" fill="currentColor" opacity="0.2" />
+      <path d="M4 18h16M4 12l8 4 8-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 14v4m4-4v4" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  ),
   dashboard: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" />
@@ -146,6 +161,7 @@ const menuIcons = {
 }
 
 const moduleLabels: Record<string, string> = {
+  schools: 'Escuelas',
   dashboard: 'Dashboard',
   schools: 'Escuelas',
   payments: 'Pagos y Finanzas',
@@ -223,6 +239,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     return null
   }
 
+  const handleNavigation = (event: MouseEvent<HTMLAnchorElement>, path?: string) => {
+    if (!path) return
+    event.preventDefault()
+    onNavigate?.(path)
+    onClose()
+  }
+
   return (
     <aside className={`sidebar d-flex flex-column ${isOpen ? 'is-open' : ''}`}>
       <div className="d-flex align-items-center gap-3 mb-3">
@@ -245,7 +268,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <a
                 key={item.key}
                 className="nav-link sidebar-link d-flex align-items-center gap-3"
-                href="#"
+                href={item.path ?? '#'}
+                onClick={(event) => handleNavigation(event, item.path)}
               >
                 <span className="sidebar-icon">
                   {menuIcons[item.key as keyof typeof menuIcons] || menuIcons.default}
