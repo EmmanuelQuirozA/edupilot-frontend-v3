@@ -27,12 +27,14 @@ export function Layout({ children, onNavigate }: LayoutProps) {
   return (
     <div className="app-shell d-flex flex-column" style={{ minHeight: '100vh' }}>
       <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} />
-      <div className="d-flex flex-grow-1 position-relative">
+      <div className="layout-grid flex-grow-1 position-relative">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
         {isSidebarOpen && window.innerWidth < 992 ? <div className="sidebar-backdrop d-lg-none" onClick={() => setSidebarOpen(false)} /> : null}
-        <main className="flex-grow-1 content-area">{children}</main>
+        <div className="layout-main d-flex flex-column">
+          <main className="flex-grow-1 content-area">{children}</main>
+          <Footer />
+        </div>
       </div>
-      <Footer />
     </div>
   )
 }
