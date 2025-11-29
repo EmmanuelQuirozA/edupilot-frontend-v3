@@ -1,5 +1,5 @@
 :root {
-  --sidebar-width: 260px;
+  --sidebar-width: 280px;
   --sidebar-bg: #0d6efd;
   --sidebar-text: #f8f9fa;
   --footer-bg: #f8f9fa;
@@ -27,9 +27,19 @@ a:hover {
   background-color: #f5f7fb;
 }
 
+.layout-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: calc(100vh - var(--header-height));
+}
+
+.layout-main {
+  min-height: calc(100vh - var(--header-height));
+}
+
 .sidebar {
   width: var(--sidebar-width);
-  min-height: calc(100vh - var(--header-height));
+  height: calc(100vh - var(--header-height));
   background: linear-gradient(180deg, #0d3575, #0d6efd);
   color: var(--sidebar-text);
   position: sticky;
@@ -37,6 +47,12 @@ a:hover {
   padding: 1.25rem;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   z-index: 1040;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 .sidebar.is-open {
@@ -95,6 +111,10 @@ a:hover {
 @media (max-width: 991.98px) {
   :root {
     --sidebar-width: 260px;
+  }
+
+  .layout-grid {
+    grid-template-columns: 1fr;
   }
 
   .sidebar {
