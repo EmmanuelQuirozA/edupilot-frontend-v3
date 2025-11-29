@@ -18,7 +18,7 @@ export function DashboardAdminPage({ onNavigate }: DashboardAdminPageProps) {
         </div>
         <button className="btn btn-outline-primary" onClick={() => onNavigate('/')}>Home</button>
       </div>
-      <div className="card shadow-sm">
+      <div className="card">
         <div className="card-body">
           <h5 className="card-title">Módulos administrativos</h5>
           <p className="mb-0">

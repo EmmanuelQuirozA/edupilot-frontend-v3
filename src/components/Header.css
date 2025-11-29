@@ -1,0 +1,54 @@
+.app-header {
+  background: linear-gradient(90deg, #f2f4ff, #f6f8ff);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.header-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 1.2rem + 1vw, 2.25rem);
+  font-weight: 700;
+}
+
+.header-subtitle {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.header-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 0.55rem 0.9rem;
+  min-width: 220px;
+  box-shadow: 0 8px 30px rgba(34, 42, 121, 0.08);
+}
+
+.header-search-input {
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.header-search-input:focus {
+  box-shadow: none;
+}

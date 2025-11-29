@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext'
+import './sidebar.css'
 
 interface SidebarProps {
   isOpen: boolean

@@ -2,6 +2,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import LanguageSelector from './LanguageSelector'
 import type { Locale } from '../context/LanguageContext'
+import './Header.css'
 
 interface HeaderProps {
   onNavigate: (path: string) => void
