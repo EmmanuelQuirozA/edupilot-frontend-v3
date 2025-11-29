@@ -1,35 +1,53 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
+import { LanguageProvider } from './context/LanguageContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import { HomePage } from './pages/HomePage'
+import { LoginPage } from './pages/LoginPage'
+import { PortalPage } from './pages/PortalPage'
 
-function App() {
-  const [count, setCount] = useState(0)
+function Router() {
+  const [path, setPath] = useState(window.location.pathname)
+  const { token } = useAuth()
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  const navigate = (nextPath: string) => {
+    window.history.pushState({}, '', nextPath)
+    setPath(nextPath)
+  }
+
+  useEffect(() => {
+    const handlePop = () => setPath(window.location.pathname)
+    window.addEventListener('popstate', handlePop)
+    return () => window.removeEventListener('popstate', handlePop)
+  }, [])
+
+  useEffect(() => {
+    if (!token && path === '/portal') {
+      navigate('/login')
+    }
+  }, [path, token])
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [path])
+
+  if (path === '/login') {
+    return <LoginPage onNavigate={navigate} />
+  }
+
+  if (path === '/portal' && token) {
+    return <PortalPage onNavigate={navigate} />
+  }
+
+  return <HomePage onNavigate={navigate} />
 }
 
-export default App
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AuthProvider>
+        <Router />
+      </AuthProvider>
+    </LanguageProvider>
+  )
+}
