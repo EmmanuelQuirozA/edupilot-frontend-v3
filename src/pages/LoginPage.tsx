@@ -55,6 +55,7 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
             <ul className="small mb-0">
               <li>Administración</li>
               <li>Gestión escolar</li>
+              <li>Administración académica</li>
               <li>Estudiantes</li>
               <li>Profesores</li>
               <li>Cocina</li>

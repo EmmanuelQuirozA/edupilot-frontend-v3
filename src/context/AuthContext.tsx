@@ -1,7 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
-export type Role = 'ADMIN' | 'SCHOOL' | 'STUDENT' | 'TEACHER' | 'KITCHEN' | 'UNKNOWN'
+export type Role =
+  | 'ADMIN'
+  | 'SCHOOL'
+  | 'SCHOLAR_ADMIN'
+  | 'STUDENT'
+  | 'TEACHER'
+  | 'KITCHEN'
+  | 'UNKNOWN'
 
 export interface UserProfile {
   user_id: number

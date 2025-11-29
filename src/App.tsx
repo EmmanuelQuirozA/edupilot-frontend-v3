@@ -4,11 +4,15 @@ import { LanguageProvider } from './context/LanguageContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
-import { PortalPage } from './pages/PortalPage'
+import { DashboardAdminPage } from './pages/DashboardAdminPage'
+import { DashboardScholarAdminPage } from './pages/DashboardScholarAdminPage'
+import { DashboardTeacherPage } from './pages/DashboardTeacherPage'
+import { DashboardStudentsPage } from './pages/DashboardStudentsPage'
+import { KitchenPage } from './pages/KitchenPage'
 
 function Router() {
   const [path, setPath] = useState(window.location.pathname)
-  const { token } = useAuth()
+  const { token, role } = useAuth()
 
   const navigate = (nextPath: string) => {
     window.history.pushState({}, '', nextPath)
@@ -36,7 +40,21 @@ function Router() {
   }
 
   if (path === '/portal' && token) {
-    return <PortalPage onNavigate={navigate} />
+    switch (role) {
+      case 'ADMIN':
+        return <DashboardAdminPage onNavigate={navigate} />
+      case 'SCHOLAR_ADMIN':
+      case 'SCHOOL':
+        return <DashboardScholarAdminPage onNavigate={navigate} />
+      case 'TEACHER':
+        return <DashboardTeacherPage onNavigate={navigate} />
+      case 'STUDENT':
+        return <DashboardStudentsPage onNavigate={navigate} />
+      case 'KITCHEN':
+        return <KitchenPage onNavigate={navigate} />
+      default:
+        return <HomePage onNavigate={navigate} />
+    }
   }
 
   return <HomePage onNavigate={navigate} />
