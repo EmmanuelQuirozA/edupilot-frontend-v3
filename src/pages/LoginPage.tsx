@@ -1,122 +1,101 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
-import { useLanguage } from '../context/LanguageContext'
+// import type { FormEvent } from 'react'
+// import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
+import LanguageSelector from '../components/LanguageSelector';
+import './LoginPage.css';
 
 interface LoginPageProps {
   onNavigate: (path: string) => void
 }
 
 export function LoginPage({ onNavigate }: LoginPageProps) {
-  const { locale, t } = useLanguage()
-  const { login } = useAuth()
+  const { login, loading } = useAuth();
+  const t = getTranslation(language);
   const [usernameOrEmail, setUsernameOrEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('');
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    setLoading(true)
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setError('');
+
     try {
-      await login(usernameOrEmail, password)
-      Swal.fire({ icon: 'success', title: t('welcome') })
-      onNavigate(`/${locale}/dashboard`)
-    } catch (error) {
-      const message = (error as Error).message
-      if (message === 'wrong_credentials') {
-        Swal.fire({ icon: 'error', title: t('wrongCredentials') })
-      } else if (message === 'service_unavailable') {
-        Swal.fire({ icon: 'error', title: t('serviceUnavailable') })
-      } else {
-        Swal.fire({ icon: 'error', title: t('defaultError') })
+      await login(username, password);
+    } catch (err) {
+      if (err?.status === 401) {
+        setError(t.errors.invalidCredentials);
+        return;
       }
-    } finally {
-      setLoading(false)
+
+      if (err?.status === 403) {
+        setError(t.errors.userDisabled);
+        return;
+      }
+
+      if (err?.code === 'MISSING_ROLE') {
+        setError(t.errors.missingRole);
+        return;
+      }
+
+      if (err?.code === 'NETWORK_ERROR') {
+        setError(t.errors.network);
+        return;
+      }
+
+      setError(t.errors.unexpected);
     }
-  }
+  };
 
   return (
-    <div className="container py-5">
-      <div className="login-card row g-0">
-        <div className="col-lg-5 d-flex flex-column justify-content-between p-4 login-bg">
-          <div>
-            <div className="d-flex align-items-center gap-2 mb-4">
-              <div className="logo-circle bg-white text-primary">EP</div>
-              <div>
-                <p className="mb-0 text-white-50 small">EduPilot</p>
-                <h5 className="mb-0">{t('portalTitle')}</h5>
-              </div>
-            </div>
-            <h3 className="fw-bold mb-3">{t('loginTitle')}</h3>
-            <p className="mb-0">{t('loginSubtitle')}</p>
-          </div>
-          <div className="mt-4">
-            <p className="fw-semibold mb-1">Roles soportados</p>
-            <ul className="small mb-0">
-              <li>Administración</li>
-              <li>Gestión escolar</li>
-              <li>Administración académica</li>
-              <li>Estudiantes</li>
-              <li>Profesores</li>
-              <li>Cocina</li>
-            </ul>
-          </div>
+    
+    <div className="login-page">
+      <div className="login-page__media">
+        <div className="login-page__media-overlay" />
+        <div className="login-page__language-selector">
+          <LanguageSelector value={language} onChange={onLanguageChange} />
         </div>
-        <div className="col-lg-7 p-5">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h4 className="fw-bold mb-1">{t('loginTitle')}</h4>
-              <p className="text-muted mb-0">{t('loginSubtitle')}</p>
-            </div>
-            <button className="btn btn-outline-primary" onClick={() => onNavigate('/')}>Home</button>
-          </div>
-          <form className="row g-3" onSubmit={handleSubmit}>
-            <div className="col-12">
-              <div className="form-floating">
-                <input
-                  type="text"
-                  className="form-control"
-                  id="username"
-                  placeholder={t('usernameLabel')}
-                  value={usernameOrEmail}
-                  onChange={(event) => setUsernameOrEmail(event.target.value)}
-                  required
-                />
-                <label htmlFor="username">{t('usernameLabel')}</label>
-              </div>
-            </div>
-            <div className="col-12">
-              <div className="form-floating">
-                <input
-                  type="password"
-                  className="form-control"
-                  id="password"
-                  placeholder={t('passwordLabel')}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                />
-                <label htmlFor="password">{t('passwordLabel')}</label>
-              </div>
-            </div>
-            <div className="col-12 d-flex justify-content-between align-items-center">
-              <div className="form-check">
-                <input className="form-check-input" type="checkbox" id="remember" />
-                <label className="form-check-label" htmlFor="remember">
-                  {t('rememberMe')}
-                </label>
-              </div>
-              <a href="#" className="text-decoration-none">
-                {t('forgotPassword')}
-              </a>
-            </div>
-            <div className="col-12">
-              <button className="btn btn-primary w-100" type="submit" disabled={loading}>
-                {loading ? '...' : t('signIn')}
-              </button>
-            </div>
-          </form>
+        <div className="login-page__headline">
+          <p>{t.welcomeHeadline}</p>
         </div>
+      </div>
+      <div className="login-page__form-wrapper">
+        <form className="login-form" onSubmit={handleSubmit}>
+          <h1 className="login-form__title">{t.loginTitle}</h1>
+          <label className="login-form__field">
+            <span className="sr-only">{t.usernamePlaceholder}</span>
+            <input
+              type="text"
+              autoComplete="usernameOrEmail"
+              placeholder={t.usernamePlaceholder}
+              value={usernameOrEmail}
+              onChange={(event) => setUsernameOrEmail(event.target.value)}
+              required
+            />
+          </label>
+          <label className="login-form__field">
+            <span className="sr-only">{t.passwordPlaceholder}</span>
+            <input
+              type="password"
+              autoComplete="current-password"
+              placeholder={t.passwordPlaceholder}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </label>
+          <div className="login-form__actions">
+            <button type="button" className="login-form__link">
+              {t.forgotPassword}
+            </button>
+          </div>
+          {error ? <p className="login-form__error" role="alert">{error}</p> : null}
+          <button type="submit" className="login-form__submit" disabled={loading}>
+            {loading ? '...' : t.submit}
+          </button>
+        </form>
       </div>
     </div>
   )
