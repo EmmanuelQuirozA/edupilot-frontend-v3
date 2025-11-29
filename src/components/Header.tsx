@@ -1,6 +1,7 @@
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import LanguageSelector from './LanguageSelector'
+import type { Locale } from '../context/LanguageContext'
 
 interface HeaderProps {
   onNavigate: (path: string) => void
@@ -24,6 +25,12 @@ export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: 
   const displayName = user?.full_name || user?.first_name || t('welcome')
   const currentPageTitle = pageTitle ?? t('portalTitle')
   const contextText = pageContext ?? 'School the sauses'
+
+  const handleLanguageChange = (nextLocale: Locale) => {
+    if (nextLocale !== locale) {
+      setLocale(nextLocale)
+    }
+  }
 
   return (
     <header className="p-2">
@@ -53,7 +60,7 @@ export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: 
           </button>
           
           <div className="sidebar__language-badge">
-            <LanguageSelector value={language} onChange={onLanguageChange} />
+            <LanguageSelector value={locale} onChange={handleLanguageChange} />
           </div>
 
           {token ? (
