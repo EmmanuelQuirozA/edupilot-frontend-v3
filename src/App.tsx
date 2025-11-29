@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { LanguageProvider, useLanguage, type Locale } from './context/LanguageContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -23,6 +23,7 @@ function Router() {
   const pathLocale = useMemo(() => getPathLocale(path), [path])
   const isDashboardPath = /^\/(es|en)\/dashboard$/.test(path)
   const dashboardPath = useMemo(() => `/${locale}/dashboard`, [locale])
+  const localeRef = useRef(locale)
 
   const navigate = useCallback((nextPath: string) => {
     window.history.pushState({}, '', nextPath)
@@ -36,10 +37,25 @@ function Router() {
   }, [])
 
   useEffect(() => {
-    if (pathLocale && pathLocale !== locale) {
+    localeRef.current = locale
+  }, [locale])
+
+  useEffect(() => {
+    if (pathLocale && pathLocale !== localeRef.current) {
       setLocale(pathLocale)
     }
-  }, [locale, pathLocale, setLocale])
+  }, [pathLocale, setLocale])
+
+  useEffect(() => {
+    if (!pathLocale) {
+      navigate(`/${locale}${path}`)
+      return
+    }
+
+    if (pathLocale !== locale) {
+      navigate(path.replace(/^\/(es|en)/, `/${locale}`))
+    }
+  }, [locale, navigate, path, pathLocale])
 
   useEffect(() => {
     if (isDashboardPath && pathLocale && pathLocale !== locale) {
