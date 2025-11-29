@@ -29,6 +29,7 @@ const translations: TranslationMap = {
     wrongCredentials: 'Credenciales incorrectas. Verifica tus datos.',
     serviceUnavailable: 'El servicio no está disponible en este momento.',
     defaultError: 'Ocurrió un error inesperado.',
+    loginPageTitle: 'Una nueva forma de vivir la experiencia escolar.'
   },
   en: {
     homeTitle: 'Welcome to EduPilot',
@@ -53,6 +54,7 @@ const translations: TranslationMap = {
     wrongCredentials: 'Wrong credentials. Please try again.',
     serviceUnavailable: 'The service is unavailable right now.',
     defaultError: 'An unexpected error occurred.',
+    loginPageTitle: 'A new way to live the school experience.'
   },
 }
 

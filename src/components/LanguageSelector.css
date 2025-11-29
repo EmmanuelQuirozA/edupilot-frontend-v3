@@ -1,7 +1,7 @@
 
 
 .language-selector {
-  /* display: inline-flex; */
+  display: inline-flex !important;
   padding: 4px;
   border-radius: 9999px;
   backdrop-filter: blur(8px);

@@ -59,8 +59,7 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
         </div>
         <div className="login-page__headline">
           <p className="login-page__eyebrow">EduPilot Platform</p>
-          <h2>{t('portalTitle')}</h2>
-          <p className="login-page__copy">{t('portalSubtitle')}</p>
+          <h2>{t('loginPageTitle')}</h2>
         </div>
       </div>
       <div className="login-page__form-wrapper">

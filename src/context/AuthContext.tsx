@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import { API_BASE_URL } from '../config';
+
 
 export type Role =
   | 'ADMIN'
@@ -39,7 +41,6 @@ interface LoginResponse {
 }
 
 const AUTH_KEY = 'authData'
-const BASE_URL = 'http://localhost:8080/api/'
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const timeout = setTimeout(() => controller.abort(), 15000)
 
       try {
-        const response = await fetch(`${BASE_URL}auth/login`, {
+        const response = await fetch(`${API_BASE_URL}auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -121,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) {
