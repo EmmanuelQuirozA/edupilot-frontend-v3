@@ -1,15 +1,24 @@
+.sidebar_container{
+  background: #10194c;
+}
+
 .sidebar {
   width: var(--sidebar-width);
   min-height: calc(100vh - var(--footer-height));
-  background: #10194c;
   height: 100vh;
   color: var(--sidebar-text);
   position: sticky;
   padding: 1.25rem;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.35s ease, opacity 0.35s ease;
   z-index: 1040;
   overflow-y: auto;
   scrollbar-width: none;
+
+  
+  position: relative;
+  position: sticky;
+  top: 0;
+  
 }
 
 .sidebar::-webkit-scrollbar {

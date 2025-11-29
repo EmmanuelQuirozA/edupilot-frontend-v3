@@ -28,7 +28,9 @@ export function Layout({ children, onNavigate, pageTitle }: LayoutProps) {
   return (
     <div className="app-shell d-flex flex-column" style={{ minHeight: '100vh' }}>
       <div className="layout-grid flex-grow-1 position-relative">
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <div className="sidebar_container">
+          <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+        </div>
         {isSidebarOpen && window.innerWidth < 992 ? <div className="sidebar-backdrop d-lg-none" onClick={() => setSidebarOpen(false)} /> : null}
         <div className="d-flex flex-column">
           <div className="layout-main  p-4">
