@@ -26,13 +26,6 @@ interface SidebarItem {
 }
 
 const menuIcons = {
-  schools: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 10 12 6l8 4v8H4Z" fill="currentColor" opacity="0.2" />
-      <path d="M4 18h16M4 12l8 4 8-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M10 14v4m4-4v4" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  ),
   dashboard: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" />
@@ -161,7 +154,6 @@ const menuIcons = {
 }
 
 const moduleLabels: Record<string, string> = {
-  schools: 'Escuelas',
   dashboard: 'Dashboard',
   schools: 'Escuelas',
   payments: 'Pagos y Finanzas',
