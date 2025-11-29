@@ -105,7 +105,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="sidebar-avatar">{initial}</div>
         <div>
           <p className="mb-0 fw-semibold text-white">{user?.full_name || 'Hermenegildo'}</p>
-          <small className="text-light">Panel estudiantil</small>
+          <small className="text-light sidebar-subtitle">Panel estudiantil</small>
         </div>
         <button className="btn btn-link text-white ms-auto d-lg-none" onClick={onClose} aria-label="Cerrar menú">
           ✕
@@ -113,8 +113,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
 
       {menuSections.map((section) => (
-        <div key={section.label} className="mb-3">
-          <p className="text-uppercase fw-semibold small text-light mb-2">{section.label}</p>
+        <div key={section.label} className="my-3">
+          <p className="text-uppercase sidebar-section mb-2">{section.label}</p>
           <nav className="nav flex-column gap-2">
             {section.items.map((item) => (
               <a

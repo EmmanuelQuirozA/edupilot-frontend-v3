@@ -30,9 +30,11 @@ export function Layout({ children, onNavigate, pageTitle }: LayoutProps) {
       <div className="layout-grid flex-grow-1 position-relative">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
         {isSidebarOpen && window.innerWidth < 992 ? <div className="sidebar-backdrop d-lg-none" onClick={() => setSidebarOpen(false)} /> : null}
-        <div className="layout-main d-flex flex-column">
-          <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} pageTitle={pageTitle} />
-          <main className="flex-grow-1 content-area">{children}</main>
+        <div className="d-flex flex-column">
+          <div className="layout-main  p-4">
+            <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} pageTitle={pageTitle} />
+            <main className="flex-grow-1 p-2">{children}</main>
+          </div>
           <Footer />
         </div>
       </div>
