@@ -26,6 +26,17 @@ const menuIcons = {
       <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" />
     </svg>
   ),
+  schools: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="8" width="16" height="12" rx="2" fill="currentColor" opacity="0.2" />
+      <rect x="4" y="10" width="16" height="2" fill="currentColor" />
+      <rect x="11" y="14" width="2" height="6" rx="1" fill="currentColor" />
+      <rect x="6" y="12" width="3" height="2" rx="1" fill="currentColor" />
+      <rect x="15" y="12" width="3" height="2" rx="1" fill="currentColor" />
+      <rect x="11.5" y="4" width="1" height="4" fill="currentColor" />
+      <path d="M12.5 4 L15 5.2 L12.5 6.4 Z" fill="currentColor" />
+    </svg>
+  ),
   payments: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <rect x="2" y="6" width="20" height="12" rx="2" fill="currentColor" opacity="0.2" />
@@ -136,6 +147,7 @@ const menuIcons = {
 
 const moduleLabels: Record<string, string> = {
   dashboard: 'Dashboard',
+  schools: 'Escuelas',
   payments: 'Pagos y Finanzas',
   students: 'Alumnos y Grupos',
   teachers: 'Profesores',
@@ -148,79 +160,15 @@ const moduleLabels: Record<string, string> = {
   reports: 'Reportes',
 }
 
-const settingsItems = [
-  { key: 'payments-center', label: 'Centro de pagos' },
-  { key: 'settings', label: 'Configuración' },
-]
-
-const defaultModules: ModuleAccess[] = [
-  {
-    moduleId: 1,
-    moduleName: 'Dashboard',
-    moduleKey: 'dashboard',
-    moduleAccessControlId: 1,
-    schoolId: null,
-    enabled: true,
-  },
-  {
-    moduleId: 2,
-    moduleName: 'Payments',
-    moduleKey: 'payments',
-    moduleAccessControlId: 2,
-    schoolId: null,
-    enabled: true,
-  },
-  {
-    moduleId: 3,
-    moduleName: 'Students',
-    moduleKey: 'students',
-    moduleAccessControlId: 3,
-    schoolId: null,
-    enabled: true,
-  },
-  {
-    moduleId: 4,
-    moduleName: 'Teachers',
-    moduleKey: 'teachers',
-    moduleAccessControlId: 4,
-    schoolId: null,
-    enabled: true,
-  },
-  {
-    moduleId: 5,
-    moduleName: 'Schedules',
-    moduleKey: 'schedules',
-    moduleAccessControlId: 5,
-    schoolId: null,
-    enabled: true,
-  },
-  {
-    moduleId: 6,
-    moduleName: 'Grades',
-    moduleKey: 'grades',
-    moduleAccessControlId: 6,
-    schoolId: null,
-    enabled: true,
-  },
-  {
-    moduleId: 7,
-    moduleName: 'Communications',
-    moduleKey: 'communications',
-    moduleAccessControlId: 7,
-    schoolId: null,
-    enabled: true,
-  },
-]
-
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, token } = useAuth()
-  const initial = user?.first_name?.[0]?.toUpperCase() || 'H'
-
   const [modules, setModules] = useState<ModuleAccess[]>([])
+
+  const initial = user?.first_name?.[0]?.toUpperCase() || 'U'
 
   useEffect(() => {
     if (!token) {
-      setModules(defaultModules)
+      setModules([])
       return
     }
 
@@ -228,54 +176,60 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     async function fetchModules() {
       try {
-        const response = await fetch(`${API_BASE_URL}modules/access-control`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await fetch(`${API_BASE_URL}/modules/access-control`, {
+          headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         })
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch modules')
-        }
+        if (!response.ok) throw new Error('Failed to fetch modules')
 
-        const data = (await response.json()) as ModuleAccess[]
-        setModules(data.filter((module) => module.enabled !== false))
+        const data = await response.json() as ModuleAccess[]
+        setModules(data)  // ← SIN FILTROS, backend manda lo que existe
       } catch (error) {
         console.error('Error fetching access control modules', error)
-        setModules(defaultModules)
+        setModules([]) // ← Sidebar vacío si falla
       }
     }
 
     fetchModules()
-
     return () => controller.abort()
   }, [token])
 
-  const menuSections = useMemo(
-    () => [
+  // Construcción de secciones SOLO si usuario autenticado
+  const menuSections = useMemo(() => {
+    if (!token) return []
+    return [
       {
         label: 'Menú principal',
-        items: modules.map((module) => ({
-          key: module.moduleKey,
-          label: moduleLabels[module.moduleKey] || module.moduleName,
+        items: modules.map(m => ({
+          
+          key: m.moduleKey,
+          label: moduleLabels[m.moduleKey] || m.moduleName,
         })),
       },
       {
         label: 'Ajustes',
-        items: settingsItems,
-      },
-    ],
-    [modules],
-  )
+        items: [
+          { key: 'settings', label: 'Configuración' }
+        ]
+      }
+    ]
+  }, [modules, token])
+
+    console.log(modules)
+
+  // Si no hay token → sidebar completamente oculto o vacío
+  if (!token) {
+    return null
+  }
 
   return (
     <aside className={`sidebar d-flex flex-column ${isOpen ? 'is-open' : ''}`}>
       <div className="d-flex align-items-center gap-3 mb-3">
         <div className="sidebar-avatar">{initial}</div>
         <div>
-          <p className="mb-0 fw-semibold text-white">{user?.full_name || 'Hermenegildo'}</p>
-          <small className="text-light sidebar-subtitle">Panel estudiantil</small>
+          <p className="mb-0 fw-semibold text-white">{user?.full_name}</p>
+          <small className="text-light sidebar-subtitle">Panel</small>
         </div>
         <button className="btn btn-link text-white ms-auto d-lg-none" onClick={onClose} aria-label="Cerrar menú">
           ✕
@@ -285,6 +239,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {menuSections.map((section) => (
         <div key={section.label} className="my-3">
           <p className="text-uppercase sidebar-section mb-2">{section.label}</p>
+
           <nav className="nav flex-column gap-2">
             {section.items.map((item) => (
               <a
@@ -292,7 +247,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className="nav-link sidebar-link d-flex align-items-center gap-3"
                 href="#"
               >
-                <span className="sidebar-icon">{menuIcons[item.key as keyof typeof menuIcons] || menuIcons.default}</span>
+                <span className="sidebar-icon">
+                  {menuIcons[item.key as keyof typeof menuIcons] || menuIcons.default}
+                </span>
                 <span>{item.label}</span>
               </a>
             ))}

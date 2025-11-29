@@ -424,12 +424,6 @@ export function DashboardAdminPage({ onNavigate }: DashboardAdminPageProps) {
         </section>
 
         <section aria-label={strings.keyMetricsLabel} className="d-flex flex-column gap-3">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-            <div>
-              <h2 className="h5 mb-1">{strings.keyMetricsTitle}</h2>
-              <p className="text-body-secondary mb-0">{strings.keyMetricsHelper}</p>
-            </div>
-          </div>
           <div className="row g-3">
             {strings.summaryCards.map((card) => (
               <div key={card.label} className="col-12 col-sm-6 col-lg-3">

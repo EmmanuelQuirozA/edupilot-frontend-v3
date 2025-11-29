@@ -33,7 +33,7 @@ export function Layout({ children, onNavigate, pageTitle }: LayoutProps) {
         </div>
         {isSidebarOpen && window.innerWidth < 992 ? <div className="sidebar-backdrop d-lg-none" onClick={() => setSidebarOpen(false)} /> : null}
         <div className="d-flex flex-column">
-          <div className="layout-main  p-4">
+          <div className="layout-main  p-5">
             <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} pageTitle={pageTitle} />
             <main className="flex-grow-1 p-2">{children}</main>
           </div>
