@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 export type Role =
   | 'ADMIN'
   | 'SCHOOL'
-  | 'SCHOLAR_ADMIN'
+  | 'SCHOOL_ADMIN'
   | 'STUDENT'
   | 'TEACHER'
   | 'KITCHEN'

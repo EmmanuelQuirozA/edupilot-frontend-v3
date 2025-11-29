@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 const roleLabels: Record<string, string> = {
   ADMIN: 'Administración del sistema',
   SCHOOL: 'Gestión escolar',
-  SCHOLAR_ADMIN: 'Administración académica',
+  SCHOOL_ADMIN: 'Administración académica',
   STUDENT: 'Portal de estudiantes',
   TEACHER: 'Portal de profesores',
   KITCHEN: 'Portal de cocina',
