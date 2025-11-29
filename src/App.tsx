@@ -22,6 +22,7 @@ function Router() {
 
   const pathLocale = useMemo(() => getPathLocale(path), [path])
   const isDashboardPath = /^\/(es|en)\/dashboard$/.test(path)
+  const isLoginPath = path === '/login' || /^\/(es|en)\/login$/.test(path)
   const dashboardPath = useMemo(() => `/${locale}/dashboard`, [locale])
   const localeRef = useRef(locale)
 
@@ -70,10 +71,10 @@ function Router() {
   }, [isDashboardPath, navigate, token])
 
   useEffect(() => {
-    if (token && path === '/login') {
+    if (token && isLoginPath) {
       navigate(dashboardPath)
     }
-  }, [dashboardPath, navigate, path, token])
+  }, [dashboardPath, isLoginPath, navigate, path, token])
 
   useEffect(() => {
     if (path === '/portal') {
@@ -85,7 +86,7 @@ function Router() {
     window.scrollTo(0, 0)
   }, [path])
 
-  if (path === '/login') {
+  if (isLoginPath) {
     return <LoginPage onNavigate={navigate} />
   }
 
