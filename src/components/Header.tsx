@@ -38,7 +38,7 @@ export function Header({ onNavigate }: HeaderProps) {
               </button>
               <ul className="dropdown-menu dropdown-menu-end">
                 <li>
-                  <button className="dropdown-item" onClick={() => onNavigate('/portal')}>
+                  <button className="dropdown-item" onClick={() => onNavigate(`/${locale}/dashboard`)}>
                     {t('portalTitle')}
                   </button>
                 </li>
