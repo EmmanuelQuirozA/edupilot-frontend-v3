@@ -8,7 +8,7 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onNavigate }: LoginPageProps) {
-  const { t } = useLanguage()
+  const { locale, t } = useLanguage()
   const { login } = useAuth()
   const [usernameOrEmail, setUsernameOrEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,7 +20,7 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
     try {
       await login(usernameOrEmail, password)
       Swal.fire({ icon: 'success', title: t('welcome') })
-      onNavigate('/portal')
+      onNavigate(`/${locale}/dashboard`)
     } catch (error) {
       const message = (error as Error).message
       if (message === 'wrong_credentials') {

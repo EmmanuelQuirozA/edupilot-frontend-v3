@@ -14,7 +14,7 @@ export function DashboardAdminPage({ onNavigate }: DashboardAdminPageProps) {
         <div>
           <p className="text-uppercase text-muted mb-1">Panel de administración</p>
           <h2 className="fw-bold mb-2">{t('welcome')}</h2>
-          <p className="text-muted mb-0">Control centralizado de portales, usuarios y configuraciones.</p>
+          <p className="text-muted mb-0">Control centralizado de dashboards, usuarios y configuraciones.</p>
         </div>
         <button className="btn btn-outline-primary" onClick={() => onNavigate('/')}>Home</button>
       </div>

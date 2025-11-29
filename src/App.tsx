@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { LanguageProvider } from './context/LanguageContext'
+import { LanguageProvider, useLanguage, type Locale } from './context/LanguageContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
@@ -10,14 +10,24 @@ import { DashboardTeacherPage } from './pages/DashboardTeacherPage'
 import { DashboardStudentsPage } from './pages/DashboardStudentsPage'
 import { KitchenPage } from './pages/KitchenPage'
 
+function getPathLocale(path: string): Locale | null {
+  const match = path.match(/^\/(es|en)(?:\/|$)/)
+  return match ? (match[1] as Locale) : null
+}
+
 function Router() {
   const [path, setPath] = useState(window.location.pathname)
   const { token, role } = useAuth()
+  const { locale, setLocale } = useLanguage()
 
-  const navigate = (nextPath: string) => {
+  const pathLocale = useMemo(() => getPathLocale(path), [path])
+  const isDashboardPath = /^\/(es|en)\/dashboard$/.test(path)
+  const dashboardPath = useMemo(() => `/${locale}/dashboard`, [locale])
+
+  const navigate = useCallback((nextPath: string) => {
     window.history.pushState({}, '', nextPath)
     setPath(nextPath)
-  }
+  }, [])
 
   useEffect(() => {
     const handlePop = () => setPath(window.location.pathname)
@@ -26,10 +36,34 @@ function Router() {
   }, [])
 
   useEffect(() => {
-    if (!token && path === '/portal') {
+    if (pathLocale && pathLocale !== locale) {
+      setLocale(pathLocale)
+    }
+  }, [locale, pathLocale, setLocale])
+
+  useEffect(() => {
+    if (isDashboardPath && pathLocale && pathLocale !== locale) {
+      navigate(`/${locale}/dashboard`)
+    }
+  }, [isDashboardPath, locale, navigate, pathLocale])
+
+  useEffect(() => {
+    if (!token && isDashboardPath) {
       navigate('/login')
     }
-  }, [path, token])
+  }, [isDashboardPath, navigate, token])
+
+  useEffect(() => {
+    if (token && path === '/login') {
+      navigate(dashboardPath)
+    }
+  }, [dashboardPath, navigate, path, token])
+
+  useEffect(() => {
+    if (path === '/portal') {
+      navigate(dashboardPath)
+    }
+  }, [dashboardPath, navigate, path])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -39,7 +73,7 @@ function Router() {
     return <LoginPage onNavigate={navigate} />
   }
 
-  if (path === '/portal' && token) {
+  if (isDashboardPath && token) {
     switch (role) {
       case 'ADMIN':
         return <DashboardAdminPage onNavigate={navigate} />

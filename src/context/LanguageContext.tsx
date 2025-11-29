@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
-type Locale = 'es' | 'en'
+export type Locale = 'es' | 'en'
 
 type TranslationMap = Record<Locale, Record<string, string>>
 
@@ -9,7 +9,7 @@ const translations: TranslationMap = {
   es: {
     homeTitle: 'Bienvenido a EduPilot',
     homeSubtitle:
-      'Una plataforma moderna preparada para múltiples portales y accesos basados en roles.',
+      'Una plataforma moderna preparada para múltiples dashboards y accesos basados en roles.',
     homeCta: 'Iniciar sesión',
     languageLabel: 'Idioma',
     loginTitle: 'Iniciar sesión',
@@ -19,12 +19,12 @@ const translations: TranslationMap = {
     rememberMe: 'Recordarme',
     signIn: 'Entrar',
     forgotPassword: '¿Olvidaste tu contraseña?',
-    portalTitle: 'Portal principal',
+    portalTitle: 'Dashboard principal',
     portalSubtitle:
       'Estructura lista para mostrar módulos dinámicos por rol y configuraciones de menú.',
     logout: 'Cerrar sesión',
     welcome: 'Bienvenido',
-    heroCta: 'Explorar portales',
+    heroCta: 'Explorar dashboards',
     footerText: 'EduPilot © 2025. Todos los derechos reservados.',
     wrongCredentials: 'Credenciales incorrectas. Verifica tus datos.',
     serviceUnavailable: 'El servicio no está disponible en este momento.',
@@ -33,7 +33,7 @@ const translations: TranslationMap = {
   en: {
     homeTitle: 'Welcome to EduPilot',
     homeSubtitle:
-      'A modern platform prepared for multiple portals and role-based access.',
+      'A modern platform prepared for multiple dashboards and role-based access.',
     homeCta: 'Log in',
     languageLabel: 'Language',
     loginTitle: 'Sign in',
@@ -43,12 +43,12 @@ const translations: TranslationMap = {
     rememberMe: 'Remember me',
     signIn: 'Sign in',
     forgotPassword: 'Forgot password?',
-    portalTitle: 'Main portal',
+    portalTitle: 'Main dashboard',
     portalSubtitle:
       'Layout ready to display dynamic role-based modules and menu configuration.',
     logout: 'Log out',
     welcome: 'Welcome',
-    heroCta: 'Explore portals',
+    heroCta: 'Explore dashboards',
     footerText: 'EduPilot © 2025. All rights reserved.',
     wrongCredentials: 'Wrong credentials. Please try again.',
     serviceUnavailable: 'The service is unavailable right now.',
@@ -64,8 +64,16 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined)
 
+function getInitialLocale(): Locale {
+  const match = window.location.pathname.match(/^\/(es|en)(?:\/|$)/)
+  if (match) {
+    return match[1] as Locale
+  }
+  return 'es'
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>('es')
+  const [locale, setLocale] = useState<Locale>(getInitialLocale())
 
   const value = useMemo<LanguageContextValue>(() => {
     const t = (key: keyof typeof translations['en']) => translations[locale][key] || key
