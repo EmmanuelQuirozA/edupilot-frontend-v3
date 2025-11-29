@@ -6,9 +6,10 @@ import { Footer } from '../components/Footer'
 interface LayoutProps {
   children: ReactNode
   onNavigate: (path: string) => void
+  pageTitle?: string
 }
 
-export function Layout({ children, onNavigate }: LayoutProps) {
+export function Layout({ children, onNavigate, pageTitle }: LayoutProps) {
   const [isSidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 992)
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export function Layout({ children, onNavigate }: LayoutProps) {
         <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
         {isSidebarOpen && window.innerWidth < 992 ? <div className="sidebar-backdrop d-lg-none" onClick={() => setSidebarOpen(false)} /> : null}
         <div className="layout-main d-flex flex-column">
-          <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} />
+          <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} pageTitle={pageTitle} />
           <main className="flex-grow-1 content-area">{children}</main>
           <Footer />
         </div>

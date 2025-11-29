@@ -9,7 +9,7 @@ export function KitchenPage({ onNavigate }: KitchenPageProps) {
   const { t } = useLanguage()
 
   return (
-    <Layout onNavigate={onNavigate}>
+    <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')}>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <p className="text-uppercase text-muted mb-1">Panel de cocina</p>
