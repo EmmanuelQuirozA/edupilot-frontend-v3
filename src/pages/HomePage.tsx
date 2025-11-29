@@ -1,5 +1,5 @@
-import { Header } from '../components/Header'
-import { Footer } from '../components/Footer'
+import { PublicHeader } from '../components/PublicHeader'
+import { PublicFooter } from '../components/PublicFooter'
 import { useLanguage } from '../context/LanguageContext'
 
 interface HomePageProps {
@@ -11,7 +11,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
 
   return (
     <div className="app-shell d-flex flex-column" style={{ minHeight: '100vh' }}>
-      <Header onNavigate={onNavigate} pageTitle={t('homeTitle')} pageContext={t('heroCta')} />
+      <PublicHeader onNavigate={onNavigate} />
       <main className="flex-grow-1">
         <div className="container py-5">
           <div className="hero-section mb-4">
@@ -64,7 +64,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
           </div>
         </div>
       </main>
-      <Footer />
+      <PublicFooter />
     </div>
   )
 }
