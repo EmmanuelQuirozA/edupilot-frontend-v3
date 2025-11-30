@@ -10,6 +10,8 @@ import { DashboardTeacherPage } from './pages/DashboardTeacherPage'
 import { DashboardStudentsPage } from './pages/DashboardStudentsPage'
 import { KitchenPage } from './pages/KitchenPage'
 import { SchoolsPage } from './pages/SchoolsPage'
+import { LoadingSkeleton } from './components/LoadingSkeleton'
+import { Layout } from './layout/Layout'
 
 function getPathLocale(path: string): Locale | null {
   const match = path.match(/^\/(es|en)(?:\/|$)/)
@@ -18,8 +20,8 @@ function getPathLocale(path: string): Locale | null {
 
 function Router() {
   const [path, setPath] = useState(window.location.pathname)
-  const { token, role } = useAuth()
-  const { locale, setLocale } = useLanguage()
+  const { token, role, hydrated } = useAuth()
+  const { locale, setLocale, t } = useLanguage()
 
   const pathLocale = useMemo(() => getPathLocale(path), [path])
   const isDashboardRootPath = /^\/(es|en)\/dashboard$/.test(path)
@@ -68,16 +70,20 @@ function Router() {
   }, [isDashboardRootPath, locale, navigate, pathLocale])
 
   useEffect(() => {
+    if (!hydrated) return
+
     if (!token && isDashboardAreaPath) {
       navigate('/login')
     }
-  }, [isDashboardAreaPath, navigate, token])
+  }, [hydrated, isDashboardAreaPath, navigate, token])
 
   useEffect(() => {
+    if (!hydrated) return
+
     if (token && isLoginPath) {
       navigate(dashboardPath)
     }
-  }, [dashboardPath, isLoginPath, navigate, path, token])
+  }, [dashboardPath, hydrated, isLoginPath, navigate, token])
 
   useEffect(() => {
     if (path === '/portal') {
@@ -91,6 +97,14 @@ function Router() {
 
   if (isLoginPath) {
     return <LoginPage onNavigate={navigate} />
+  }
+
+  if (isDashboardAreaPath && !hydrated) {
+    return (
+      <Layout onNavigate={navigate} pageTitle={t('portalTitle')}>
+        <LoadingSkeleton variant="dashboard" cardCount={8} />
+      </Layout>
+    )
   }
 
   if (isDashboardAreaPath && token) {

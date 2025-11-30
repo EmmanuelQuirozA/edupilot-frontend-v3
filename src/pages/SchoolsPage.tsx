@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { API_BASE_URL } from '../config'
 import { DataTable, type DataTableColumn } from '../components/DataTable'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
 
 interface School {
   school_id: number
@@ -31,7 +32,7 @@ interface SchoolsPageProps {
 }
 
 export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
-  const { token } = useAuth()
+  const { token, hydrated } = useAuth()
   const { locale, t } = useLanguage()
 
   const [schools, setSchools] = useState<School[]>([])
@@ -121,6 +122,14 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
 
     return () => controller.abort()
   }, [locale, page, pageSize, t, token])
+
+  if (!hydrated) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
+        <LoadingSkeleton variant="table" rowCount={10} />
+      </Layout>
+    )
+  }
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>

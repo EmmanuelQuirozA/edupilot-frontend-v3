@@ -30,8 +30,6 @@ export function DataTable<T>({ columns, data, isLoading = false, pagination, emp
 
   const pageIndex = pagination?.page ?? 0
   const totalPages = pagination?.totalPages ?? 0
-  const totalElements = pagination?.totalElements ?? data.length
-  const pageSize = pagination?.size ?? data.length
 
   const rows = useMemo(() => data, [data])
 
