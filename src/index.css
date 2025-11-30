@@ -246,3 +246,18 @@ a:hover {
 .btn-link {
   text-decoration: none;
 }
+
+.cell-chip {
+  padding: 1.5px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.bg-success {
+  background-color: #75ed7f3b !important;
+  color: #096900 !important;
+}
+
+.bg-danger {
+  background-color: rgba(220, 53, 70, 0.295) !important;
+}

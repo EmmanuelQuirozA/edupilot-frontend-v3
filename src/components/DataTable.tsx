@@ -90,7 +90,7 @@ export function DataTable<T>({ columns, data, isLoading = false, pagination, emp
               rows.map((row, index) => (
                 <tr key={index}>
                   {columns.map((column) => (
-                    <td key={column.key}>{column.render ? column.render(row) : ((row as Record<string, unknown>)[column.key] as ReactNode)}</td>
+                    <td className='text-muted' key={column.key}>{column.render ? column.render(row) : ((row as Record<string, unknown>)[column.key] as ReactNode)}</td>
                   ))}
                 </tr>
               ))

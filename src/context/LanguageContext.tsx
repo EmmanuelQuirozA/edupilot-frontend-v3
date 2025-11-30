@@ -51,6 +51,8 @@ const translations: TranslationMap = {
     tableNext: 'Siguiente',
     tableActions: 'Acciones',
     tableViewDetails: 'Ver detalles',
+    renew: 'Renueva',
+    students: 'Estudiantes',
   },
   en: {
     homeTitle: 'Welcome to EduPilot',
@@ -97,6 +99,8 @@ const translations: TranslationMap = {
     tableNext: 'Next',
     tableActions: 'Actions',
     tableViewDetails: 'View details',
+    renew: 'Renew',
+    students: 'Students',
   },
 }
 
