@@ -19,6 +19,17 @@ interface ModuleAccess {
   enabled: boolean
 }
 
+interface MenuItem {
+  key: string
+  label: string
+  path?: string
+}
+
+interface MenuSection {
+  label: string
+  items: MenuItem[]
+}
+
 const menuIcons = {
   dashboard: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -199,7 +210,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
   }, [token])
 
   // Construcción de secciones SOLO si usuario autenticado
-  const menuSections = useMemo(() => {
+  const menuSections: MenuSection[] = useMemo(() => {
     const modulePaths: Record<string, string> = {
       dashboard: `/${locale}/dashboard`,
       schools: `/${locale}/dashboard/schools`,
@@ -208,8 +219,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
     return [
       {
         label: 'Menú principal',
-        items: modules.map(m => ({
-          
+        items: modules.map((m) => ({
           key: m.moduleKey,
           label: moduleLabels[m.moduleKey] || m.moduleName,
           path: modulePaths[m.moduleKey] ?? `/${locale}/dashboard/${m.moduleKey}`,
@@ -223,8 +233,6 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
       }
     ]
   }, [locale, modules, token])
-
-    console.log(modules)
 
   // Si no hay token → sidebar completamente oculto o vacío
   if (!token) {

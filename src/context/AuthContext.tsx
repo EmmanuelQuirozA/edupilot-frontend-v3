@@ -31,6 +31,7 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
+  hydrated: boolean
   login: (usernameOrEmail: string, password: string) => Promise<void>
   logout: () => void
 }
@@ -57,6 +58,7 @@ function decodeRole(token: string): Role {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ token: null, user: null, role: 'UNKNOWN' })
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(AUTH_KEY)
@@ -68,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Invalid auth state in storage', error)
       }
     }
+    setHydrated(true)
   }, [])
 
   const value = useMemo<AuthContextValue>(() => {
@@ -116,8 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(AUTH_KEY)
     }
 
-    return { ...state, login, logout }
-  }, [state])
+    return { ...state, hydrated, login, logout }
+  }, [hydrated, state])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

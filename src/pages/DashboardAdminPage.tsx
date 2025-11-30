@@ -1,6 +1,7 @@
 import { Layout } from '../layout/Layout'
 import { useLanguage, type Locale } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
 
 type StatusVariant = 'success' | 'warning' | 'critical' | 'info'
 
@@ -393,11 +394,19 @@ interface DashboardAdminPageProps {
 
 export function DashboardAdminPage({ onNavigate }: DashboardAdminPageProps) {
   const { locale, t } = useLanguage()
-  const { user } = useAuth()
+  const { user, hydrated } = useAuth()
 
   const strings = DASHBOARD_COPY[locale] ?? DASHBOARD_COPY.es
   const displayName =
     user?.first_name || user?.full_name || user?.username || user?.email || t('welcome')
+
+  if (!hydrated) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')}>
+        <LoadingSkeleton variant="dashboard" cardCount={8} />
+      </Layout>
+    )
+  }
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')}>

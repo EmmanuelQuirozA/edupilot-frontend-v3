@@ -1,0 +1,114 @@
+.loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.loading-skeleton__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 680px;
+}
+
+.loading-skeleton__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.loading-skeleton__card {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.loading-skeleton__table {
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.loading-skeleton__table-header,
+.loading-skeleton__table-row {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 1rem 1.25rem;
+}
+
+.loading-skeleton__table-header {
+  border-bottom: 1px solid var(--bs-border-color);
+  background: var(--bs-light);
+}
+
+.loading-skeleton__table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.loading-skeleton__pill {
+  width: 120px;
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--bs-light), var(--bs-gray-200));
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-skeleton__line {
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--bs-light), var(--bs-gray-200));
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-skeleton__line.short {
+  width: 40%;
+}
+
+.loading-skeleton__line--title {
+  width: 70%;
+  height: 18px;
+}
+
+.loading-skeleton__line--subtitle {
+  width: 90%;
+}
+
+.loading-skeleton__line--muted {
+  opacity: 0.85;
+}
+
+.loading-skeleton__line--highlight {
+  width: 55%;
+  height: 24px;
+}
+
+.loading-skeleton__line::after,
+.loading-skeleton__pill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: loading-skeleton-shimmer 1.25s ease-in-out infinite;
+}
+
+@keyframes loading-skeleton-shimmer {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
