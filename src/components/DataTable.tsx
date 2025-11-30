@@ -39,6 +39,8 @@ export function DataTable<T>({ columns, data, isLoading = false, pagination, emp
     <div className="datatable card shadow-sm border-0">
       {/* <div className="d-flex justify-content-between align-items-center p-3">
         <div className="small text-muted">
+          <strong>{t('tableResults')}</strong>: {totalElements} • <strong>{t('tablePageLabel')}</strong> {pageIndex + 1} {t('tablePageOf')}{' '}
+          {totalPages} • <strong>{t('tablePageSize')}</strong>: {pageSize}
         </div>
         {pagination?.onPageSizeChange ? (
           <div className="d-flex align-items-center gap-2">
