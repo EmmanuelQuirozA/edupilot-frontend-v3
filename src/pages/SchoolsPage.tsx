@@ -99,7 +99,7 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
               row.renew_plan ?
               (
                 <small className='fw-light'>
-                  {t('renew') + ' ' + formatDate(row.renew_plan, {year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'})}
+                  {t('renew') + ' ' + formatDate(row.renew_plan, locale, {year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'})}
                 </small>
               )
               :null
@@ -136,14 +136,18 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
       {
         key: 'view_details',
         label: t('tableActions'),
-        render: () => (
-          <button type="button" className="btn btn-link btn-sm">
+        render: (row) => (
+          <button
+            type="button"
+            className="btn btn-link btn-sm"
+            onClick={() => onNavigate(`/${locale}/dashboard/schools/${row.school_id}`)}
+          >
             {t('tableViewDetails')}
           </button>
         ),
       },
     ],
-    [t],
+    [locale, onNavigate, t],
   )
 
   useEffect(() => {
