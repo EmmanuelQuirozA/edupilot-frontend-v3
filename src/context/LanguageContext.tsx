@@ -19,7 +19,7 @@ const translations: TranslationMap = {
     rememberMe: 'Recordarme',
     signIn: 'Entrar',
     forgotPassword: '¿Olvidaste tu contraseña?',
-    portalTitle: 'Dashboard principal',
+    portalTitle: 'Dashboard',
     portalSubtitle:
       'Estructura lista para mostrar módulos dinámicos por rol y configuraciones de menú.',
     logout: 'Cerrar sesión',
@@ -49,6 +49,7 @@ const translations: TranslationMap = {
     tableNoData: 'No hay registros para mostrar',
     tablePrev: 'Anterior',
     tableNext: 'Siguiente',
+    tableActions: 'Acciones',
     tableViewDetails: 'Ver detalles',
   },
   en: {
@@ -94,6 +95,7 @@ const translations: TranslationMap = {
     tableNoData: 'No records to display',
     tablePrev: 'Previous',
     tableNext: 'Next',
+    tableActions: 'Actions',
     tableViewDetails: 'View details',
   },
 }

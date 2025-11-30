@@ -13,19 +13,29 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
   if (!items.length) return null
 
   return (
-    <nav aria-label="Breadcrumb" className="breadcrumb-container">
-      <ol className="breadcrumb mb-0">
-        {items.map((item, index) => (
-          <li key={item.label} className={`breadcrumb-item ${index === items.length - 1 ? 'active' : ''}`} aria-current={index === items.length - 1 ? 'page' : undefined}>
-            {item.onClick && index !== items.length - 1 ? (
-              <button type="button" className="btn btn-link p-0 breadcrumb-link" onClick={item.onClick}>
-                {item.label}
+    <nav className="breadcrumbs" aria-label="Breadcrumb">
+      <ol>
+        {items.map((item, index) => {
+          const label = item?.label ?? '';
+          const isCurrent = index === items.length - 1;
+          const key = `${label}-${index}`;
+
+          if (isCurrent || typeof item.onClick !== 'function') {
+            return (
+              <li key={key} className={isCurrent ? 'is-current' : undefined} aria-current={isCurrent ? 'page' : undefined}>
+                <span>{label}</span>
+              </li>
+            );
+          }
+
+          return (
+            <li key={key}>
+              <button type="button" onClick={item.onClick}>
+                {label}
               </button>
-            ) : (
-              <span>{item.label}</span>
-            )}
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ol>
     </nav>
   )

@@ -39,7 +39,7 @@ export function Layout({ children, onNavigate, pageTitle, breadcrumbItems = [] }
           <div className="layout-main  p-5">
             <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} pageTitle={pageTitle} />
             {breadcrumbItems.length ? <Breadcrumb items={breadcrumbItems} /> : null}
-            <main className="flex-grow-1 p-2">{children}</main>
+            <main className="flex-grow-1">{children}</main>
           </div>
           <Footer />
         </div>

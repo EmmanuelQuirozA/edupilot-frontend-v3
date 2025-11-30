@@ -66,9 +66,9 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
       },
       {
         key: 'view_details',
-        label: t('tableViewDetails'),
+        label: t('tableActions'),
         render: () => (
-          <button type="button" className="btn btn-outline-primary btn-sm">
+          <button type="button" className="btn btn-link btn-sm">
             {t('tableViewDetails')}
           </button>
         ),
@@ -125,18 +125,16 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
       <div className="d-flex flex-column gap-3">
-        <div className="card border-0 shadow-sm">
-          <div className="card-body">
-            <h2 className="card-title h5 mb-2">{t('schoolsTitle')}</h2>
-            <p className="text-muted mb-0">{t('schoolsSubtitle')}</p>
-          </div>
-        </div>
 
         {error ? (
           <div className="alert alert-danger" role="alert">
             {error}
           </div>
         ) : null}
+
+        <div className="d-flex justify-content-end">
+          <button className="ui-btn" type="button"><span className="ui-button__label">Agregar escuela</span></button>
+        </div>
 
         <DataTable
           columns={columns}

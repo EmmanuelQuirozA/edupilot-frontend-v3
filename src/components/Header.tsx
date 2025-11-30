@@ -23,7 +23,7 @@ export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: 
 
   const lastNameFromFullName = user?.full_name?.split(' ').at(-1)
   const initials = getUserInitials(user?.first_name, lastNameFromFullName)
-  const displayName = user?.full_name || user?.first_name || t('welcome')
+  const displayName = user?.first_name || t('welcome')
   const currentPageTitle = pageTitle ?? t('portalTitle')
   const contextText = pageContext ?? 'School the sauses'
 
@@ -34,7 +34,7 @@ export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: 
   }
 
   return (
-    <header className="p-2">
+    <header>
       <div className="header-container">
         <div className="d-flex align-items-start gap-3">
           {onToggleSidebar ? (

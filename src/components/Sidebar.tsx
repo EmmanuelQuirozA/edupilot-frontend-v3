@@ -19,12 +19,6 @@ interface ModuleAccess {
   enabled: boolean
 }
 
-interface SidebarItem {
-  key: string
-  label: string
-  path?: string
-}
-
 const menuIcons = {
   dashboard: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -168,8 +162,9 @@ const moduleLabels: Record<string, string> = {
   reports: 'Reportes',
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
   const { user, token } = useAuth()
+  const { locale } = useLanguage()
   const [modules, setModules] = useState<ModuleAccess[]>([])
 
   const initial = user?.first_name?.[0]?.toUpperCase() || 'U'
@@ -205,6 +200,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   // Construcción de secciones SOLO si usuario autenticado
   const menuSections = useMemo(() => {
+    const modulePaths: Record<string, string> = {
+      dashboard: `/${locale}/dashboard`,
+      schools: `/${locale}/dashboard/schools`,
+    }
     if (!token) return []
     return [
       {
@@ -213,6 +212,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           
           key: m.moduleKey,
           label: moduleLabels[m.moduleKey] || m.moduleName,
+          path: modulePaths[m.moduleKey] ?? `/${locale}/dashboard/${m.moduleKey}`,
         })),
       },
       {
@@ -222,7 +222,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         ]
       }
     ]
-  }, [modules, token])
+  }, [locale, modules, token])
 
     console.log(modules)
 

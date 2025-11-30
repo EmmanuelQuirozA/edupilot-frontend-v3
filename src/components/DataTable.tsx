@@ -37,10 +37,8 @@ export function DataTable<T>({ columns, data, isLoading = false, pagination, emp
 
   return (
     <div className="datatable card shadow-sm border-0">
-      <div className="d-flex justify-content-between align-items-center p-3">
+      {/* <div className="d-flex justify-content-between align-items-center p-3">
         <div className="small text-muted">
-          <strong>{t('tableResults')}</strong>: {totalElements} • <strong>{t('tablePageLabel')}</strong> {pageIndex + 1} {t('tablePageOf')}{' '}
-          {totalPages} • <strong>{t('tablePageSize')}</strong>: {pageSize}
         </div>
         {pagination?.onPageSizeChange ? (
           <div className="d-flex align-items-center gap-2">
@@ -61,14 +59,15 @@ export function DataTable<T>({ columns, data, isLoading = false, pagination, emp
             </select>
           </div>
         ) : null}
-      </div>
+      </div> */}
+
 
       <div className="table-responsive">
         <table className="table align-middle mb-0">
-          <thead className="table-light">
+          <thead>
             <tr>
               {columns.map((column) => (
-                <th key={column.key} scope="col">
+                <th key={column.key} scope="col" className="table-column-name">
                   {column.label}
                 </th>
               ))}
@@ -101,27 +100,29 @@ export function DataTable<T>({ columns, data, isLoading = false, pagination, emp
       </div>
 
       {pagination ? (
-        <div className="d-flex justify-content-between align-items-center p-3 border-top">
+        
+        <div className="d-flex justify-content-between align-items-center px-3 pt-3 border-top">
           <div className="small text-muted">
             {t('tablePageLabel')} {pageIndex + 1} {t('tablePageOf')} {totalPages}
           </div>
           <div className="btn-group" role="group" aria-label="Pagination controls">
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm"
-              disabled={pageIndex <= 0}
-              onClick={() => pagination.onPageChange?.(pageIndex - 1)}
-            >
-              {t('tablePrev')}
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm"
-              disabled={pageIndex >= totalPages - 1 || totalPages === 0}
-              onClick={() => pagination.onPageChange?.(pageIndex + 1)}
-            >
-              {t('tableNext')}
-            </button>
+            <nav className='Table pagination'>
+              <ul className='pagination justify-content-lg-end mb-0'>
+                <li className='page-item disabled'>
+                  <button type="button" className="page-link" disabled={pageIndex <= 0} onClick={() => pagination.onPageChange?.(pageIndex - 1)}>
+                    ←
+                  </button>
+                </li>
+                <li className='page-item disabled'>
+                  <span className='page-link'>{pageIndex + 1} {'/'} {totalPages} </span>
+                </li>
+                <li className='page-item disabled'>
+                  <button type="button" className="page-link" disabled={pageIndex >= totalPages - 1 || totalPages === 0} onClick={() => pagination.onPageChange?.(pageIndex + 1)}>
+                    →
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
       ) : null}
