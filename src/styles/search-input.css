@@ -44,3 +44,21 @@
 .search-input form {
   width: 100%;
 }
+
+.search-input__clear {
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  padding: 0;
+  line-height: 1;
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-input__clear:hover,
+.search-input__clear:focus-visible {
+  color: #0f172a;
+  box-shadow: none;
+}

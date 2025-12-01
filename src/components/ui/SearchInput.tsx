@@ -4,12 +4,15 @@ export interface SearchInputProps {
   value: string | number;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
+  onClear?: () => void;
   placeholder?: string;
   className?: string;
   inputClassName?: string;
   icon?: ReactNode;
   inputProps?: Record<string, unknown>;
   wrapperProps?: Record<string, unknown>;
+  showClearButton?: boolean;
+  clearButtonAriaLabel?: string;
 }
 
 const DefaultIcon = (
@@ -40,20 +43,27 @@ const SearchInput = ({
   icon = DefaultIcon,
   inputProps = {},
   wrapperProps = {},
+  showClearButton = true,
+  clearButtonAriaLabel = "Borrar filtro",
 }: SearchInputProps) => {
   // Wrapper dinámico → form si recibe onSubmit, si no solo div
-  const Wrapper: any = onSubmit ? "form" : "div";
+  const Wrapper = (onSubmit ? "form" : "div") as const;
 
   const {
     className: wrapperClassName = "",
     onSubmit: wrapperOnSubmit,
     ...restWrapperProps
-  } = wrapperProps as any;
+  } = (wrapperProps || {}) as {
+    className?: string;
+    onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
+  } & Record<string, unknown>;
 
   const {
     className: inputClassNameProp = "",
     ...restInputProps
-  } = inputProps as any;
+  } = (inputProps || {}) as {
+    className?: string;
+  } & Record<string, unknown>;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     if (onSubmit) {
@@ -62,6 +72,15 @@ const SearchInput = ({
     }
 
     wrapperOnSubmit?.(event);
+  };
+
+  const handleClear = () => {
+    if (onClear) {
+      onClear();
+      return;
+    }
+
+    onChange({ target: { value: "" } } as ChangeEvent<HTMLInputElement>);
   };
 
   return (
@@ -90,6 +109,17 @@ const SearchInput = ({
         placeholder={placeholder}
         {...restInputProps}
       />
+
+      {showClearButton && value ? (
+        <button
+          type="button"
+          className="btn search-input__clear"
+          onClick={handleClear}
+          aria-label={clearButtonAriaLabel}
+        >
+          ×
+        </button>
+      ) : null}
     </Wrapper>
   );
 };
