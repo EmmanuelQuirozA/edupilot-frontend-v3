@@ -106,7 +106,7 @@ interface SchoolDetailsResponse {
   } | null
 }
 
-type TabKey = 'overview' | 'billing' | 'settings' | 'structure'
+type TabKey = 'overview' | 'details' | 'billing' | 'settings' | 'structure'
 
 export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPageProps) {
   const { locale, t } = useLanguage()
@@ -176,6 +176,33 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
   const payments: SchoolPayment[] = data?.school_payments ?? []
   const modules: SchoolModule[] = data?.modules ?? []
 
+  const schoolDetails = data?.school_details
+  const fullAddress = useMemo(() => {
+    if (!schoolDetails) return null
+
+    const streetLine = [schoolDetails.street, schoolDetails.ext_number, schoolDetails.int_number]
+      .filter(Boolean)
+      .join(' ')
+
+    const localityLine = [schoolDetails.suburb, schoolDetails.locality, schoolDetails.municipality, schoolDetails.state]
+      .filter(Boolean)
+      .join(', ')
+
+    const address = [streetLine, localityLine].filter(Boolean).join(' · ')
+
+    return address || null
+  }, [schoolDetails])
+
+  const hasResults = Boolean(
+    data &&
+      (childSchools.length ||
+        payments.length ||
+        modules.length ||
+        data.conctacts ||
+        data.current_plan ||
+        data.roles_per_school),
+  )
+
   const initials = useMemo(() => {
     if (!data?.school_details.commercial_name) return 'SC'
     const parts = data.school_details.commercial_name.trim().split(' ')
@@ -237,27 +264,29 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                       </span>
                     </div>
 
-                    <div className="d-flex flex-wrap align-items-center gap-2 py-2">
-                      <span 
-                        className="pill-chip" 
-                        style={{
-                          backgroundColor: (data.current_plan?.ui_color ? 'rgba('+data.current_plan?.ui_color+', 0.16)' : 'rgba(42, 33, 168, 0.16)'), 
-                          color: (data.current_plan?.ui_color ? 'rgb('+data.current_plan?.ui_color+')' : 'rgb(42, 33, 168)'),
-                          borderColor: (data.current_plan?.ui_color ? 'rgba('+data.current_plan?.ui_color+', 0.6)' : 'rgba(42, 33, 168, 0.6)')
-                        }}
-                      >
-                        {t('schoolPlanBadge')} {data.current_plan?.plan_name}
-                      </span>
-                      <span className="pill-chip" 
-                        // style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#0f766e' }}
-                        style={{
-                          color: (data.current_plan?.is_active ? '#0f766e' : '#761b0fff'),
-                          background: (data.current_plan?.is_active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(185, 16, 16, 0.12)'),
-                        }}
-                      >
-                        {data.current_plan?.status_name}
-                      </span>
-                    </div>
+                    {hasResults && data.current_plan ? (
+                      <div className="d-flex flex-wrap align-items-center gap-2 py-2">
+                        <span
+                          className="pill-chip"
+                          style={{
+                            backgroundColor: (data.current_plan?.ui_color ? 'rgba('+data.current_plan?.ui_color+', 0.16)' : 'rgba(42, 33, 168, 0.16)'),
+                            color: (data.current_plan?.ui_color ? 'rgb('+data.current_plan?.ui_color+')' : 'rgb(42, 33, 168)'),
+                            borderColor: (data.current_plan?.ui_color ? 'rgba('+data.current_plan?.ui_color+', 0.6)' : 'rgba(42, 33, 168, 0.6)')
+                          }}
+                        >
+                          {t('schoolPlanBadge')} {data.current_plan?.plan_name}
+                        </span>
+                        <span className="pill-chip"
+                          // style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#0f766e' }}
+                          style={{
+                            color: (data.current_plan?.is_active ? '#0f766e' : '#761b0fff'),
+                            background: (data.current_plan?.is_active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(185, 16, 16, 0.12)'),
+                          }}
+                        >
+                          {data.current_plan?.status_name}
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
@@ -408,45 +437,52 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
               </div>
             </div>
 
-            <div className="d-flex  gap-4 my-2 border-b border-gray-200">
-              {(
-                [
-                  { 
-                    key: 'overview', 
-                    label: t('schoolOverviewTab'),
-                    svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="layout-grid" className="p-1 lucide lucide-layout-grid h-4 w-4"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>
-                  },
-                  { 
-                    key: 'billing', 
-                    label: t('schoolBillingTab'),
-                    svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="receipt" className="p-1 lucide lucide-receipt h-4 w-4"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 17.5v-11"></path></svg>
-                  },
-                  { 
-                    key: 'settings', 
-                    label: t('schoolSettingsTab'),
-                    svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sliders" className="p-1 lucide lucide-sliders h-4 w-4"><path d="M10 8h4"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M17 16h4"></path><path d="M19 12V3"></path><path d="M19 21v-5"></path><path d="M3 14h4"></path><path d="M5 10V3"></path><path d="M5 21v-7"></path></svg>
-                  },
-                  { 
-                    key: 'structure', 
-                    label: t('schoolStructureTab'),
-                    svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="building" className="p-1 lucide lucide-building h-4 w-4"><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M12 6h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path><path d="M8 6h.01"></path><path d="M9 22v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"></path><rect x="4" y="2" width="16" height="20" rx="2"></rect></svg>
-                  },
-                ] as Array<{ key: TabKey; label: string; svg: React.ReactNode }>
-              ).map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={`tab-pill p-2 fw-light ${activeTab === tab.key ? 'active' : ''}`}
-                  onClick={() => setActiveTab(tab.key)}
-                >
-                  {tab.svg}
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            {hasResults ? (
+              <>
+                <div className="d-flex  gap-4 my-2 border-b border-gray-200">
+                  {(
+                    [
+                      {
+                        key: 'overview',
+                        label: t('schoolOverviewTab'),
+                        svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="layout-grid" className="p-1 lucide lucide-layout-grid h-4 w-4"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>
+                      },
+                      {
+                        key: 'details',
+                        label: t('schoolDetailsTab'),
+                        svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="id-card" className="p-1 lucide lucide-id-card h-4 w-4"><path d="M16 18a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2"></path><circle cx="9" cy="10" r="2"></circle><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M15 9h5"></path><path d="M15 12h5"></path></svg>
+                      },
+                      {
+                        key: 'billing',
+                        label: t('schoolBillingTab'),
+                        svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="receipt" className="p-1 lucide lucide-receipt h-4 w-4"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 17.5v-11"></path></svg>
+                      },
+                      {
+                        key: 'settings',
+                        label: t('schoolSettingsTab'),
+                        svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sliders" className="p-1 lucide lucide-sliders h-4 w-4"><path d="M10 8h4"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M17 16h4"></path><path d="M19 12V3"></path><path d="M19 21v-5"></path><path d="M3 14h4"></path><path d="M5 10V3"></path><path d="M5 21v-7"></path></svg>
+                      },
+                      {
+                        key: 'structure',
+                        label: t('schoolStructureTab'),
+                        svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="building" className="p-1 lucide lucide-building h-4 w-4"><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M12 6h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path><path d="M8 6h.01"></path><path d="M9 22v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"></path><rect x="4" y="2" width="16" height="20" rx="2"></rect></svg>
+                      },
+                    ] as Array<{ key: TabKey; label: string; svg: React.ReactNode }>
+                  ).map((tab) => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      className={`tab-pill p-2 fw-light ${activeTab === tab.key ? 'active' : ''}`}
+                      onClick={() => setActiveTab(tab.key)}
+                    >
+                      {tab.svg}
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
 
-            <div >
-              {activeTab === 'overview' ? (
+                <div>
+                  {activeTab === 'overview' ? (
                 <div className="row g-3">
                   <div className="col-12 col-lg-6">
                     <div className="card h-100">
@@ -525,6 +561,70 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                           <small className="text-white-50">{data.current_plan?.renew_plan}</small>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {activeTab === 'details' ? (
+                <div className="row g-3">
+                  <div className="col-12 col-lg-6">
+                    <div className="card h-100">
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                        <h6 className="mb-0 fw-bold">{t('schoolDetailsTitle')}</h6>
+                      </div>
+                      <ul className="info-list d-flex flex-column gap-3">
+                        <li className="d-flex justify-content-between gap-3 align-items-start">
+                          <span className="info-list__label">{t('schoolCommercialNameLabel')}</span>
+                          <span className="info-list__value text-end">{schoolDetails?.commercial_name || t('schoolNoData')}</span>
+                        </li>
+                        <li className="d-flex justify-content-between gap-3 align-items-start">
+                          <span className="info-list__label">{t('schoolBusinessNameLabel')}</span>
+                          <span className="info-list__value text-end">{schoolDetails?.business_name || t('schoolNoData')}</span>
+                        </li>
+                        <li className="d-flex justify-content-between gap-3 align-items-start">
+                          <span className="info-list__label">{t('schoolTaxIdLabel')}</span>
+                          <span className="info-list__value text-end">{schoolDetails?.tax_id || t('schoolNoData')}</span>
+                        </li>
+                        <li className="d-flex flex-column gap-1">
+                          <span className="info-list__label">{t('schoolDescriptionLabel')}</span>
+                          <span className="info-list__value">{schoolDetails?.school_description || t('schoolNoData')}</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="col-12 col-lg-6">
+                    <div className="card h-100">
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                        <h6 className="mb-0 fw-bold">{t('schoolDetailsLocationTitle')}</h6>
+                      </div>
+                      <ul className="info-list d-flex flex-column gap-3">
+                        <li className="d-flex justify-content-between gap-3 align-items-start">
+                          <span className="info-list__label">{t('schoolAddressLabel')}</span>
+                          <span className="info-list__value text-end">{fullAddress || t('schoolNoData')}</span>
+                        </li>
+                        <li className="d-flex justify-content-between gap-3 align-items-start">
+                          <span className="info-list__label">{t('schoolContactPhone')}</span>
+                          <span className="info-list__value text-end">{schoolDetails?.phone_number || t('schoolNoData')}</span>
+                        </li>
+                        <li className="d-flex justify-content-between gap-3 align-items-start">
+                          <span className="info-list__label">{t('schoolContactEmail')}</span>
+                          <span className="info-list__value text-end">{schoolDetails?.email || t('schoolNoData')}</span>
+                        </li>
+                        <li className="d-flex justify-content-between gap-3 align-items-start">
+                          <span className="info-list__label">{t('schoolCreationDateLabel')}</span>
+                          <span className="info-list__value text-end">{schoolDetails?.created_at || t('schoolNoData')}</span>
+                        </li>
+                        <li className="d-flex justify-content-between gap-3 align-items-start">
+                          <span className="info-list__label">{t('schoolMaxDebtLabel')}</span>
+                          <span className="info-list__value text-end">{schoolDetails?.max_debt?.toLocaleString(locale) ?? t('schoolNoData')}</span>
+                        </li>
+                        <li className="d-flex justify-content-between gap-3 align-items-start">
+                          <span className="info-list__label">{t('schoolDefaultTuitionLabel')}</span>
+                          <span className="info-list__value text-end">{schoolDetails?.default_tuition?.toLocaleString(locale) ?? t('schoolNoData')}</span>
+                        </li>
+                      </ul>
                     </div>
                   </div>
                 </div>
@@ -664,7 +764,17 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
               ) : null}
             </div>
           </>
-        ) : null}
+        ) : (
+          <div className="card">
+            <p className="mb-0 text-muted fw-semibold">{t('schoolNoData')}</p>
+          </div>
+        )}
+          </>
+        ) : (
+          <div className="card">
+            <p className="mb-0 text-muted fw-semibold">{t('schoolNoData')}</p>
+          </div>
+        )}
       </div>
     </Layout>
   )
