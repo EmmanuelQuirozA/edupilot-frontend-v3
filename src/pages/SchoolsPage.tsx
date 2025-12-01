@@ -60,7 +60,6 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
     [locale, onNavigate, t],
   )
 
-  // <td>{formatDate(p.date, {year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'})}</td>
   const columns: Array<DataTableColumn<School>> = useMemo(
     () => [
       { 

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { API_BASE_URL } from '../config'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
+import { formatDate } from '../utils/formatDate';
 import './SchoolDetailsPage.css'
 
 interface SchoolDetailsPageProps {
@@ -619,7 +620,13 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                         <div>
                           <h5 className="fw-bolder mb-2">{data.current_plan?.plan_name}</h5>
                           <span className="plan-chip">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 1 21h22L12 2z"></path><path d="M12 9v4"></path><path d="m12 17 .01-.01"></path></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="9"></circle>
+                              <line x1="12" y1="12" x2="12" y2="7"></line>
+                              <line x1="12" y1="12" x2="16" y2="12"></line>
+                            </svg>
+
                             {data.current_plan?.pot_name}
                           </span>
                         </div>
@@ -627,13 +634,22 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="crown" className="lucide lucide-crown h-8 w-8 text-yellow-300"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path><path d="M5 21h14"></path></svg>
                           </div>
                       </div>
-                      <div className="d-flex flex-column gap-2 pt-3"
+                      <div className="d-flex gap-2 pt-3"
                         style={{borderTop: '.5px solid rgb(255 255 255 / 0.1)'}}
                       >
-                        <span className="fw-semibold">{t('schoolNextBilling')}</span>
-                        <div className="d-flex flex-wrap gap-2 align-items-center">
-                          <span className="fw-bold">${data.current_plan?.price_yearly.toLocaleString(locale)}</span>
-                          <small className="text-white-50">{data.current_plan?.renew_plan}</small>
+                        <div className='col-md-6'>
+                          <span className="fw-light">{t('startDate')}</span>
+                          <div className="d-flex flex-wrap gap-2 align-items-center">
+                            <small className="text-white-50">{formatDate(data.current_plan?.start_date, locale, {year: 'numeric', month: 'short', day: '2-digit'}) || t('schoolNoData')}</small>
+                          </div>
+                        </div>
+
+                        <div className='col-md-6'>
+                          <span className="fw-light">{t('schoolNextBilling')}</span>
+                          <div className="d-flex flex-wrap gap-2 align-items-center">
+                            <span className="fw-bold">${data.current_plan?.price_yearly.toLocaleString(locale)}</span>
+                            <small className="text-white-50">{formatDate(data.current_plan?.renew_plan, locale, {year: 'numeric', month: 'short', day: '2-digit'}) || t('schoolNoData')}</small>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -649,20 +665,20 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                         <h6 className="mb-0 fw-bold">{t('schoolDetailsTitle')}</h6>
                       </div>
                       <ul className="info-list d-flex flex-column gap-3">
-                        <li className="d-flex justify-content-between gap-3 align-items-start">
-                          <span className="info-list__label">{t('schoolCommercialNameLabel')}</span>
-                          <span className="info-list__value text-end">{schoolDetails?.commercial_name || t('schoolNoData')}</span>
+                        <li className="d-flex flex-column align-items-start">
+                          <span className="text-sm text-gray-500">{t('schoolCommercialNameLabel')}</span>
+                          <span className="fw-medium">{schoolDetails?.commercial_name || t('schoolNoData')}</span>
                         </li>
-                        <li className="d-flex justify-content-between gap-3 align-items-start">
-                          <span className="info-list__label">{t('schoolBusinessNameLabel')}</span>
-                          <span className="info-list__value text-end">{schoolDetails?.business_name || t('schoolNoData')}</span>
+                        <li className="d-flex flex-column align-items-start">
+                          <span className="text-sm text-gray-500">{t('schoolBusinessNameLabel')}</span>
+                          <span className="fw-medium">{schoolDetails?.business_name || t('schoolNoData')}</span>
                         </li>
-                        <li className="d-flex justify-content-between gap-3 align-items-start">
-                          <span className="info-list__label">{t('schoolTaxIdLabel')}</span>
-                          <span className="info-list__value text-end">{schoolDetails?.tax_id || t('schoolNoData')}</span>
+                        <li className="d-flex flex-column align-items-start">
+                          <span className="text-sm text-gray-500">{t('schoolTaxIdLabel')}</span>
+                          <span className="fw-medium">{schoolDetails?.tax_id || t('schoolNoData')}</span>
                         </li>
                         <li className="d-flex flex-column gap-1">
-                          <span className="info-list__label">{t('schoolDescriptionLabel')}</span>
+                          <span className="text-sm text-gray-500">{t('schoolDescriptionLabel')}</span>
                           <span className="info-list__value">{schoolDetails?.school_description || t('schoolNoData')}</span>
                         </li>
                       </ul>
@@ -675,29 +691,29 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                         <h6 className="mb-0 fw-bold">{t('schoolDetailsLocationTitle')}</h6>
                       </div>
                       <ul className="info-list d-flex flex-column gap-3">
-                        <li className="d-flex justify-content-between gap-3 align-items-start">
-                          <span className="info-list__label">{t('schoolAddressLabel')}</span>
-                          <span className="info-list__value text-end">{fullAddress || t('schoolNoData')}</span>
+                        <li className="d-flex flex-column align-items-start">
+                          <span className="text-sm text-gray-500">{t('schoolAddressLabel')}</span>
+                          <span className="fw-medium">{fullAddress || t('schoolNoData')}</span>
                         </li>
-                        <li className="d-flex justify-content-between gap-3 align-items-start">
-                          <span className="info-list__label">{t('schoolContactPhone')}</span>
-                          <span className="info-list__value text-end">{schoolDetails?.phone_number || t('schoolNoData')}</span>
+                        <li className="d-flex flex-column align-items-start">
+                          <span className="text-sm text-gray-500">{t('schoolContactPhone')}</span>
+                          <span className="fw-medium">{schoolDetails?.phone_number || t('schoolNoData')}</span>
                         </li>
-                        <li className="d-flex justify-content-between gap-3 align-items-start">
-                          <span className="info-list__label">{t('schoolContactEmail')}</span>
-                          <span className="info-list__value text-end">{schoolDetails?.email || t('schoolNoData')}</span>
+                        <li className="d-flex flex-column align-items-start">
+                          <span className="text-sm text-gray-500">{t('schoolContactEmail')}</span>
+                          <span className="fw-medium">{schoolDetails?.email || t('schoolNoData')}</span>
                         </li>
-                        <li className="d-flex justify-content-between gap-3 align-items-start">
-                          <span className="info-list__label">{t('schoolCreationDateLabel')}</span>
-                          <span className="info-list__value text-end">{schoolDetails?.created_at || t('schoolNoData')}</span>
+                        <li className="d-flex flex-column align-items-start">
+                          <span className="text-sm text-gray-500">{t('schoolCreationDateLabel')}</span>
+                          <span className="fw-medium">{formatDate(schoolDetails?.created_at, locale, {year: 'numeric', month: 'short', day: '2-digit'}) || t('schoolNoData')}</span>
                         </li>
-                        <li className="d-flex justify-content-between gap-3 align-items-start">
-                          <span className="info-list__label">{t('schoolMaxDebtLabel')}</span>
-                          <span className="info-list__value text-end">{schoolDetails?.max_debt?.toLocaleString(locale) ?? t('schoolNoData')}</span>
+                        <li className="d-flex flex-column align-items-start">
+                          <span className="text-sm text-gray-500">{t('schoolMaxDebtLabel')}</span>
+                          <span className="fw-medium">{schoolDetails?.max_debt?.toLocaleString(locale) ?? t('schoolNoData')}</span>
                         </li>
-                        <li className="d-flex justify-content-between gap-3 align-items-start">
-                          <span className="info-list__label">{t('schoolDefaultTuitionLabel')}</span>
-                          <span className="info-list__value text-end">{schoolDetails?.default_tuition?.toLocaleString(locale) ?? t('schoolNoData')}</span>
+                        <li className="d-flex flex-column align-items-start">
+                          <span className="text-sm text-gray-500">{t('schoolDefaultTuitionLabel')}</span>
+                          <span className="fw-medium">{schoolDetails?.default_tuition?.toLocaleString(locale) ?? t('schoolNoData')}</span>
                         </li>
                       </ul>
                     </div>

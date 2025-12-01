@@ -98,6 +98,7 @@ const translations: TranslationMap = {
     ocupied: 'Ocupado',
     email: 'Correo Electrónico',
     main_contact: 'Contacto Principal',
+    startDate: 'Fecha inicial',
   },
   en: {
     homeTitle: 'Welcome to EduPilot',
@@ -191,6 +192,7 @@ const translations: TranslationMap = {
     ocupied: 'Ocupied',
     email: 'Email',
     main_contact: 'Main contact',
+    startDate: 'Start date',
   },
 }
 
