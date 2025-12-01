@@ -36,6 +36,23 @@ interface StudentsPageProps {
 
 type OrderDirection = 'ASC' | 'DESC'
 
+interface ClassGroup {
+  class_id: number
+  school_id: number
+  generation: string
+  grade_group: string
+  scholar_level_name: string
+  enabled: boolean
+}
+
+interface ClassesResponse {
+  content: ClassGroup[]
+  totalElements: number
+  page: number
+  size: number
+  totalPages: number
+}
+
 export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const { token, hydrated } = useAuth()
   const { locale, t } = useLanguage()
@@ -51,6 +68,17 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const [appliedSearch, setAppliedSearch] = useState('')
   const [orderBy, setOrderBy] = useState<keyof Student>('full_name')
   const [orderDir, setOrderDir] = useState<OrderDirection>('DESC')
+
+  const [groups, setGroups] = useState<ClassGroup[]>([])
+  const [groupsPage, setGroupsPage] = useState(0)
+  const [groupsPageSize] = useState(10)
+  const [groupsTotalPages, setGroupsTotalPages] = useState(0)
+  const [groupsTotalElements, setGroupsTotalElements] = useState(0)
+  const [isGroupsLoading, setIsGroupsLoading] = useState(false)
+  const [groupSearchTerm, setGroupSearchTerm] = useState('')
+  const [appliedGroupSearch, setAppliedGroupSearch] = useState('')
+  const [groupsOrderBy, setGroupsOrderBy] = useState<keyof ClassGroup>('grade_group')
+  const [groupsOrderDir, setGroupsOrderDir] = useState<OrderDirection>('ASC')
 
   const [activeTab, setActiveTab] = useState<'students' | 'groups'>('students');
   const tabs = [
@@ -165,6 +193,58 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     return () => controller.abort()
   }, [appliedSearch, locale, orderBy, orderDir, page, pageSize, t, token])
 
+  useEffect(() => {
+    if (!token || activeTab !== 'groups') return
+
+    const controller = new AbortController()
+
+    const fetchClasses = async () => {
+      try {
+        setIsGroupsLoading(true)
+        setError(null)
+
+        const params = new URLSearchParams({
+          offset: String(groupsPage * groupsPageSize),
+          limit: String(groupsPageSize),
+          order_by: groupsOrderBy,
+          order_dir: groupsOrderDir,
+          exportAll: 'false',
+          lang: locale,
+        })
+
+        if (appliedGroupSearch) {
+          params.set('grade_group', appliedGroupSearch)
+        }
+
+        const response = await fetch(`${API_BASE_URL}/classes?${params.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const data = (await response.json()) as ClassesResponse
+        setGroups(data.content ?? [])
+        setGroupsTotalElements(data.totalElements ?? 0)
+        setGroupsTotalPages(data.totalPages ?? 0)
+      } catch (fetchError) {
+        if ((fetchError as Error).name !== 'AbortError') {
+          setError(t('defaultError'))
+        }
+      } finally {
+        setIsGroupsLoading(false)
+      }
+    }
+
+    fetchClasses()
+
+    return () => controller.abort()
+  }, [activeTab, appliedGroupSearch, groupsOrderBy, groupsOrderDir, groupsPage, groupsPageSize, locale, t, token])
+
   const handleSearchSubmit = () => {
     setAppliedSearch(searchTerm)
     setPage(0)
@@ -181,6 +261,54 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     setOrderDir((prevDir) => (orderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
     setOrderBy(columnKey)
   }
+
+  const handleGroupSearchSubmit = () => {
+    setAppliedGroupSearch(groupSearchTerm)
+    setGroupsPage(0)
+  }
+
+  const handleGroupSort = (columnKey: keyof ClassGroup) => {
+    setGroupsPage(0)
+    setGroupsOrderDir((prevDir) => (groupsOrderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
+    setGroupsOrderBy(columnKey)
+  }
+
+  const groupColumns: Array<DataTableColumn<ClassGroup>> = useMemo(
+    () => [
+      {
+        key: 'grade_group',
+        label: 'Grupo',
+        sortable: true,
+      },
+      {
+        key: 'generation',
+        label: 'Generación',
+        sortable: true,
+      },
+      {
+        key: 'scholar_level_name',
+        label: 'Nivel académico',
+        sortable: true,
+      },
+      {
+        key: 'school_id',
+        label: 'Escuela',
+        sortable: true,
+        render: (group) => <span className="fw-semibold text-black">#{group.school_id}</span>,
+      },
+      {
+        key: 'enabled',
+        label: 'Estatus',
+        sortable: true,
+        render: (group) => (
+          <span className={`badge ${group.enabled ? 'bg-success-subtle text-success' : 'bg-secondary'}`}>
+            {group.enabled ? 'Activo' : 'Inactivo'}
+          </span>
+        ),
+      },
+    ],
+    [],
+  )
 
   if (!hydrated) {
     return (
@@ -270,6 +398,40 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
               sortBy={orderBy}
               sortDirection={orderDir}
               onSort={(columnKey) => handleSort(columnKey as keyof Student)}
+            />
+          </>
+        )}
+        {activeTab === 'groups' && (
+          <>
+            <div className="card shadow-sm border-0">
+              <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
+                <SearchInput
+                  value={groupSearchTerm}
+                  onChange={(event) => setGroupSearchTerm(event.target.value)}
+                  onSubmit={handleGroupSearchSubmit}
+                  placeholder="Buscar grupo por nombre"
+                  className="flex-grow-1"
+                  inputClassName="w-100"
+                />
+              </div>
+            </div>
+
+            <DataTable
+              columns={groupColumns}
+              data={groups}
+              isLoading={isGroupsLoading}
+              emptyMessage={t('tableNoData')}
+              pagination={{
+                page: groupsPage,
+                size: groupsPageSize,
+                totalPages: groupsTotalPages,
+                totalElements: groupsTotalElements,
+                onPageChange: (nextPage) =>
+                  setGroupsPage(Math.max(0, Math.min(groupsTotalPages - 1, nextPage))),
+              }}
+              sortBy={groupsOrderBy}
+              sortDirection={groupsOrderDir}
+              onSort={(columnKey) => handleGroupSort(columnKey as keyof ClassGroup)}
             />
           </>
         )}
