@@ -20,6 +20,21 @@
   color: inherit;
 }
 
-.datatable__sort:hover .datatable__sort-icon {
-  color: #2a21a8;
+.datatable__sort-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.datatable__sort-icon path {
+  fill: #cbd5e1;
+  transition: fill 0.2s ease;
+}
+
+.table__sort-icon--asc path:first-of-type,
+.table__sort-icon--desc path:last-of-type {
+  fill: #4a5dff;
+}
+
+.datatable__sort:hover .datatable__sort-icon path {
+  fill: #2a21a8;
 }
