@@ -7,6 +7,7 @@ import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { DataTable, type DataTableColumn } from '../components/DataTable'
 import SearchInput from '../components/ui/SearchInput';
+import Tabs from '../components/ui/Tabs';
 import './StudentsPage.css'
 
 interface Student {
@@ -50,6 +51,12 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const [appliedSearch, setAppliedSearch] = useState('')
   const [orderBy, setOrderBy] = useState<keyof Student>('full_name')
   const [orderDir, setOrderDir] = useState<OrderDirection>('DESC')
+
+  const [activeTab, setActiveTab] = useState<'students' | 'groups'>('students');
+  const tabs = [
+    { key: 'students', label: 'Alumnos' },
+    { key: 'groups', label: 'Grupos' }
+  ];
 
   const columns: Array<DataTableColumn<Student>> = useMemo(
     () => [
@@ -192,81 +199,80 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
           </div>
         ) : null}
 
-        <div className="students-page__header card shadow-sm border-0">
+        <div className="students-page__header  border-0">
           <div className="card-body d-flex flex-column gap-3 flex-lg-row align-items-lg-center justify-content-lg-between">
-            <div className="d-flex align-items-center gap-3">
-              <button type="button" className="btn btn-outline-secondary active">Alumnos</button>
-              <button type="button" className="btn btn-outline-secondary">Grupos</button>
-            </div>
+            
+            <Tabs
+              tabs={tabs}
+              activeKey={activeTab}
+              onSelect={(key) => setActiveTab(key as 'students' | 'groups')}
+            />
+
             <div className="d-flex align-items-center gap-3">
               <button type="button" className="btn btn-primary">Carga Masiva (CSV)</button>
               <button type="button" className="btn btn-outline-primary">Agregar alumno</button>
             </div>
           </div>
         </div>
+        {activeTab === 'students' && (
+          <>
+            <div className="card shadow-sm border-0">
+              <div className="card-body">
+                <div className="d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between">
 
-        <div className="card shadow-sm border-0">
-          <div className="card-body">
-            <div className="d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between">
-              <SearchInput
-                value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
-                onSubmit={handleSearchSubmit}
-                placeholder={strings.searchPlaceholder}
-                className="flex-grow-1"
-                wrapperProps={{ role: 'search' }}
-              />
-              
-              <div className="students-search position-relative flex-grow-1">
-                <input
-                  className="form-control"
-                  placeholder="Buscar alumno por nombre"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault()
-                      handleSearchSubmit()
-                    }
-                  }}
-                />
-                {searchTerm ? (
-                  <button type="button" className="students-search__clear" onClick={handleClearSearch} aria-label="Borrar filtro">
-                    ×
+                  <div className="students-search position-relative flex-grow-1">
+                    <input
+                      className="form-control"
+                      placeholder="Buscar alumno por nombre"
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault()
+                          handleSearchSubmit()
+                        }
+                      }}
+                    />
+                    {searchTerm ? (
+                      <button type="button" className="students-search__clear" onClick={handleClearSearch} aria-label="Borrar filtro">
+                        ×
+                      </button>
+                    ) : null}
+                  </div>
+                  <button type="button" className="students-filter-button">
+                    <svg
+                      viewBox="0 0 20 20"
+                      aria-hidden="true"
+                      className="students-filter-button__icon"
+                      focusable="false"
+                    >
+                      <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
+                    </svg>
+                    <span className="fw-semibold">Filtros</span>
                   </button>
-                ) : null}
+                  
+                </div>
               </div>
-              <button type="button" className="students-filter-button">
-                <svg
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                  className="students-filter-button__icon"
-                  focusable="false"
-                >
-                  <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
-                </svg>
-                <span className="fw-semibold">Filtros</span>
-              </button>
             </div>
-          </div>
-        </div>
 
-        <DataTable
-          columns={columns}
-          data={students}
-          isLoading={isLoading}
-          emptyMessage={t('tableNoData')}
-          pagination={{
-            page,
-            size: pageSize,
-            totalPages,
-            totalElements,
-            onPageChange: (nextPage) => setPage(Math.max(0, Math.min(totalPages - 1, nextPage))),
-          }}
-          sortBy={orderBy}
-          sortDirection={orderDir}
-          onSort={(columnKey) => handleSort(columnKey as keyof Student)}
-        />
+            <DataTable
+              columns={columns}
+              data={students}
+              isLoading={isLoading}
+              emptyMessage={t('tableNoData')}
+              pagination={{
+                page,
+                size: pageSize,
+                totalPages,
+                totalElements,
+                onPageChange: (nextPage) => setPage(Math.max(0, Math.min(totalPages - 1, nextPage))),
+              }}
+              sortBy={orderBy}
+              sortDirection={orderDir}
+              onSort={(columnKey) => handleSort(columnKey as keyof Student)}
+            />
+          </>
+        )}
       </div>
     </Layout>
   )
