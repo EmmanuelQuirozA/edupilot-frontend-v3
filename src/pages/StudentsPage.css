@@ -18,6 +18,34 @@
   cursor: pointer;
 }
 
+.students-filter-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background-color: #e9f1ff;
+  color: #2f6bd7;
+  font-weight: 600;
+}
+
+.students-filter-button:hover,
+.students-filter-button:focus-visible {
+  background-color: #dfe8ff;
+  border-color: #aec8ff;
+  color: #2f6bd7;
+}
+
+.students-filter-button__icon {
+  width: 18px;
+  height: 18px;
+}
+
+.students-filter-button__icon path {
+  fill: currentColor;
+}
+
 .students-table thead th {
   border-bottom-width: 2px;
 }

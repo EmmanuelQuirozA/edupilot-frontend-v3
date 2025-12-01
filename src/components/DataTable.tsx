@@ -82,13 +82,13 @@ export function DataTable<T>({
               {columns.map((column) => {
                 const isSortable = Boolean(onSort && column.sortable)
                 const isActive = sortBy === column.key
-                const icon = !isSortable
-                  ? null
-                  : isActive
-                  ? sortDirection === 'ASC'
-                    ? '↑'
-                    : '↓'
-                  : '⇅'
+                const sortIconClassName = [
+                  'table__sort-icon',
+                  'datatable__sort-icon',
+                  isActive ? `table__sort-icon--${sortDirection === 'ASC' ? 'asc' : 'desc'}` : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')
 
                 return (
                   <th key={column.key} scope="col" className="table-column-name">
@@ -99,7 +99,15 @@ export function DataTable<T>({
                         onClick={() => onSort?.(column.key)}
                       >
                         <span className="fw-semibold text-uppercase small text-muted">{column.label}</span>
-                        <span className={`datatable__sort-icon ${isActive ? 'text-primary' : 'text-muted'}`}>{icon}</span>
+                        <svg
+                          viewBox="0 0 12 12"
+                          aria-hidden="true"
+                          className={sortIconClassName}
+                          focusable="false"
+                        >
+                          <path d="M6 2l3 4H3l3-4Z" />
+                          <path d="M6 10l3-4H3l3 4Z" />
+                        </svg>
                       </button>
                     ) : (
                       <span className="fw-semibold text-uppercase small text-muted">{column.label}</span>
