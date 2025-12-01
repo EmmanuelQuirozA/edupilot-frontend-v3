@@ -40,7 +40,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
 
   const [students, setStudents] = useState<Student[]>([])
   const [page, setPage] = useState(0)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize] = useState(10)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -155,8 +155,6 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
         setStudents(data.content ?? [])
         setTotalElements(data.totalElements ?? 0)
         setTotalPages(data.totalPages ?? 0)
-        setPage(data.page ?? page)
-        setPageSize(data.size ?? pageSize)
       } catch (fetchError) {
         if ((fetchError as Error).name !== 'AbortError') {
           setError(t('defaultError'))
