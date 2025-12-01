@@ -1,3 +1,5 @@
+@import './styles/search-input.css';
+
 :root {
   --sidebar-width: 280px;
   --sidebar-bg: #0d6efd;

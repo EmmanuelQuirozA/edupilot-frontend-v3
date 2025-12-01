@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../config'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { DataTable, type DataTableColumn } from '../components/DataTable'
+import SearchInput from '../components/ui/SearchInput';
 import './StudentsPage.css'
 
 interface Student {
@@ -65,18 +66,6 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
             </div>
           </div>
         ),
-      },
-      {
-        key: 'register_id',
-        label: 'Matrícula',
-        sortable: true,
-        render: (student) => <span className="text-muted">{student.register_id}</span>,
-      },
-      {
-        key: 'payment_reference',
-        label: 'Referencia de pago',
-        sortable: true,
-        render: (student) => <span className="text-muted">{student.payment_reference}</span>,
       },
       {
         key: 'generation',
@@ -219,9 +208,17 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
         <div className="card shadow-sm border-0">
           <div className="card-body">
             <div className="d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between">
+              <SearchInput
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                onSubmit={handleSearchSubmit}
+                placeholder={strings.searchPlaceholder}
+                className="flex-grow-1"
+                wrapperProps={{ role: 'search' }}
+              />
+              
               <div className="students-search position-relative flex-grow-1">
                 <input
-                  type="search"
                   className="form-control"
                   placeholder="Buscar alumno por nombre"
                   value={searchTerm}
