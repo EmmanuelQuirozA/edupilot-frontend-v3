@@ -106,6 +106,13 @@ interface SchoolDetailsResponse {
   } | null
 }
 
+interface ModulePermission {
+  enabled: boolean
+  createAllowed: boolean
+  readAllowed: boolean
+  updateAllowed: boolean
+}
+
 type TabKey = 'overview' | 'details' | 'billing' | 'settings' | 'structure'
 
 export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPageProps) {
@@ -116,6 +123,8 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [permissions, setPermissions] = useState<ModulePermission | null>(null)
+  const [permissionsLoading, setPermissionsLoading] = useState(false)
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -168,6 +177,49 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
     return () => controller.abort()
   }, [locale, schoolId, t, token])
 
+  useEffect(() => {
+    if (!token) return
+
+    const controller = new AbortController()
+    const fetchPermissions = async () => {
+      setPermissionsLoading(true)
+      try {
+        const params = new URLSearchParams({ moduleKey: 'schools' })
+        const response = await fetch(`${API_BASE_URL}/permissions/module?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const json = (await response.json()) as Array<ModulePermission & Record<string, unknown>>
+        const permission = json?.[0]
+        setPermissions(
+          permission
+            ? {
+                enabled: Boolean(permission.enabled),
+                createAllowed: Boolean(permission.createAllowed),
+                readAllowed: Boolean(permission.readAllowed),
+                updateAllowed: Boolean(permission.updateAllowed),
+              }
+            : null,
+        )
+      } catch (fetchError) {
+        if ((fetchError as Error).name !== 'AbortError') {
+          setError(t('defaultError'))
+        }
+      } finally {
+        setPermissionsLoading(false)
+      }
+    }
+
+    fetchPermissions()
+
+    return () => controller.abort()
+  }, [t, token])
+
   const childSchools = useMemo<ChildSchool[]>(() => {
     if (!data?.child_schools) return []
     return Array.isArray(data.child_schools) ? data.child_schools : [data.child_schools]
@@ -217,6 +269,9 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
     return municipality || state || t('schoolNoData')
   }, [data?.school_details, t])
 
+  const canUpdate = permissions?.updateAllowed ?? false
+  const canCreate = permissions?.createAllowed ?? false
+
   if (!hydrated) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
@@ -229,6 +284,24 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
         <LoadingSkeleton variant="dashboard" cardCount={6} />
+      </Layout>
+    )
+  }
+
+  if (permissionsLoading) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
+        <LoadingSkeleton variant="dashboard" cardCount={6} />
+      </Layout>
+    )
+  }
+
+  if (!permissions || !permissions.readAllowed || !permissions.enabled) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
+        <div className="alert alert-warning" role="alert">
+          {t('defaultError')}
+        </div>
       </Layout>
     )
   }
@@ -290,24 +363,26 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                   </div>
                 </div>
 
-                <div className="d-flex flex-wrap gap-3 align-items-center p-3">
-                  <div className="d-flex align-itmes-center gap-1">
-                    <small className="text-muted fw-semibold">{t('schoolAccessLabel')}: </small>
-                    <div className="form-check form-switch m-0">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        role="switch"
-                        checked={data.school_details.enabled}
-                        readOnly
-                      />
+                {canUpdate ? (
+                  <div className="d-flex flex-wrap gap-3 align-items-center p-3">
+                    <div className="d-flex align-itmes-center gap-1">
+                      <small className="text-muted fw-semibold">{t('schoolAccessLabel')}: </small>
+                      <div className="form-check form-switch m-0">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          role="switch"
+                          checked={data.school_details.enabled}
+                          readOnly
+                        />
+                      </div>
                     </div>
+                    <div className="h-8 w-px bg-gray-300"></div>
+                    <button type="button" className="ghost-button">
+                      {t('schoolEditButton')}
+                    </button>
                   </div>
-                  <div className="h-8 w-px bg-gray-300"></div>
-                  <button type="button" className="ghost-button">
-                    {t('schoolEditButton')}
-                  </button>
-                </div>
+                ) : null}
               </div>
             </div>
 
@@ -719,8 +794,13 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
 
               {activeTab === 'structure' ? (
                 <div className="card">
-                  <div className="d-flex align-items-center gap-2 mb-3">
+                  <div className="d-flex align-items-center justify-content-between gap-2 mb-3">
                     <h6 className="mb-0 fw-bold">{t('schoolStructureTitle')}</h6>
+                    {canCreate ? (
+                      <button type="button" className="btn btn-primary">
+                        Añadir
+                      </button>
+                    ) : null}
                   </div>
                   {childSchools.length ? (
                     <table className="table-custom">
