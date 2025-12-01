@@ -1,0 +1,143 @@
+.students-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.student-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.student-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+}
+
+.student-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.student-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.student-card__badge--activo {
+  color: #0f172a;
+  background-color: #c7d2fe;
+}
+
+.student-card__badge--pendiente {
+  color: #92400e;
+  background-color: #fde68a;
+}
+
+.student-card__badge--becado {
+  color: #065f46;
+  background-color: #bbf7d0;
+}
+
+.student-card__grade {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.student-card__body {
+  padding: 1.25rem;
+}
+
+.student-card__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.student-card__name {
+  margin: 0;
+}
+
+.student-card__link {
+  background: none;
+  border: none;
+  color: #0f172a;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: #94a3b8;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.student-card__link:hover,
+.student-card__link:focus-visible {
+  color: #2563eb;
+  outline: none;
+  text-decoration-color: #2563eb;
+}
+
+.student-card__group {
+  margin: 0;
+  color: #475569;
+  font-weight: 600;
+  background: #e2e8f0;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.student-card__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.student-card__details div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.student-card__details dt {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.student-card__details dd {
+  margin: 0.15rem 0 0;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+@media (max-width: 600px) {
+  .student-card__title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .student-card__group {
+    align-self: flex-start;
+  }
+}
