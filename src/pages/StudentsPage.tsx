@@ -34,14 +34,6 @@ interface StudentsPageProps {
 
 type OrderDirection = 'ASC' | 'DESC'
 
-const DEFAULT_FILTERS = {
-  register_id: '1205',
-  payment_reference: '3322',
-  generation: '2025',
-  grade_group: '1 B',
-  enabled: 'true',
-}
-
 export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const { token, hydrated } = useAuth()
   const { locale, t } = useLanguage()
@@ -53,8 +45,8 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const [totalElements, setTotalElements] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('Herme')
-  const [appliedSearch, setAppliedSearch] = useState('Herme')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
   const [orderBy, setOrderBy] = useState<keyof Student>('full_name')
   const [orderDir, setOrderDir] = useState<OrderDirection>('DESC')
 
@@ -143,12 +135,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
           offset: String(page * pageSize),
           limit: String(pageSize),
           export_all: 'false',
-          register_id: DEFAULT_FILTERS.register_id,
           full_name: appliedSearch,
-          payment_reference: DEFAULT_FILTERS.payment_reference,
-          generation: DEFAULT_FILTERS.generation,
-          grade_group: DEFAULT_FILTERS.grade_group,
-          enabled: DEFAULT_FILTERS.enabled,
           order_by: orderBy,
           order_dir: orderDir,
         })
@@ -254,13 +241,17 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
                   </button>
                 ) : null}
               </div>
-              <div className="d-flex align-items-center gap-2 text-nowrap">
-                <span className="badge bg-light text-secondary">Matrícula: {DEFAULT_FILTERS.register_id}</span>
-                <span className="badge bg-light text-secondary">Referencia: {DEFAULT_FILTERS.payment_reference}</span>
-                <span className="badge bg-light text-secondary">Generación: {DEFAULT_FILTERS.generation}</span>
-                <span className="badge bg-light text-secondary">Grupo: {DEFAULT_FILTERS.grade_group}</span>
-                <span className="badge bg-light text-secondary">Activo</span>
-              </div>
+              <button type="button" className="students-filter-button">
+                <svg
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                  className="students-filter-button__icon"
+                  focusable="false"
+                >
+                  <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
+                </svg>
+                <span className="fw-semibold">Filtros</span>
+              </button>
             </div>
           </div>
         </div>
