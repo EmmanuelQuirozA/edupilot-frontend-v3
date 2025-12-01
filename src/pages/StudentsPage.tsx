@@ -267,6 +267,12 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     setGroupsPage(0)
   }
 
+  const handleGroupClearSearch = () => {
+    setGroupSearchTerm('')
+    setAppliedGroupSearch('')
+    setGroupsPage(0)
+  }
+
   const handleGroupSort = (columnKey: keyof ClassGroup) => {
     setGroupsPage(0)
     setGroupsOrderDir((prevDir) => (groupsOrderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
@@ -409,6 +415,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
                   value={groupSearchTerm}
                   onChange={(event) => setGroupSearchTerm(event.target.value)}
                   onSubmit={handleGroupSearchSubmit}
+                  onClear={handleGroupClearSearch}
                   placeholder="Buscar grupo por nombre"
                   className="flex-grow-1"
                   inputClassName="w-100"
