@@ -14,3 +14,12 @@
 .datatable .btn-group .btn {
   min-width: 80px;
 }
+
+.datatable__sort {
+  text-decoration: none;
+  color: inherit;
+}
+
+.datatable__sort:hover .datatable__sort-icon {
+  color: #2a21a8;
+}

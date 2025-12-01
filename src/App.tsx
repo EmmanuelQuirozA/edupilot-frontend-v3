@@ -11,6 +11,7 @@ import { DashboardStudentsPage } from './pages/DashboardStudentsPage'
 import { KitchenPage } from './pages/KitchenPage'
 import { SchoolsPage } from './pages/SchoolsPage'
 import { SchoolDetailsPage } from './pages/SchoolDetailsPage'
+import { StudentsPage } from './pages/StudentsPage'
 import { LoadingSkeleton } from './components/LoadingSkeleton'
 import { Layout } from './layout/Layout'
 
@@ -27,6 +28,7 @@ function Router() {
   const pathLocale = useMemo(() => getPathLocale(path), [path])
   const isDashboardRootPath = /^\/(es|en)\/dashboard$/.test(path)
   const isSchoolsPath = /^\/(es|en)\/dashboard\/schools$/.test(path)
+  const isStudentsPath = /^\/(es|en)\/dashboard\/students$/.test(path)
   const schoolDetailMatch = path.match(/^\/(es|en)\/dashboard\/schools\/(\d+)$/)
   const isSchoolDetailPath = Boolean(schoolDetailMatch)
   const isDashboardAreaPath = /^\/(es|en)\/dashboard(?:\/.*)?$/.test(path)
@@ -117,6 +119,10 @@ function Router() {
 
     if (isSchoolsPath) {
       return <SchoolsPage onNavigate={navigate} />
+    }
+
+    if (isStudentsPath) {
+      return <StudentsPage onNavigate={navigate} />
     }
 
     if (!isDashboardRootPath) {

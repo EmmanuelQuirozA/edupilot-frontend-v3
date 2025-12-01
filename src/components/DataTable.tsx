@@ -6,6 +6,7 @@ export interface DataTableColumn<T> {
   key: string
   label: string
   render?: (row: T) => ReactNode
+  sortable?: boolean
 }
 
 export interface DataTablePagination {
@@ -23,9 +24,21 @@ interface DataTableProps<T> {
   isLoading?: boolean
   pagination?: DataTablePagination
   emptyMessage?: string
+  sortBy?: string
+  sortDirection?: 'ASC' | 'DESC'
+  onSort?: (columnKey: string) => void
 }
 
-export function DataTable<T>({ columns, data, isLoading = false, pagination, emptyMessage }: DataTableProps<T>) {
+export function DataTable<T>({
+  columns,
+  data,
+  isLoading = false,
+  pagination,
+  emptyMessage,
+  sortBy,
+  sortDirection,
+  onSort,
+}: DataTableProps<T>) {
   const { t } = useLanguage()
 
   const pageIndex = pagination?.page ?? 0
@@ -66,11 +79,34 @@ export function DataTable<T>({ columns, data, isLoading = false, pagination, emp
         <table className="table align-middle mb-0">
           <thead>
             <tr>
-              {columns.map((column) => (
-                <th key={column.key} scope="col" className="table-column-name">
-                  {column.label}
-                </th>
-              ))}
+              {columns.map((column) => {
+                const isSortable = Boolean(onSort && column.sortable)
+                const isActive = sortBy === column.key
+                const icon = !isSortable
+                  ? null
+                  : isActive
+                  ? sortDirection === 'ASC'
+                    ? '↑'
+                    : '↓'
+                  : '⇅'
+
+                return (
+                  <th key={column.key} scope="col" className="table-column-name">
+                    {isSortable ? (
+                      <button
+                        type="button"
+                        className="datatable__sort btn btn-link p-0 d-inline-flex align-items-center gap-2"
+                        onClick={() => onSort?.(column.key)}
+                      >
+                        <span className="fw-semibold text-uppercase small text-muted">{column.label}</span>
+                        <span className={`datatable__sort-icon ${isActive ? 'text-primary' : 'text-muted'}`}>{icon}</span>
+                      </button>
+                    ) : (
+                      <span className="fw-semibold text-uppercase small text-muted">{column.label}</span>
+                    )}
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
@@ -100,7 +136,7 @@ export function DataTable<T>({ columns, data, isLoading = false, pagination, emp
       </div>
 
       {pagination ? (
-        
+
         <div className="d-flex justify-content-between align-items-center px-3 pt-3 border-top">
           <div className="small text-muted">
             {t('tablePageLabel')} {pageIndex + 1} {t('tablePageOf')} {totalPages}
@@ -108,15 +144,15 @@ export function DataTable<T>({ columns, data, isLoading = false, pagination, emp
           <div className="btn-group" role="group" aria-label="Pagination controls">
             <nav className='Table pagination'>
               <ul className='pagination justify-content-lg-end mb-0'>
-                <li className='page-item disabled'>
+                <li className={`page-item ${pageIndex <= 0 ? 'disabled' : ''}`}>
                   <button type="button" className="page-link" disabled={pageIndex <= 0} onClick={() => pagination.onPageChange?.(pageIndex - 1)}>
                     ←
                   </button>
                 </li>
-                <li className='page-item disabled'>
+                <li className='page-item'>
                   <span className='page-link'>{pageIndex + 1} {'/'} {totalPages} </span>
                 </li>
-                <li className='page-item disabled'>
+                <li className={`page-item ${(pageIndex >= totalPages - 1 || totalPages === 0) ? 'disabled' : ''}`}>
                   <button type="button" className="page-link" disabled={pageIndex >= totalPages - 1 || totalPages === 0} onClick={() => pagination.onPageChange?.(pageIndex + 1)}>
                     →
                   </button>
