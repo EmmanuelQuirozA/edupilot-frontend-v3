@@ -85,6 +85,9 @@ const translations: TranslationMap = {
     schoolAddressLabel: 'Dirección',
     schoolNoData: 'Sin información',
     schoolStudentsCard: 'Alumnos',
+    ocupied: 'Ocupado',
+    email: 'Correo Electrónico',
+    main_contact: 'Contacto Principal',
   },
   en: {
     homeTitle: 'Welcome to EduPilot',
@@ -165,6 +168,9 @@ const translations: TranslationMap = {
     schoolAddressLabel: 'Address',
     schoolNoData: 'No information',
     schoolStudentsCard: 'Students',
+    ocupied: 'Ocupied',
+    email: 'Email',
+    main_contact: 'Main contact',
   },
 }
 

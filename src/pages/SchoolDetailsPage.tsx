@@ -96,7 +96,7 @@ interface SchoolDetailsResponse {
     pot_name: string
     status_id: number
     status_name: string
-  }
+  } | null
   conctacts: {
     user_id: number
     full_name: string
@@ -218,36 +218,52 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
         {data ? (
           <>
             <div className="card school-hero p-4">
-              <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <div className="d-flex gap-3 align-items-center">
                   <div className="school-avatar">{initials}</div>
                   <div className="d-flex flex-column gap-1">
                     <div className="d-flex flex-wrap align-items-center gap-2">
                       <span className="school-hero__title">{data.school_details.commercial_name}</span>
-                      <span className="badge-soft">
-                        <span className="pill-chip__dot" />
-                        {t('schoolPlanBadge')}: {data.current_plan.plan_name}
+                    </div>
+                    
+                    <div className="d-flex flex-wrap align-items-center gap-2">
+                      <span className="text-sm text-gray-500">
+                        # {t('schoolIdLabel')}: {data.school_details.school_id}
+                      </span>
+                      <span className="h-1 w-1 bg-gray-300 rounded-full"/>
+                      <span className="text-sm text-gray-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map-pin" style={{padding:'6px'}} className="lucide lucide-map-pin h-3 w-3"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                      {t('schoolLocationLabel')}: {locationLabel}
                       </span>
                     </div>
-                    <span className="school-hero__meta">
-                      {t('schoolIdLabel')}: {data.school_details.school_id} • {t('schoolLocationLabel')}: {locationLabel}
-                    </span>
-                    <div className="d-flex flex-wrap align-items-center gap-2">
-                      <span className="pill-chip">
-                        <span className="pill-chip__dot" />
-                        {data.current_plan.status_name}
+
+                    <div className="d-flex flex-wrap align-items-center gap-2 py-2">
+                      <span 
+                        className="pill-chip" 
+                        style={{
+                          backgroundColor: (data.current_plan?.ui_color ? 'rgba('+data.current_plan?.ui_color+', 0.16)' : 'rgba(42, 33, 168, 0.16)'), 
+                          color: (data.current_plan?.ui_color ? 'rgb('+data.current_plan?.ui_color+')' : 'rgb(42, 33, 168)'),
+                          borderColor: (data.current_plan?.ui_color ? 'rgba('+data.current_plan?.ui_color+', 0.6)' : 'rgba(42, 33, 168, 0.6)')
+                        }}
+                      >
+                        {t('schoolPlanBadge')} {data.current_plan?.plan_name}
                       </span>
-                      <span className="pill-chip" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#0f766e' }}>
-                        <span className="pill-chip__dot" />
-                        {data.current_plan.pot_name}
+                      <span className="pill-chip" 
+                        // style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#0f766e' }}
+                        style={{
+                          color: (data.current_plan?.is_active ? '#0f766e' : '#761b0fff'),
+                          background: (data.current_plan?.is_active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(185, 16, 16, 0.12)'),
+                        }}
+                      >
+                        {data.current_plan?.status_name}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="d-flex flex-wrap gap-3 align-items-center">
-                  <div className="d-flex flex-column gap-1">
-                    <small className="text-muted fw-semibold">{t('schoolAccessLabel')}</small>
+                <div className="d-flex flex-wrap gap-3 align-items-center p-3">
+                  <div className="d-flex align-itmes-center gap-1">
+                    <small className="text-muted fw-semibold">{t('schoolAccessLabel')}: </small>
                     <div className="form-check form-switch m-0">
                       <input
                         className="form-check-input"
@@ -256,11 +272,9 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                         checked={data.school_details.enabled}
                         readOnly
                       />
-                      <label className="form-check-label fw-semibold">
-                        {data.school_details.enabled ? t('schoolStatusActive') : t('schoolStatusInactive')}
-                      </label>
                     </div>
                   </div>
+                  <div className="h-8 w-px bg-gray-300"></div>
                   <button type="button" className="ghost-button">
                     {t('schoolEditButton')}
                   </button>
@@ -276,14 +290,30 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                       <div className="stat-card__title">{t('schoolStudentsCard')}</div>
                       <div className="stat-card__value">
                         {data.roles_per_school.student_count.toLocaleString(locale)}
-                        <small className="text-muted ms-1">/ {data.current_plan.base_student_limit}</small>
+                        <small className="text-sm ms-1 text-gray-400 fw-light">/ {data.current_plan?.base_student_limit}</small>
                       </div>
                     </div>
                     <div className="stat-card__icon">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                   </div>
-                  <small className="text-muted fw-semibold">{t('schoolBaseLimit')}: {data.current_plan.base_student_limit}</small>
+                  <div className="py-2">
+                    <div className="progress">
+                      <div 
+                        className="progress-bar" 
+                        style={{
+                          width:( data.current_plan?.base_student_limit ?
+                            (((data.roles_per_school.student_count/data.current_plan?.base_student_limit)*100).toFixed(0)+'%') : 0)
+                        }} 
+                        role="progressbar" 
+                      />
+                    </div>
+                  </div>
+                  <div className="d-flex justify-content-end">
+                    <small className="text-sm text-gray-400 fw-light">{ data.current_plan?.base_student_limit ? 
+                      (((data.roles_per_school.student_count/data.current_plan?.base_student_limit)*100).toFixed(0)) : 0
+                    }% {t('ocupied')}</small>
+                  </div>
                 </div>
               </div>
 
@@ -308,14 +338,34 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                       <div className="stat-card__title">{t('schoolAdminsCard')}</div>
                       <div className="stat-card__value">
                         {data.roles_per_school.school_admin_count.toLocaleString(locale)}
-                        <small className="text-muted ms-1">/ {data.current_plan.base_admin_users_limit}</small>
+                        <small className="ms-1 text-sm text-gray-400 fw-light">/ {data.current_plan?.base_admin_users_limit}</small>
                       </div>
                     </div>
                     <div className="stat-card__icon" style={{ color: '#f97316', background: 'rgba(249,115,22,0.12)' }}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 20a5 5 0 0 1 10 0"></path><circle cx="8" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M23 11h-6"></path></svg>
                     </div>
                   </div>
-                  <small className="text-muted fw-semibold">{t('schoolBaseLimit')}: {data.current_plan.base_admin_users_limit}</small>
+                  <div className="py-2">
+                    <div className="progress">
+                      <div 
+                        className="progress-bar" 
+                        style={{
+                          backgroundColor: '#f97316',
+                          width:
+                            ( data.current_plan?.base_admin_users_limit ? 
+                              (((data.roles_per_school.school_admin_count/data.current_plan?.base_admin_users_limit)*100).toFixed(0)+'%') : 0
+                            )
+                        }} 
+                        role="progressbar" 
+                      />
+                    </div>
+                  </div>
+                  <div className="d-flex justify-content-end">
+                    <small className="text-sm text-gray-400 fw-light">{
+                      data.current_plan?.base_admin_users_limit ? 
+                      (((data.roles_per_school.school_admin_count/data.current_plan?.base_admin_users_limit)*100).toFixed(0)): 0
+                    }% {t('ocupied')}</small>
+                  </div>
                 </div>
               </div>
 
@@ -326,77 +376,119 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                       <div className="stat-card__title">{t('schoolCampusesCard')}</div>
                       <div className="stat-card__value">
                         {childSchools.length}
-                        <small className="text-muted ms-1">/ {data.current_plan.base_school_limit}</small>
+                        <small className="ms-1 text-sm text-gray-400 fw-light">/ {data.current_plan?.base_school_limit}</small>
                       </div>
                     </div>
                     <div className="stat-card__icon" style={{ color: '#16a34a', background: 'rgba(22,163,74,0.12)' }}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="10" height="14" x="3" y="7" rx="2"></rect><path d="M3 11h10"></path><path d="M8 11v10"></path><path d="m15 5 4-2v3l4-2v14"></path></svg>
                     </div>
                   </div>
-                  <small className="text-muted fw-semibold">{t('schoolBaseLimit')}: {data.current_plan.base_school_limit}</small>
+                  <div className="py-2">
+                    <div className="progress">
+                      <div 
+                        className="progress-bar" 
+                        style={{
+                          backgroundColor: '#16a34a',
+                          width:
+                            ( data.current_plan?.base_school_limit ?
+                              (((childSchools.length/data.current_plan?.base_school_limit)*100).toFixed(0)+'%') : 0
+                            )
+                        }} 
+                        role="progressbar" 
+                      />
+                    </div>
+                  </div>
+                  <div className="d-flex justify-content-end">
+                    <small className="text-sm text-gray-400 fw-light">{
+                      data.current_plan?.base_school_limit?
+                      (((childSchools.length/data.current_plan?.base_school_limit)*100).toFixed(0)): '0'
+                    }% {t('ocupied')}</small>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="d-flex flex-wrap gap-2 mt-2">
+            <div className="d-flex  gap-4 my-2 border-b border-gray-200">
               {(
                 [
-                  { key: 'overview', label: t('schoolOverviewTab') },
-                  { key: 'billing', label: t('schoolBillingTab') },
-                  { key: 'settings', label: t('schoolSettingsTab') },
-                  { key: 'structure', label: t('schoolStructureTab') },
-                ] as Array<{ key: TabKey; label: string }>
+                  { 
+                    key: 'overview', 
+                    label: t('schoolOverviewTab'),
+                    svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="layout-grid" className="p-1 lucide lucide-layout-grid h-4 w-4"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>
+                  },
+                  { 
+                    key: 'billing', 
+                    label: t('schoolBillingTab'),
+                    svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="receipt" className="p-1 lucide lucide-receipt h-4 w-4"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 17.5v-11"></path></svg>
+                  },
+                  { 
+                    key: 'settings', 
+                    label: t('schoolSettingsTab'),
+                    svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sliders" className="p-1 lucide lucide-sliders h-4 w-4"><path d="M10 8h4"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M17 16h4"></path><path d="M19 12V3"></path><path d="M19 21v-5"></path><path d="M3 14h4"></path><path d="M5 10V3"></path><path d="M5 21v-7"></path></svg>
+                  },
+                  { 
+                    key: 'structure', 
+                    label: t('schoolStructureTab'),
+                    svg: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="building" className="p-1 lucide lucide-building h-4 w-4"><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M12 6h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path><path d="M8 6h.01"></path><path d="M9 22v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"></path><rect x="4" y="2" width="16" height="20" rx="2"></rect></svg>
+                  },
+                ] as Array<{ key: TabKey; label: string; svg: React.ReactNode }>
               ).map((tab) => (
                 <button
                   key={tab.key}
                   type="button"
-                  className={`tab-pill ${activeTab === tab.key ? 'active' : ''}`}
+                  className={`tab-pill p-2 fw-light ${activeTab === tab.key ? 'active' : ''}`}
                   onClick={() => setActiveTab(tab.key)}
                 >
+                  {tab.svg}
                   {tab.label}
                 </button>
               ))}
             </div>
 
-            <div className="tab-panel">
+            <div >
               {activeTab === 'overview' ? (
                 <div className="row g-3">
                   <div className="col-12 col-lg-6">
                     <div className="card h-100">
                       <div className="d-flex align-items-center gap-2 mb-3">
-                        <div className="pill-chip__dot" style={{ background: '#4338ca' }} />
                         <h6 className="mb-0 fw-bold">{t('schoolOverviewTitle')}</h6>
                       </div>
-                      <ul className="info-list">
-                        <li className="info-list__item">
-                          <span className="info-list__label">{t('schoolContactEmail')}</span>
-                          <span className="info-list__value">{data.school_details.email || t('schoolNoData')}</span>
+                      <ul className="d-flex flex-column p-0 gap-3">
+                        <li className="d-flex align-items-center gap-2">
+                          <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="user" className="lucide lucide-user h-5 w-5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                          </div>
+                          <div className='d-flex flex-column'>
+                            <span className="text-sm text-gray-500">{t('main_contact')}</span>
+                            <span className="fw-medium ">{data.conctacts?.full_name || t('schoolNoData')}</span>
+                          </div>
                         </li>
-                        <li className="info-list__item">
-                          <span className="info-list__label">{t('schoolContactPhone')}</span>
-                          <span className="info-list__value">{data.school_details.phone_number || t('schoolNoData')}</span>
+                        <li className="d-flex align-items-center gap-2">
+                          <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="mail" className="lucide lucide-mail h-5 w-5"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path><rect x="2" y="4" width="20" height="16" rx="2"></rect></svg>
+                        </div>
+                          <div className='d-flex flex-column'>
+                            <span className="text-sm text-gray-500">{t('email')}</span>
+                            <span className="fw-medium ">{data.conctacts?.personal_email || t('schoolNoData')}</span>
+                          </div>
                         </li>
-                        <li className="info-list__item">
-                          <span className="info-list__label">{t('schoolAddressLabel')}</span>
-                          <span className="info-list__value">
-                            {[
-                              data.school_details.street,
-                              data.school_details.ext_number,
-                              data.school_details.suburb,
-                              data.school_details.municipality,
-                              data.school_details.state,
-                            ]
-                              .filter(Boolean)
-                              .join(', ') || t('schoolNoData')}
-                          </span>
+                        <li className="d-flex align-items-center gap-2">
+                          <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="phone" className="lucide lucide-phone h-5 w-5"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"></path></svg>
+                          </div>
+                          <div className='d-flex flex-column'>
+                            <span className="text-sm text-gray-500">{t('schoolContactPhone')}</span>
+                            <span className="fw-medium ">{data.conctacts?.phone_number || t('schoolNoData')}</span>
+                          </div>
                         </li>
-                        <li className="info-list__item">
-                          <span className="info-list__label">RFC</span>
-                          <span className="info-list__value">{data.school_details.tax_id || t('schoolNoData')}</span>
-                        </li>
-                        <li className="info-list__item">
-                          <span className="info-list__label">{t('schoolPlanStatusLabel')}</span>
-                          <span className="pill-chip">{data.current_plan.status_name}</span>
+                        <li className="d-flex align-items-center gap-2">
+                          <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map" className="lucide lucide-map h-5 w-5"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path><path d="M15 5.764v15"></path><path d="M9 3.236v15"></path></svg>
+                          </div>
+                          <div className='d-flex flex-column'>
+                            <span className="text-sm text-gray-500">{t('schoolAddressLabel')}</span>
+                            <span className="fw-medium ">{data.conctacts?.address || t('schoolNoData')}</span>
+                          </div>
                         </li>
                       </ul>
                     </div>
@@ -404,24 +496,33 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
 
                   <div className="col-12 col-lg-6">
                     <div className="plan-card">
-                      <div className="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                      <div className="d-flex flex-wrap justify-content-between align-items-center">
                         <div>
                           <p className="text-white-50 fw-semibold mb-1">{t('schoolPlanTitle')}</p>
-                          <h5 className="fw-bolder mb-2">{data.current_plan.plan_name}</h5>
-                          <span className="plan-chip">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 1 21h22L12 2z"></path><path d="M12 9v4"></path><path d="m12 17 .01-.01"></path></svg>
-                            {data.current_plan.pot_name}
-                          </span>
                         </div>
                         <span className="badge-soft" style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', borderColor: 'rgba(255,255,255,0.3)' }}>
-                          {t('schoolStatusBadge')}: {data.current_plan.status_name}
+                          {t('schoolStatusBadge')}: {data.current_plan?.status_name}
                         </span>
                       </div>
-                      <div className="d-flex flex-column gap-2 mt-3">
+                      <div className="d-flex flex-wrap justify-content-between align-items-center my-4">
+                        <div>
+                          <h5 className="fw-bolder mb-2">{data.current_plan?.plan_name}</h5>
+                          <span className="plan-chip">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 1 21h22L12 2z"></path><path d="M12 9v4"></path><path d="m12 17 .01-.01"></path></svg>
+                            {data.current_plan?.pot_name}
+                          </span>
+                        </div>
+                          <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm rounded" style={{color:'rgb(253 224 71)'}}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="crown" className="lucide lucide-crown h-8 w-8 text-yellow-300"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path><path d="M5 21h14"></path></svg>
+                          </div>
+                      </div>
+                      <div className="d-flex flex-column gap-2 pt-3"
+                        style={{borderTop: '.5px solid rgb(255 255 255 / 0.1)'}}
+                      >
                         <span className="fw-semibold">{t('schoolNextBilling')}</span>
                         <div className="d-flex flex-wrap gap-2 align-items-center">
-                          <span className="fw-bold">${data.current_plan.price_yearly.toLocaleString(locale)}</span>
-                          <small className="text-white-50">{data.current_plan.renew_plan}</small>
+                          <span className="fw-bold">${data.current_plan?.price_yearly.toLocaleString(locale)}</span>
+                          <small className="text-white-50">{data.current_plan?.renew_plan}</small>
                         </div>
                       </div>
                     </div>
@@ -433,7 +534,6 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                 <div className="d-flex flex-column gap-3">
                   <div className="card">
                     <div className="d-flex align-items-center gap-2 mb-3">
-                      <div className="pill-chip__dot" style={{ background: '#4338ca' }} />
                       <h6 className="mb-0 fw-bold">{t('schoolPreviousPeriods')}</h6>
                     </div>
                     {payments && payments.length ? (
@@ -473,7 +573,6 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                   <div className="col-12 col-lg-6">
                     <div className="card h-100">
                       <div className="d-flex align-items-center gap-2 mb-3">
-                        <div className="pill-chip__dot" style={{ background: '#4338ca' }} />
                         <h6 className="mb-0 fw-bold">{t('schoolModulesTitle')}</h6>
                       </div>
                       {modules && modules.length ? (
@@ -497,7 +596,6 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                   <div className="col-12 col-lg-6">
                     <div className="card h-100">
                       <div className="d-flex align-items-center gap-2 mb-3">
-                        <div className="pill-chip__dot" style={{ background: '#4338ca' }} />
                         <h6 className="mb-0 fw-bold">{t('schoolRolesTitle')}</h6>
                       </div>
                       <div className="d-flex flex-column gap-2">
@@ -522,7 +620,6 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
               {activeTab === 'structure' ? (
                 <div className="card">
                   <div className="d-flex align-items-center gap-2 mb-3">
-                    <div className="pill-chip__dot" style={{ background: '#4338ca' }} />
                     <h6 className="mb-0 fw-bold">{t('schoolStructureTitle')}</h6>
                   </div>
                   {childSchools.length ? (

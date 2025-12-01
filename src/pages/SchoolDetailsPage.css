@@ -31,19 +31,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
   border-radius: 999px;
   font-weight: 700;
-  font-size: 0.85rem;
-  background: rgba(79, 70, 229, 0.08);
-  color: #4338ca;
-}
-
-.pill-chip__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: currentColor;
+  font-size: 0.75rem;
+  line-height: 1rem;
 }
 
 .ghost-button {
@@ -110,13 +105,6 @@
   padding: 0;
   margin: 0;
   display: grid;
-  gap: 0.75rem;
-}
-
-.info-list__item {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.25rem;
 }
 
 .info-list__label {
