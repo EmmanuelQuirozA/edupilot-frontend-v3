@@ -50,7 +50,7 @@ const menuIcons = {
       <path d="M12.5 4 L15 5.2 L12.5 6.4 Z" fill="currentColor" />
     </svg>
   ),
-  payments: (
+  finance: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <rect x="2" y="6" width="20" height="12" rx="2" fill="currentColor" opacity="0.2" />
       <rect x="2" y="8" width="20" height="3" fill="currentColor" />
@@ -161,7 +161,7 @@ const menuIcons = {
 const moduleLabels: Record<string, string> = {
   dashboard: 'Dashboard',
   schools: 'Escuelas',
-  payments: 'Pagos y Finanzas',
+  finance: 'Pagos y Finanzas',
   students: 'Alumnos y Grupos',
   teachers: 'Profesores',
   schedules: 'Horarios y Tareas',

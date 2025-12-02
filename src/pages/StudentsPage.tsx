@@ -69,8 +69,8 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const [studentSearchTerm, setStudentSearchTerm] = useState('')
   const [appliedStudentSearch, setAppliedSearch] = useState('')
   
-  const [orderBy, setOrderBy] = useState<keyof Student>('full_name')
-  const [orderDir, setOrderDir] = useState<OrderDirection>('DESC')
+  const [orderBy, setOrderBy] = useState('')
+  const [orderDir, setOrderDir] = useState<OrderDirection>('ASC')
 
   // Groups
   const [groups, setGroups] = useState<ClassGroup[]>([])
@@ -83,7 +83,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const [groupSearchTerm, setGroupSearchTerm] = useState('')
   const [appliedGroupSearch, setAppliedGroupSearch] = useState('')
   
-  const [groupsOrderBy, setGroupsOrderBy] = useState<keyof ClassGroup>('grade_group')
+  const [groupsOrderBy, setGroupsOrderBy] = useState('')
   const [groupsOrderDir, setGroupsOrderDir] = useState<OrderDirection>('ASC')
 
   // Tabs

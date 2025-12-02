@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
 import { useLanguage } from '../context/LanguageContext'
+import { createCurrencyFormatter } from "../utils/currencyFormatter";
 import './DataTable.css'
 
 export interface DataTableColumn<T> {
@@ -7,6 +8,7 @@ export interface DataTableColumn<T> {
   label: string
   render?: (row: T) => ReactNode
   sortable?: boolean
+  currency?: string 
 }
 
 export interface DataTablePagination {
@@ -39,43 +41,18 @@ export function DataTable<T>({
   sortDirection,
   onSort,
 }: DataTableProps<T>) {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
 
   const pageIndex = pagination?.page ?? 0
   const totalPages = pagination?.totalPages ?? 0
   const totalElements = pagination?.totalElements ?? 0;
 
+
+
   const rows = useMemo(() => data, [data])
 
   return (
     <div className="datatable card shadow-sm border-0">
-      {/* <div className="d-flex justify-content-between align-items-center p-3">
-        <div className="small text-muted">
-          <strong>{t('tableResults')}</strong>: {totalElements} • <strong>{t('tablePageLabel')}</strong> {pageIndex + 1} {t('tablePageOf')}{' '}
-          {totalPages} • <strong>{t('tablePageSize')}</strong>: {pageSize}
-        </div>
-        {pagination?.onPageSizeChange ? (
-          <div className="d-flex align-items-center gap-2">
-            <label htmlFor="datatable-page-size" className="form-label m-0 small">
-              {t('tableRowsPerPage')}
-            </label>
-            <select
-              id="datatable-page-size"
-              className="form-select form-select-sm"
-              value={pageSize}
-              onChange={(event) => pagination.onPageSizeChange?.(Number(event.target.value))}
-            >
-              {[5, 10, 20, 50].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
-      </div> */}
-
-
       <div className="table-responsive">
         <table className="table align-middle mb-0">
           <thead>
@@ -135,7 +112,16 @@ export function DataTable<T>({
               rows.map((row, index) => (
                 <tr key={index}>
                   {columns.map((column) => (
-                    <td className='text-muted' key={column.key}>{column.render ? column.render(row) : ((row as Record<string, unknown>)[column.key] as ReactNode)}</td>
+                    <td className="text-muted" key={column.key}>
+                      {column.render
+                        ? column.render(row)
+                        : column.currency
+                          ? createCurrencyFormatter(locale, column.currency).format(
+                              Number((row as Record<string, unknown>)[column.key])
+                            )
+                          : ((row as Record<string, unknown>)[column.key] as ReactNode)
+                      }
+                    </td>
                   ))}
                 </tr>
               ))
