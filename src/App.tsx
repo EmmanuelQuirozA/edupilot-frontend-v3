@@ -12,6 +12,7 @@ import { KitchenPage } from './pages/KitchenPage'
 import { SchoolsPage } from './pages/SchoolsPage'
 import { SchoolDetailsPage } from './pages/SchoolDetailsPage'
 import { StudentsPage } from './pages/StudentsPage'
+import { PaymentsFinancePage } from './pages/PaymentsFinancePage'
 import { LoadingSkeleton } from './components/LoadingSkeleton'
 import { Layout } from './layout/Layout'
 
@@ -29,6 +30,7 @@ function Router() {
   const isDashboardRootPath = /^\/(es|en)\/dashboard$/.test(path)
   const isSchoolsPath = /^\/(es|en)\/dashboard\/schools$/.test(path)
   const isStudentsPath = /^\/(es|en)\/dashboard\/students$/.test(path)
+  const isPaymentsPath = /^\/(es|en)\/dashboard\/payments$/.test(path)
   const schoolDetailMatch = path.match(/^\/(es|en)\/dashboard\/schools\/(\d+)$/)
   const isSchoolDetailPath = Boolean(schoolDetailMatch)
   const isDashboardAreaPath = /^\/(es|en)\/dashboard(?:\/.*)?$/.test(path)
@@ -123,6 +125,10 @@ function Router() {
 
     if (isStudentsPath) {
       return <StudentsPage onNavigate={navigate} />
+    }
+
+    if (isPaymentsPath) {
+      return <PaymentsFinancePage onNavigate={navigate} />
     }
 
     if (!isDashboardRootPath) {
