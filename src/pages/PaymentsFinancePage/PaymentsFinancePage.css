@@ -1,0 +1,31 @@
+.payments-finance {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.payments-finance__meta {
+  margin: 0.25rem 0 0;
+}
+
+.finance-table__sort-icon--asc path:first-of-type {
+  opacity: 1;
+}
+
+.finance-table__sort-icon--asc path:last-of-type {
+  opacity: 0.25;
+}
+
+.finance-table__sort-icon--desc path:first-of-type {
+  opacity: 0.25;
+}
+
+.finance-table__sort-icon--desc path:last-of-type {
+  opacity: 1;
+}
+
+.payments-finance .btn-group .btn.active {
+  color: #fff;
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
