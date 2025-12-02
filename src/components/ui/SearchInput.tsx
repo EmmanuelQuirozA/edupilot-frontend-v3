@@ -1,12 +1,5 @@
-import {
-  ChangeEvent,
-  FormEvent,
-  KeyboardEvent,
-  ReactNode,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import type { FormEvent, KeyboardEvent, ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface SearchInputProps {
   value: string;
@@ -72,7 +65,6 @@ const SearchInput = ({
   debounceMs,
   clearButtonAriaLabel = "Clear search",
 }: SearchInputProps) => {
-  const Wrapper = (onSubmit ? "form" : "div") as const;
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [internalValue, setInternalValue] = useState(value);
@@ -93,7 +85,7 @@ const SearchInput = ({
     }, debounceMs);
 
     return () => clearTimeout(handler);
-  }, [internalValue]);
+  }, [debounceMs, internalValue, onChange, value]);
 
   const triggerOnChange = (val: string) => {
     if (debounceMs != null) {
@@ -130,12 +122,8 @@ const SearchInput = ({
     onSubmit?.();
   };
 
-  return (
-    <Wrapper
-      className={["search-input", className].filter(Boolean).join(" ")}
-      {...(onSubmit && { onSubmit: handleSubmit })}
-      {...wrapperProps}
-    >
+  const content = (
+    <>
       <span className="search-input__icon" aria-hidden="true">
         {icon}
       </span>
@@ -169,7 +157,28 @@ const SearchInput = ({
           ×
         </button>
       )}
-    </Wrapper>
+    </>
+  );
+
+  if (onSubmit) {
+    return (
+      <form
+        className={["search-input", className].filter(Boolean).join(" ")}
+        onSubmit={handleSubmit}
+        {...wrapperProps}
+      >
+        {content}
+      </form>
+    );
+  }
+
+  return (
+    <div
+      className={["search-input", className].filter(Boolean).join(" ")}
+      {...wrapperProps}
+    >
+      {content}
+    </div>
   );
 };
 
