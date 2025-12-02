@@ -57,36 +57,124 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const { token, hydrated } = useAuth()
   const { locale, t } = useLanguage()
 
+  // Students
   const [students, setStudents] = useState<Student[]>([])
-  const [page, setPage] = useState(0)
-  const [pageSize] = useState(10)
-  const [totalPages, setTotalPages] = useState(0)
-  const [totalElements, setTotalElements] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
+  const [studentsPage, setStudentsPage] = useState(0)
+  const [studentsPageSize] = useState(10)
+  const [studentsTotalPages, setStudentsTotalPages] = useState(0)
+  const [studentsTotalElements, setStudentsTotalElements] = useState(0)
+  const [isStudentsLoading, setIsStudentsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [appliedSearch, setAppliedSearch] = useState('')
+
+  const [studentSearchTerm, setStudentSearchTerm] = useState('')
+  const [appliedStudentSearch, setAppliedSearch] = useState('')
+  
   const [orderBy, setOrderBy] = useState<keyof Student>('full_name')
   const [orderDir, setOrderDir] = useState<OrderDirection>('DESC')
 
+  // Groups
   const [groups, setGroups] = useState<ClassGroup[]>([])
   const [groupsPage, setGroupsPage] = useState(0)
   const [groupsPageSize] = useState(10)
   const [groupsTotalPages, setGroupsTotalPages] = useState(0)
   const [groupsTotalElements, setGroupsTotalElements] = useState(0)
   const [isGroupsLoading, setIsGroupsLoading] = useState(false)
+
   const [groupSearchTerm, setGroupSearchTerm] = useState('')
   const [appliedGroupSearch, setAppliedGroupSearch] = useState('')
+  
   const [groupsOrderBy, setGroupsOrderBy] = useState<keyof ClassGroup>('grade_group')
   const [groupsOrderDir, setGroupsOrderDir] = useState<OrderDirection>('ASC')
 
+  // Tabs
   const [activeTab, setActiveTab] = useState<'students' | 'groups'>('students');
   const tabs = [
-    { key: 'students', label: 'Alumnos' },
-    { key: 'groups', label: 'Grupos' }
+    { key: 'students', label: t('students') },
+    { key: 'groups', label: t('classes') }
   ];
 
-  const columns: Array<DataTableColumn<Student>> = useMemo(
+  const breadcrumbItems: BreadcrumbItem[] = useMemo(
+    () => [
+      {
+        label: t('portalTitle'),
+        onClick: () => onNavigate(`/${locale}/dashboard`),
+      },
+      { label: t('studentsGroups') },
+    ],
+    [locale, onNavigate, t],
+  )
+
+  // Students
+  useEffect(() => {
+    if (!token) return
+
+    const controller = new AbortController()
+
+    const fetchStudents = async () => {
+      setIsStudentsLoading(true)
+      setError(null)
+
+      try {
+        const params = new URLSearchParams({
+          lang: locale,
+          offset: String(studentsPage * studentsPageSize),
+          limit: String(studentsPageSize),
+          export_all: 'false',
+          order_by: orderBy,
+          order_dir: orderDir,
+        })
+
+        if (appliedStudentSearch) {
+          params.set('full_name', appliedStudentSearch)
+        }
+
+        const response = await fetch(`${API_BASE_URL}/students?${params.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const data = (await response.json()) as StudentsResponse
+        setStudents(data.content ?? [])
+        setStudentsTotalElements(data.totalElements ?? 0)
+        setStudentsTotalPages(data.totalPages ?? 0)
+      } catch (fetchError) {
+        if ((fetchError as Error).name !== 'AbortError') {
+          setError(t('defaultError'))
+        }
+      } finally {
+        setIsStudentsLoading(false)
+      }
+    }
+
+    fetchStudents()
+
+    return () => controller.abort()
+  }, [appliedStudentSearch, locale, orderBy, orderDir, studentsPage, studentsPageSize, t, token])
+
+  const handleStudentSearchSubmit = () => {
+    setAppliedSearch(studentSearchTerm)
+    setStudentsPage(0)
+  }
+
+  const handleStudentClearSearch = () => {
+    setStudentSearchTerm('')
+    setAppliedSearch('')
+    setStudentsPage(0)
+  }
+
+  const handleStudentSort = (columnKey: keyof Student) => {
+    setStudentsPage(0)
+    setOrderDir((prevDir) => (orderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
+    setOrderBy(columnKey)
+  }
+
+  const studentsColumns: Array<DataTableColumn<Student>> = useMemo(
     () => [
       {
         key: 'full_name',
@@ -132,67 +220,8 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     ],
     [],
   )
-
-  const breadcrumbItems: BreadcrumbItem[] = useMemo(
-    () => [
-      {
-        label: t('portalTitle'),
-        onClick: () => onNavigate(`/${locale}/dashboard`),
-      },
-      { label: 'Alumnos' },
-    ],
-    [locale, onNavigate, t],
-  )
-
-  useEffect(() => {
-    if (!token) return
-
-    const controller = new AbortController()
-
-    const fetchStudents = async () => {
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const params = new URLSearchParams({
-          lang: locale,
-          offset: String(page * pageSize),
-          limit: String(pageSize),
-          export_all: 'false',
-          full_name: appliedSearch,
-          order_by: orderBy,
-          order_dir: orderDir,
-        })
-
-        const response = await fetch(`${API_BASE_URL}/students?${params.toString()}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          signal: controller.signal,
-        })
-
-        if (!response.ok) {
-          throw new Error('failed_request')
-        }
-
-        const data = (await response.json()) as StudentsResponse
-        setStudents(data.content ?? [])
-        setTotalElements(data.totalElements ?? 0)
-        setTotalPages(data.totalPages ?? 0)
-      } catch (fetchError) {
-        if ((fetchError as Error).name !== 'AbortError') {
-          setError(t('defaultError'))
-        }
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchStudents()
-
-    return () => controller.abort()
-  }, [appliedSearch, locale, orderBy, orderDir, page, pageSize, t, token])
-
+  
+  // Groups
   useEffect(() => {
     if (!token || activeTab !== 'groups') return
 
@@ -204,12 +233,12 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
         setError(null)
 
         const params = new URLSearchParams({
+          lang: locale,
           offset: String(groupsPage * groupsPageSize),
           limit: String(groupsPageSize),
+          exportAll: 'false',
           order_by: groupsOrderBy,
           order_dir: groupsOrderDir,
-          exportAll: 'false',
-          lang: locale,
         })
 
         if (appliedGroupSearch) {
@@ -244,23 +273,6 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
 
     return () => controller.abort()
   }, [activeTab, appliedGroupSearch, groupsOrderBy, groupsOrderDir, groupsPage, groupsPageSize, locale, t, token])
-
-  const handleSearchSubmit = () => {
-    setAppliedSearch(searchTerm)
-    setPage(0)
-  }
-
-  const handleClearSearch = () => {
-    setSearchTerm('')
-    setAppliedSearch('')
-    setPage(0)
-  }
-
-  const handleSort = (columnKey: keyof Student) => {
-    setPage(0)
-    setOrderDir((prevDir) => (orderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
-    setOrderBy(columnKey)
-  }
 
   const handleGroupSearchSubmit = () => {
     setAppliedGroupSearch(groupSearchTerm)
@@ -297,12 +309,6 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
         sortable: true,
       },
       {
-        key: 'school_id',
-        label: 'Escuela',
-        sortable: true,
-        render: (group) => <span className="fw-semibold text-black">#{group.school_id}</span>,
-      },
-      {
         key: 'enabled',
         label: 'Estatus',
         sortable: true,
@@ -325,7 +331,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   }
 
   return (
-    <Layout onNavigate={onNavigate} pageTitle="Alumnos" breadcrumbItems={breadcrumbItems}>
+    <Layout onNavigate={onNavigate} pageTitle={t('studentsGroups')} breadcrumbItems={breadcrumbItems}>
       <div className="students-page d-flex flex-column gap-3">
         {error ? (
           <div className="alert alert-danger" role="alert">
@@ -341,69 +347,49 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
               activeKey={activeTab}
               onSelect={(key) => setActiveTab(key as 'students' | 'groups')}
             />
-
-            <div className="d-flex align-items-center gap-3">
-              <button type="button" className="btn btn-primary">Carga Masiva (CSV)</button>
-              <button type="button" className="btn btn-outline-primary">Agregar alumno</button>
-            </div>
           </div>
         </div>
         {activeTab === 'students' && (
           <>
             <div className="card shadow-sm border-0">
-              <div className="card-body">
-                <div className="d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between">
-
-                  <div className="students-search position-relative flex-grow-1">
-                    <input
-                      className="form-control"
-                      placeholder="Buscar alumno por nombre"
-                      value={searchTerm}
-                      onChange={(event) => setSearchTerm(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
-                          event.preventDefault()
-                          handleSearchSubmit()
-                        }
-                      }}
-                    />
-                    {searchTerm ? (
-                      <button type="button" className="students-search__clear" onClick={handleClearSearch} aria-label="Borrar filtro">
-                        ×
-                      </button>
-                    ) : null}
-                  </div>
-                  <button type="button" className="students-filter-button">
-                    <svg
-                      viewBox="0 0 20 20"
-                      aria-hidden="true"
-                      className="students-filter-button__icon"
-                      focusable="false"
-                    >
-                      <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
-                    </svg>
-                    <span className="fw-semibold">Filtros</span>
-                  </button>
-                  
+              <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
+                <SearchInput
+                  value={studentSearchTerm}
+                  onChange={(val) => setStudentSearchTerm(val)}
+                  onSubmit={handleStudentSearchSubmit}
+                  onClear={handleStudentClearSearch}
+                  placeholder={t("searchStudentByName")}
+                  className="flex-grow-1"
+                  inputClassName="w-100"
+                />
+                <button type="button" className="students-filter-button">
+                  <svg viewBox="0 0 20 20" aria-hidden="true" className="students-filter-button__icon" focusable="false">
+                    <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
+                  </svg>
+                  <span className="fw-semibold">Filtros</span>
+                </button>
+                <div className="d-flex align-items-center gap-3">
+                  <button type="button" className="btn btn-primary">Carga Masiva (CSV)</button>
+                  <button type="button" className="btn btn-outline-primary">Agregar alumno</button>
                 </div>
               </div>
             </div>
 
             <DataTable
-              columns={columns}
+              columns={studentsColumns}
               data={students}
-              isLoading={isLoading}
+              isLoading={isStudentsLoading}
               emptyMessage={t('tableNoData')}
               pagination={{
-                page,
-                size: pageSize,
-                totalPages,
-                totalElements,
-                onPageChange: (nextPage) => setPage(Math.max(0, Math.min(totalPages - 1, nextPage))),
+                page: studentsPage,
+                size: studentsPageSize,
+                totalPages: studentsTotalPages,
+                totalElements: studentsTotalElements,
+                onPageChange: (nextPage) => setStudentsPage(Math.max(0, Math.min(studentsTotalPages - 1, nextPage))),
               }}
               sortBy={orderBy}
               sortDirection={orderDir}
-              onSort={(columnKey) => handleSort(columnKey as keyof Student)}
+              onSort={(columnKey) => handleStudentSort(columnKey as keyof Student)}
             />
           </>
         )}
@@ -413,13 +399,24 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
               <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
                 <SearchInput
                   value={groupSearchTerm}
-                  onChange={(event) => setGroupSearchTerm(event.target.value)}
+                  onChange={(val) => setGroupSearchTerm(val)}
                   onSubmit={handleGroupSearchSubmit}
                   onClear={handleGroupClearSearch}
-                  placeholder="Buscar grupo por nombre"
+                  placeholder={t("searchByGroup")}
                   className="flex-grow-1"
                   inputClassName="w-100"
                 />
+                <button type="button" className="students-filter-button">
+                  <svg
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                    className="students-filter-button__icon"
+                    focusable="false"
+                  >
+                    <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
+                  </svg>
+                  <span className="fw-semibold">Filtros</span>
+                </button>
               </div>
             </div>
 

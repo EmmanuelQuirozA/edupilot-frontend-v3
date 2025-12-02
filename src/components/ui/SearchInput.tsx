@@ -1,17 +1,41 @@
-import { ChangeEvent, FormEvent, ReactNode } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  KeyboardEvent,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 export interface SearchInputProps {
-  value: string | number;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
+  value: string;
+  onChange: (value: string) => void;
+
+  /** Optional submit handler */
+  onSubmit?: () => void;
+
+  /** Optional clear handler */
   onClear?: () => void;
+
   placeholder?: string;
   className?: string;
   inputClassName?: string;
   icon?: ReactNode;
+
+  /** Extra props forwarded to <input> */
   inputProps?: Record<string, unknown>;
+
+  /** Extra props forwarded to wrapper */
   wrapperProps?: Record<string, unknown>;
+
+  /** Display clear button (default: true) */
   showClearButton?: boolean;
+
+  /** Debounce delay for input changes (ms). If undefined → no debounce. */
+  debounceMs?: number;
+
+  /** Aria label for clear button */
   clearButtonAriaLabel?: string;
 }
 
@@ -37,6 +61,7 @@ const SearchInput = ({
   value,
   onChange,
   onSubmit,
+  onClear,
   placeholder,
   className = "",
   inputClassName = "",
@@ -44,82 +69,106 @@ const SearchInput = ({
   inputProps = {},
   wrapperProps = {},
   showClearButton = true,
-  clearButtonAriaLabel = "Borrar filtro",
+  debounceMs,
+  clearButtonAriaLabel = "Clear search",
 }: SearchInputProps) => {
-  // Wrapper dinámico → form si recibe onSubmit, si no solo div
   const Wrapper = (onSubmit ? "form" : "div") as const;
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const {
-    className: wrapperClassName = "",
-    onSubmit: wrapperOnSubmit,
-    ...restWrapperProps
-  } = (wrapperProps || {}) as {
-    className?: string;
-    onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
-  } & Record<string, unknown>;
+  const [internalValue, setInternalValue] = useState(value);
 
-  const {
-    className: inputClassNameProp = "",
-    ...restInputProps
-  } = (inputProps || {}) as {
-    className?: string;
-  } & Record<string, unknown>;
+  // Sync value coming from parent
+  useEffect(() => {
+    setInternalValue(value);
+  }, [value]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    if (onSubmit) {
+  // Debounce logic
+  useEffect(() => {
+    if (debounceMs == null) return;
+
+    const handler = setTimeout(() => {
+      if (internalValue !== value) {
+        onChange(internalValue);
+      }
+    }, debounceMs);
+
+    return () => clearTimeout(handler);
+  }, [internalValue]);
+
+  const triggerOnChange = (val: string) => {
+    if (debounceMs != null) {
+      setInternalValue(val);
+    } else {
+      onChange(val);
+    }
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" && onSubmit) {
       event.preventDefault();
-      onSubmit(event);
+      onSubmit();
     }
 
-    wrapperOnSubmit?.(event);
+    if (event.key === "Escape") {
+      handleClear();
+    }
   };
 
   const handleClear = () => {
-    if (onClear) {
-      onClear();
-      return;
-    }
+    onClear?.();
+    triggerOnChange("");
+    setInternalValue("");
 
-    onChange({ target: { value: "" } } as ChangeEvent<HTMLInputElement>);
+    // Keep focus on input
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit?.();
   };
 
   return (
     <Wrapper
-      className={["search-input", className, wrapperClassName]
-        .filter(Boolean)
-        .join(" ")}
+      className={["search-input", className].filter(Boolean).join(" ")}
       {...(onSubmit && { onSubmit: handleSubmit })}
-      {...restWrapperProps}
+      {...wrapperProps}
     >
       <span className="search-input__icon" aria-hidden="true">
         {icon}
       </span>
 
       <input
-        type="search"
+        ref={inputRef}
         className={[
           "form-control search-input__field",
           inputClassName,
-          inputClassNameProp,
         ]
           .filter(Boolean)
           .join(" ")}
-        value={value}
-        onChange={onChange}
+        value={internalValue}
         placeholder={placeholder}
-        {...restInputProps}
+        onKeyDown={handleKeyDown}
+        onChange={(e) => triggerOnChange(e.target.value)}
+        {...inputProps}
       />
 
-      {showClearButton && value ? (
+      {showClearButton && internalValue && (
         <button
           type="button"
-          className="btn search-input__clear"
-          onClick={handleClear}
+          className="search-input__clear"
           aria-label={clearButtonAriaLabel}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleClear();
+          }}
         >
           ×
         </button>
-      ) : null}
+      )}
     </Wrapper>
   );
 };

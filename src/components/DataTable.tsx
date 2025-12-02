@@ -43,6 +43,7 @@ export function DataTable<T>({
 
   const pageIndex = pagination?.page ?? 0
   const totalPages = pagination?.totalPages ?? 0
+  const totalElements = pagination?.totalElements ?? 0;
 
   const rows = useMemo(() => data, [data])
 
@@ -147,7 +148,7 @@ export function DataTable<T>({
 
         <div className="d-flex justify-content-between align-items-center px-3 pt-3 border-top">
           <div className="small text-muted">
-            {t('tablePageLabel')} {pageIndex + 1} {t('tablePageOf')} {totalPages}
+            {totalElements} {t('results')} 
           </div>
           <div className="btn-group" role="group" aria-label="Pagination controls">
             <nav className='Table pagination'>

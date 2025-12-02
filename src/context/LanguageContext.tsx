@@ -53,7 +53,8 @@ const translations: TranslationMap = {
     tableActions: 'Acciones',
     tableViewDetails: 'Ver detalles',
     renew: 'Renueva',
-    students: 'Estudiantes',
+    students: 'Alumnos',
+    classes: 'Grupos',
     schoolOverviewTab: 'Visión General',
     schoolDetailsTab: 'Detalles de la escuela',
     schoolBillingTab: 'Plan y facturación',
@@ -99,6 +100,10 @@ const translations: TranslationMap = {
     email: 'Correo Electrónico',
     main_contact: 'Contacto Principal',
     startDate: 'Fecha inicial',
+    results: 'Resultados',
+    searchStudentByName: 'Buscar estudiante por nombre',
+    searchByGroup: 'Buscar por grupo',
+    studentsGroups: 'Alumnos y Grupos',
   },
   en: {
     homeTitle: 'Welcome to EduPilot',
@@ -148,6 +153,7 @@ const translations: TranslationMap = {
     tableViewDetails: 'View details',
     renew: 'Renew',
     students: 'Students',
+    classes: 'Classes',
     schoolOverviewTab: 'Overview',
     schoolDetailsTab: 'School details',
     schoolBillingTab: 'Plan & billing',
@@ -193,6 +199,10 @@ const translations: TranslationMap = {
     email: 'Email',
     main_contact: 'Main contact',
     startDate: 'Start date',
+    results: 'Resultados',
+    searchStudentByName: 'Search student by name',
+    searchByGroup: 'Search by group',
+    studentsGroups: 'Students and Classes',
   },
 }
 
@@ -223,6 +233,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useLanguage() {
   const ctx = useContext(LanguageContext)
   if (!ctx) {
