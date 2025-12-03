@@ -212,8 +212,8 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
   // Construcción de secciones SOLO si usuario autenticado
   const menuSections: MenuSection[] = useMemo(() => {
     const modulePaths: Record<string, string> = {
-      dashboard: `/${locale}/dashboard`,
-      schools: `/${locale}/dashboard/schools`,
+      dashboard: `/${locale}`,
+      schools: `/${locale}/schools`,
     }
     if (!token) return []
     return [
@@ -222,7 +222,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
         items: modules.map((m) => ({
           key: m.moduleKey,
           label: moduleLabels[m.moduleKey] || m.moduleName,
-          path: modulePaths[m.moduleKey] ?? `/${locale}/dashboard/${m.moduleKey}`,
+          path: modulePaths[m.moduleKey] ?? `/${locale}/${m.moduleKey}`,
         })),
       },
       {

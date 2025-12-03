@@ -97,7 +97,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     () => [
       {
         label: t('portalTitle'),
-        onClick: () => onNavigate(`/${locale}/dashboard`),
+        onClick: () => onNavigate(`/${locale}`),
       },
       { label: t('studentsGroups') },
     ],

@@ -131,11 +131,11 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
     () => [
       {
         label: t('portalTitle'),
-        onClick: () => onNavigate(`/${locale}/dashboard`),
+        onClick: () => onNavigate(`/${locale}`),
       },
       {
         label: t('schoolsBreadcrumbLabel'),
-        onClick: () => onNavigate(`/${locale}/dashboard/schools`),
+        onClick: () => onNavigate(`/${locale}/schools`),
       },
       {
         label: data?.school_details.commercial_name || t('schoolDetailsBreadcrumbLabel'),
@@ -844,7 +844,7 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
                               <button
                                 type="button"
                                 className="btn btn-link p-0"
-                                onClick={() => onNavigate(`/${locale}/dashboard/schools/${school.school_id}`)}
+                                onClick={() => onNavigate(`/${locale}/schools/${school.school_id}`)}
                               >
                                 {t('schoolViewDetail')}
                               </button>
