@@ -62,6 +62,9 @@ export function TuitionTab() {
 
   const [groupSearchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
+
+  const [startMonth, setStartMonth] = useState('')
+  const [endMonth, setEndMonth] = useState('')
   
   const [orderBy, setOrderBy] = useState('')
   const [orderDir, setOrderDir] = useState<OrderDirection>('ASC')
@@ -91,6 +94,14 @@ export function TuitionTab() {
           order_by: orderBy,
           order_dir: orderDir,
         })
+
+        if (startMonth) {
+          params.set('start_date', `${startMonth}-01`)
+        }
+
+        if (endMonth) {
+          params.set('end_date', `${endMonth}-01`)
+        }
 
         if (appliedSearch) {
           params.set('student', appliedSearch)
@@ -148,7 +159,7 @@ export function TuitionTab() {
     fetchData()
 
     return () => controller.abort()
-  }, [appliedSearch, orderBy, orderDir, Page, PageSize, locale, t, token])
+  }, [appliedSearch, orderBy, orderDir, Page, PageSize, endMonth, locale, startMonth, t, token])
 
   const handleSearchSubmit = () => {
     setAppliedSearch(groupSearchTerm)
@@ -252,7 +263,7 @@ export function TuitionTab() {
       
         <>
           <div className="card shadow-sm border-0">
-            <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
+            <div className="card-body d-flex flex-column gap-3 flex-lg-row align-items-lg-center justify-content-between">
               <SearchInput
                 value={groupSearchTerm}
                 onChange={(val) => setSearchTerm(val)}
@@ -262,17 +273,45 @@ export function TuitionTab() {
                 className="flex-grow-1"
                 inputClassName="w-100"
               />
-              <button type="button" className="students-filter-button">
-                <svg
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                  className="students-filter-button__icon"
-                  focusable="false"
-                >
-                  <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
-                </svg>
-                <span className="fw-semibold">Filtros</span>
-              </button>
+              <div className="d-flex flex-column flex-lg-row align-items-lg-end gap-3">
+                <div className="d-flex flex-column flex-lg-row gap-3">
+                  <label className="d-flex flex-column gap-1 small text-muted fw-semibold">
+                    <span className="text-body-secondary">{t('startDate')}</span>
+                    <input
+                      type="month"
+                      value={startMonth}
+                      className="form-control"
+                      onChange={(event) => {
+                        setStartMonth(event.target.value)
+                        setPage(0)
+                      }}
+                    />
+                  </label>
+                  <label className="d-flex flex-column gap-1 small text-muted fw-semibold">
+                    <span className="text-body-secondary">{t('endDate')}</span>
+                    <input
+                      type="month"
+                      value={endMonth}
+                      className="form-control"
+                      onChange={(event) => {
+                        setEndMonth(event.target.value)
+                        setPage(0)
+                      }}
+                    />
+                  </label>
+                </div>
+                <button type="button" className="students-filter-button align-self-lg-center">
+                  <svg
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                    className="students-filter-button__icon"
+                    focusable="false"
+                  >
+                    <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
+                  </svg>
+                  <span className="fw-semibold">Filtros</span>
+                </button>
+              </div>
             </div>
           </div>
 
