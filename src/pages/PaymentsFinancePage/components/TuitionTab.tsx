@@ -60,7 +60,7 @@ export function TuitionTab() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [groupSearchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
   
   const [orderBy, setOrderBy] = useState('')
@@ -151,7 +151,7 @@ export function TuitionTab() {
   }, [appliedSearch, orderBy, orderDir, Page, PageSize, locale, t, token])
 
   const handleSearchSubmit = () => {
-    setAppliedSearch(groupSearchTerm)
+    setAppliedSearch(searchTerm)
     setPage(0)
   }
 
@@ -254,7 +254,7 @@ export function TuitionTab() {
           <div className="card shadow-sm border-0">
             <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
               <SearchInput
-                value={groupSearchTerm}
+                value={searchTerm}
                 onChange={(val) => setSearchTerm(val)}
                 onSubmit={handleSearchSubmit}
                 onClear={handleClearSearch}

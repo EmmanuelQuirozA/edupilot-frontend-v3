@@ -104,6 +104,13 @@ const translations: TranslationMap = {
     searchStudentByName: 'Buscar estudiante por nombre',
     searchByGroup: 'Buscar por grupo',
     studentsGroups: 'Alumnos y Grupos',
+    tuitions: 'Colegiaturas',
+    paymentRequests: 'Solicitudes de Pago',
+    payments: 'Pagos',
+    student: 'Estudiante',
+    paymentType: 'Concepto',
+    amount: 'Monto',
+
   },
   en: {
     homeTitle: 'Welcome to EduPilot',
@@ -203,6 +210,13 @@ const translations: TranslationMap = {
     searchStudentByName: 'Search student by name',
     searchByGroup: 'Search by group',
     studentsGroups: 'Students and Classes',
+    tuitions: 'Tuitions',
+    paymentRequests: 'Payment Requests',
+    payments: 'Payments',
+    student: 'Student',
+    paymentType: 'Concept',
+    amount: 'Amount',
+
   },
 }
 

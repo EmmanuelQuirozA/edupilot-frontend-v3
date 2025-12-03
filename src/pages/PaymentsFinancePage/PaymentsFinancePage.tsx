@@ -6,7 +6,7 @@ import { useLanguage } from '../../context/LanguageContext'
 
 import { TuitionTab } from './components/TuitionTab'
 import { PaymentsTab } from './components/PaymentsTab'
-// import { PaymentRequestsTable } from './components/PaymentRequestsTable'
+import { PaymentRequestsTab } from './components/PaymentRequestsTab'
 // import { PaymentRecurrencesTable } from './components/PaymentRecurrencesTable'
 // import { createUrlSearchParams, handleExpiredToken } from './utils'
 
@@ -76,7 +76,7 @@ export function PaymentsFinancePage({ onNavigate }: PaymentsFinancePageProps) {
         )}
         {activeTab === 'paymentRequests' && (
           <>
-            paymentRequests
+            <PaymentRequestsTab/>
           </>
         )}
         {activeTab === 'payments' && (

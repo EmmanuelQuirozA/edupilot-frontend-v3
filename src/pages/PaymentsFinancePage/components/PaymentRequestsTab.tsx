@@ -5,48 +5,31 @@ import { API_BASE_URL } from '../../../config'
 import { DataTable, type DataTableColumn } from '../../../components/DataTable'
 import SearchInput from '../../../components/ui/SearchInput';
 import StudentTableCell from '../../../components/ui/StudentTableCell';
+import { formatDate } from '../../../utils/formatDate';
 
 type OrderDirection = 'ASC' | 'DESC'
 
 interface ResultsColumns {
-  payment_id: number
-  student_id: number
-  school_id: number
-  payment_month: string
-  amount: number
-  payment_status_id: number
-  payment_through_id: number
-  payment_concept_id: number
-  validated_at: Date
-  payment_created_at: Date
-  updated_at: Date
-  comments: string
-  pt_name: string
-  payt_name: string
-  payment_reference: string
-  generation: string
-  email: string
-  personal_email: string
-  student_full_name: string
-  address: string
-  phone_number: string
-  school_description: string
-  scholar_level_name: string
-  g_enabled: boolean
-  u_enabled: boolean
-  sc_enabled: boolean
-  school_status: string
-  user_status: string
-  group_status: string
-  payment_status_name: string
-  grade_group: string
-  validator_full_name: string
-  validator_phone_number: string
-  validator_username: string
   payment_request_id: number
-  receipt_path: string
-  receipt_file_name: string
-  payment_date: Date
+  payment_reference: string
+  student_full_name: string
+  generation: string
+  scholar_level_name: string
+  grade_group: string
+  pr_amount: number
+  pr_created_at: Date
+  pr_pay_by: Date
+  late_fee: string
+  fee_type: string
+  late_fee_frequency: string
+  payment_month: string
+  student_id: number
+  payment_status_id: number
+  ps_pr_name: string
+  pt_name: string
+  total_amount_payments: Date
+  latest_payment_date: Date
+  late_fee_total: string
 }
 
 interface DataResponse {
@@ -57,7 +40,7 @@ interface DataResponse {
   totalPages: number
 }
 
-export function PaymentsTab() {
+export function PaymentRequestsTab() {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
 
@@ -97,10 +80,10 @@ export function PaymentsTab() {
         })
 
         if (appliedSearch) {
-          params.set('student', appliedSearch)
+          params.set('student_full_name', appliedSearch)
         }
 
-        const response = await fetch(`${API_BASE_URL}/reports/payments?${params.toString()}`, {
+        const response = await fetch(`${API_BASE_URL}/reports/paymentrequests?${params.toString()}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -149,12 +132,12 @@ export function PaymentsTab() {
   const groupColumns: Array<DataTableColumn<ResultsColumns>> = useMemo(
     () => [
       {
-        key: 'payment_id',
+        key: 'payment_request_id',
         label: 'id',
         sortable: true,
       },
       {
-        key: 'student',
+        key: 'student_full_name',
         label: 'student',
         sortable: true,
         render: (content) => (
@@ -173,10 +156,23 @@ export function PaymentsTab() {
         sortable: true,
       },
       {
-        key: 'amount',
+        key: 'ps_pr_name',
+        label: 'status',
+        sortable: true,
+      },
+      {
+        key: 'pr_amount',
         label: 'amount',
         sortable: true,
         currency: 'MXN'
+      },
+      {
+        key: 'pr_pay_by',
+        label: 'due_date',
+        sortable: true,
+        render: (content) => (
+          formatDate(content?.pr_pay_by, locale, {year: 'numeric', month: 'short', day: '2-digit'})
+        )
       },
       { key: 'actions', label: 'actions', sortable: false,},
     ],

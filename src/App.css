@@ -1,3 +1,22 @@
+:root {
+    --bs-backdrop-zindex: 1050;
+    --bs-backdrop-bg: #000;
+}
+
 .app-shell {
   min-height: 100vh;
+}
+
+
+
+.modal{
+  backdrop-filter: blur(3px);
+}
+
+.table__student-meta {
+  font-size: 0.8rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
