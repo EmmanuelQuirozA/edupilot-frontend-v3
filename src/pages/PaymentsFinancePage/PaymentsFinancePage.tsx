@@ -36,7 +36,7 @@ export function PaymentsFinancePage({ onNavigate }: PaymentsFinancePageProps) {
     () => [
       {
         label: t('portalTitle'),
-        onClick: () => onNavigate(`/${locale}/dashboard`),
+        onClick: () => onNavigate(`/${locale}`),
       },
       { label: t('studentsGroups') },
     ],

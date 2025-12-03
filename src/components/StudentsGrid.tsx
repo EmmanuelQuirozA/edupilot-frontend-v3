@@ -35,7 +35,7 @@ export function StudentsGrid({ students, onNavigate }: StudentsGridProps) {
                 <button
                   type="button"
                   className="student-card__link"
-                  onClick={() => onNavigate(`/dashboard/students/${student.id}`)}
+                  onClick={() => onNavigate(`/students/${student.id}`)}
                 >
                   {student.name}
                 </button>

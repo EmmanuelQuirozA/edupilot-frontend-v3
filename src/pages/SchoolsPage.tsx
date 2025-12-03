@@ -53,7 +53,7 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
     () => [
       {
         label: t('portalTitle'),
-        onClick: () => onNavigate(`/${locale}/dashboard`),
+        onClick: () => onNavigate(`/${locale}`),
       },
       { label: t('schoolsBreadcrumbLabel') },
     ],
@@ -139,7 +139,7 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
           <button
             type="button"
             className="btn btn-link btn-sm"
-            onClick={() => onNavigate(`/${locale}/dashboard/schools/${row.school_id}`)}
+            onClick={() => onNavigate(`/${locale}/schools/${row.school_id}`)}
           >
             {t('tableViewDetails')}
           </button>
