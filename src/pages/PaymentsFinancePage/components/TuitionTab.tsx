@@ -45,8 +45,8 @@ export function TuitionTab() {
   const [groupSearchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
   
-  const [OrderBy, setOrderBy] = useState('')
-  const [OrderDir, setOrderDir] = useState<OrderDirection>('ASC')
+  const [orderBy, setOrderBy] = useState('')
+  const [orderDir, setOrderDir] = useState<OrderDirection>('ASC')
 
   // fetch data
   useEffect(() => {
@@ -64,8 +64,8 @@ export function TuitionTab() {
           offset: String(Page * PageSize),
           limit: String(PageSize),
           exportAll: 'false',
-          order_by: OrderBy,
-          order_dir: OrderDir,
+          order_by: orderBy,
+          order_dir: orderDir,
         })
 
         if (appliedSearch) {
@@ -99,7 +99,7 @@ export function TuitionTab() {
     fetchData()
 
     return () => controller.abort()
-  }, [appliedSearch, OrderBy, OrderDir, Page, PageSize, locale, t, token])
+  }, [appliedSearch, orderBy, orderDir, Page, PageSize, locale, t, token])
 
   const handleSearchSubmit = () => {
     setAppliedSearch(groupSearchTerm)
@@ -114,7 +114,7 @@ export function TuitionTab() {
 
   const handleSort = (columnKey: keyof ResultsColumns) => {
     setPage(0)
-    setOrderDir((prevDir) => (OrderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
+    setOrderDir((prevDir) => (orderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
     setOrderBy(columnKey)
   }
 
@@ -191,8 +191,8 @@ export function TuitionTab() {
               onPageChange: (nextPage) =>
                 setPage(Math.max(0, Math.min(TotalPages - 1, nextPage))),
             }}
-            sortBy={OrderBy}
-            sortDirection={OrderDir}
+            sortBy={orderBy}
+            sortDirection={orderDir}
             onSort={(columnKey) => handleSort(columnKey as keyof ResultsColumns)}
           />
         </>
