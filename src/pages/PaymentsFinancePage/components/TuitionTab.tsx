@@ -5,8 +5,25 @@ import { API_BASE_URL } from '../../../config'
 import { DataTable, type DataTableColumn } from '../../../components/DataTable'
 import SearchInput from '../../../components/ui/SearchInput';
 import StudentTableCell from '../../../components/ui/StudentTableCell';
+import { createCurrencyFormatter } from '../../../utils/currencyFormatter'
+import { TuitionPaymentModal } from './TuitionPaymentModal'
 
 type OrderDirection = 'ASC' | 'DESC'
+
+interface PaymentEntry {
+  amount: number
+  created_at: string
+  payment_id: number
+  payment_status_id: number
+  payment_status_name: string
+}
+
+interface PaymentMonthData {
+  payments: PaymentEntry[]
+  total_amount: number
+  payment_month: string
+  payment_request_id: number | null
+}
 
 interface ResultsColumns {
   student_id: number
@@ -19,6 +36,7 @@ interface ResultsColumns {
   scholar_level_name: string
   class: string
   generation: string
+  [key: string]: unknown
 }
 
 interface DataResponse {
@@ -47,6 +65,12 @@ export function TuitionTab() {
   
   const [orderBy, setOrderBy] = useState('')
   const [orderDir, setOrderDir] = useState<OrderDirection>('ASC')
+  const [monthColumns, setMonthColumns] = useState<string[]>([])
+  const [selectedPayment, setSelectedPayment] = useState<{
+    row: ResultsColumns
+    monthKey: string
+    details: PaymentMonthData
+  } | null>(null)
 
   // fetch data
   useEffect(() => {
@@ -84,7 +108,32 @@ export function TuitionTab() {
         }
 
         const data = (await response.json()) as DataResponse
-        setRows(data.content ?? [])
+        const nextRows = data.content ?? []
+        setRows(nextRows)
+
+        const staticColumns = new Set([
+          'student_id',
+          'g_enabled_raw',
+          'u_enabled_raw',
+          'user_status',
+          'group_status',
+          'student',
+          'payment_reference',
+          'scholar_level_name',
+          'class',
+          'generation',
+        ])
+
+        const dynamicColumns: string[] = []
+        nextRows.forEach((row) => {
+          Object.keys(row).forEach((key) => {
+            if (!staticColumns.has(key) && !dynamicColumns.includes(key)) {
+              dynamicColumns.push(key)
+            }
+          })
+        })
+
+        setMonthColumns(dynamicColumns)
         setTotalElements(data.totalElements ?? 0)
         setTotalPages(data.totalPages ?? 0)
       } catch (fetchError) {
@@ -112,14 +161,31 @@ export function TuitionTab() {
     setPage(0)
   }
 
-  const handleSort = (columnKey: keyof ResultsColumns) => {
+  const handleSort = (columnKey: string) => {
     setPage(0)
     setOrderDir((prevDir) => (orderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
     setOrderBy(columnKey)
   }
 
-  const groupColumns: Array<DataTableColumn<ResultsColumns>> = useMemo(
-    () => [
+  const currencyFormatter = useMemo(() => createCurrencyFormatter(locale, 'MXN'), [locale])
+
+  const parsePaymentData = (rawValue: unknown): PaymentMonthData | null => {
+    if (rawValue === null || rawValue === undefined) return null
+
+    if (typeof rawValue === 'string') {
+      try {
+        return JSON.parse(rawValue) as PaymentMonthData
+      } catch (error) {
+        console.error('Unable to parse payment data', error)
+        return null
+      }
+    }
+
+    return rawValue as PaymentMonthData
+  }
+
+  const groupColumns: Array<DataTableColumn<ResultsColumns>> = useMemo(() => {
+    const baseColumns: Array<DataTableColumn<ResultsColumns>> = [
       {
         key: 'student',
         label: 'student',
@@ -139,9 +205,41 @@ export function TuitionTab() {
         label: 'Generación',
         sortable: true,
       },
-    ],
-    [],
-  )
+    ]
+
+    const dynamicMonthColumns: Array<DataTableColumn<ResultsColumns>> = monthColumns.map((monthKey) => ({
+      key: monthKey,
+      label: monthKey,
+      sortable: true,
+      currency: 'MXN',
+      render: (row) => {
+        const paymentDetails = parsePaymentData(row[monthKey])
+
+        if (!paymentDetails) return <span>-</span>
+
+        const amountToShow =
+          paymentDetails.total_amount ?? paymentDetails.payments?.[0]?.amount ?? 0
+
+        return (
+          <button
+            type="button"
+            className="btn btn-link p-0 fw-semibold text-decoration-none"
+            onClick={() =>
+              setSelectedPayment({
+                row,
+                monthKey,
+                details: paymentDetails,
+              })
+            }
+          >
+            {currencyFormatter.format(amountToShow)}
+          </button>
+        )
+      },
+    }))
+
+    return [...baseColumns, ...dynamicMonthColumns]
+  }, [currencyFormatter, monthColumns])
 
   return (
     <>
@@ -193,7 +291,15 @@ export function TuitionTab() {
             }}
             sortBy={orderBy}
             sortDirection={orderDir}
-            onSort={(columnKey) => handleSort(columnKey as keyof ResultsColumns)}
+            onSort={(columnKey) => handleSort(columnKey)}
+          />
+
+          <TuitionPaymentModal
+            isOpen={Boolean(selectedPayment)}
+            onClose={() => setSelectedPayment(null)}
+            paymentData={selectedPayment?.details}
+            monthLabel={selectedPayment?.monthKey ?? ''}
+            studentData={selectedPayment?.row}
           />
         </>
       </div>
