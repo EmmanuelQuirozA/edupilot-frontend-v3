@@ -141,7 +141,7 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
             className="btn btn-link btn-sm"
             onClick={() => onNavigate(`/${locale}/schools/${row.school_id}`)}
           >
-            {t('tableViewDetails')}
+            {t('viewDetails')}
           </button>
         ),
       },

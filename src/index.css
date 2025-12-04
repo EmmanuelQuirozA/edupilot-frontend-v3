@@ -332,6 +332,16 @@ a:hover {
   color: #096900 !important;
 }
 
+.bg-warning {
+  background-color: #f3d73754 !important;
+  color: #676900 !important;
+}
+
+.bg-danger {
+  background-color: #ed7d753b !important;
+  color: #692100 !important;
+}
+
 .bg-danger {
   background-color: rgba(220, 53, 70, 0.295) !important;
 }

@@ -25,12 +25,6 @@ export interface DateRangePickerProps {
   helperText?: string;
 }
 
-const labelByGranularity: Record<DateGranularity, string> = {
-  day: "Selecciona días",
-  month: "Selecciona meses",
-  year: "Selecciona años",
-};
-
 function resolveRange(
   startKey: string,
   endKey: string,
@@ -128,7 +122,7 @@ export function DateRangePicker({
 
   const clearRange = () => {
     const emptyRange = resolveRange(startKey, endKey, { [startKey]: null, [endKey]: null });
-
+    setIsOpen(false);
     if (!value) {
       setRange(emptyRange);
     }
@@ -175,10 +169,6 @@ export function DateRangePicker({
           <span aria-hidden="true">×</span>
         </div>
         <div className="date-range-picker__toggle-content">
-          <div className="date-range-picker__toggle-label">
-            <span className="date-range-picker__title">Rango de fechas</span>
-            <span className="date-range-picker__granularity">{labelByGranularity[granularity]}</span>
-          </div>
           <span className="date-range-picker__toggle-value">{displayLabel}</span>
         </div>
         <svg
@@ -198,11 +188,11 @@ export function DateRangePicker({
 
       {isOpen ? (
         <section className="date-range-picker" role="dialog" aria-label="Selector de rango de fechas">
-          <div className="date-range-picker__actions">
+          {/* <div className="date-range-picker__actions">
             <button type="button" className="date-range-picker__clear-button" onClick={clearRange}>
               Borrar filtro
             </button>
-          </div>
+          </div> */}
           <div className="date-range-picker__fields">
             <label className="date-range-picker__field">
               <span className="date-range-picker__label">{startLabel}</span>

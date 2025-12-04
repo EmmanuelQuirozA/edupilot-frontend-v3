@@ -172,13 +172,32 @@ export function PaymentsTab() {
         label: 'paymentType',
         sortable: true,
       },
+      { 
+        key: 'payment_status_name', 
+        label: t('schoolsStatusColumn'),
+        sortable: true,
+        render: (row) => (
+          <small 
+            className={'cell-chip px-4 text-nowrap ' + (row.payment_status_id === 3 ? 'bg-success' : row.payment_status_id === 1 ? 'bg-warning' : 'bg-danger')}
+          > {row.payment_status_name} </small>
+        ),
+      },
       {
         key: 'amount',
         label: 'amount',
         sortable: true,
         currency: 'MXN'
       },
-      { key: 'actions', label: 'actions', sortable: false,},
+      { key: 'actions', label: 'actions', sortable: false,
+        render: (content) => (
+          <button 
+            className="btn btn-link p-0"
+            onClick={() => onNavigate(`/${locale}/finance/payments/${content.payment_id}`)}
+          >
+            {t("viewDetails")}
+          </button>
+        )
+      },
     ],
     [],
   )

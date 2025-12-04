@@ -159,6 +159,11 @@ export function PaymentRequestsTab() {
         key: 'ps_pr_name',
         label: 'status',
         sortable: true,
+        render: (row) => (
+          <small 
+            className={'cell-chip px-4 text-nowrap ' + (row.payment_status_id === 3 ? 'bg-success' : row.payment_status_id === 1 ? 'bg-warning' : 'bg-danger')}
+          > {row.ps_pr_name} </small>
+        ),
       },
       {
         key: 'pr_amount',
@@ -174,7 +179,16 @@ export function PaymentRequestsTab() {
           formatDate(content?.pr_pay_by, locale, {year: 'numeric', month: 'short', day: '2-digit'})
         )
       },
-      { key: 'actions', label: 'actions', sortable: false,},
+      { key: 'actions', label: 'actions', sortable: false,
+        render: (content) => (
+          <button 
+            className="btn btn-link p-0"
+            onClick={() => onNavigate(`/${locale}/finance/request/${content.payment_request_id}`)}
+          >
+            {t("viewDetails")}
+          </button>
+        )
+      },
     ],
     [locale],
   )
