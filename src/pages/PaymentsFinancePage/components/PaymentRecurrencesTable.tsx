@@ -23,41 +23,52 @@ interface PaymentRecurrencesTableProps {
   renderSortIndicator: (key: string) => ReactNode
 }
 
-export function PaymentRecurrencesTable({ rows, isLoading, error, strings, onSort, renderSortIndicator }: PaymentRecurrencesTableProps) {
-  const columns = useMemo<FinanceTableColumn<PaymentRecurrenceRow>[]>(
-    () => {
-      const sortableHeader = (label: string, key: string) => (
-        <button type="button" className="finance-table__sortable" onClick={() => onSort(key)}>
-          <span>{label}</span>
-          {renderSortIndicator(key)}
-        </button>
-      )
-
-      return [
-        { key: 'payment_request_scheduled_id', header: sortableHeader(strings.columns.id, 'payment_request_scheduled_id') },
-        { key: 'rule_name', header: sortableHeader(strings.columns.ruleName, 'rule_name') },
-        { key: 'pt_name', header: sortableHeader(strings.columns.concept, 'pt_name') },
-        { key: 'pot_name', header: sortableHeader(strings.columns.recurrenceType, 'pot_name') },
-        { key: 'applies_to', header: sortableHeader(strings.columns.appliesTo, 'applies_to') },
-        { key: 'amount', header: sortableHeader(strings.columns.amount, 'amount'), align: 'end' },
-        { key: 'next_execution_date', header: sortableHeader(strings.columns.nextExecutionDate, 'next_execution_date') },
-        { key: 'active', header: sortableHeader(strings.columns.active, 'active') },
-        { key: 'actions', header: strings.columns.actions, align: 'end' },
-      ]
-    },
-    [onSort, renderSortIndicator, strings.columns],
-  )
-
+export function PaymentRecurrencesTable({ rows, strings }: PaymentRecurrencesTableProps) {
   const decoratedRows = useMemo(
-    () =>
-      rows.map((row) => ({
-        ...row,
-        actions: <span className="badge bg-light text-dark">--</span>,
-      })),
+    () => rows.map((row) => ({ ...row, actions: <span className="badge bg-light text-dark">--</span> })),
     [rows],
   )
 
   return (
-    <div></div>
+    <div className="table-responsive">
+      <table className="table align-middle">
+        <thead className="table-light">
+          <tr>
+            <th scope="col">{strings.columns.id}</th>
+            <th scope="col">{strings.columns.ruleName}</th>
+            <th scope="col">{strings.columns.concept}</th>
+            <th scope="col">{strings.columns.recurrenceType}</th>
+            <th scope="col">{strings.columns.appliesTo}</th>
+            <th scope="col" className="text-end">{strings.columns.amount}</th>
+            <th scope="col">{strings.columns.nextExecutionDate}</th>
+            <th scope="col">{strings.columns.active}</th>
+            <th scope="col" className="text-end">{strings.columns.actions}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {decoratedRows.length === 0 ? (
+            <tr>
+              <td colSpan={9} className="text-center text-muted py-4">
+                {strings.empty}
+              </td>
+            </tr>
+          ) : (
+            decoratedRows.map((row) => (
+              <tr key={row.payment_request_scheduled_id}>
+                <td>{row.payment_request_scheduled_id}</td>
+                <td>{row.rule_name}</td>
+                <td>{row.pt_name}</td>
+                <td>{row.pot_name}</td>
+                <td>{row.applies_to}</td>
+                <td className="text-end">{row.amount}</td>
+                <td>{row.next_execution_date}</td>
+                <td>{row.active ? 'Sí' : 'No'}</td>
+                <td className="text-end">{row.actions}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
   )
 }
