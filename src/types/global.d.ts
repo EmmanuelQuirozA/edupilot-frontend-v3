@@ -6,5 +6,5 @@ declare const Swal: {
   }) => void
 }
 
-declare const $: any
+declare const $: (selector: string) => unknown
 

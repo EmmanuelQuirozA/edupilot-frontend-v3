@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../../../config'
 import { DataTable, type DataTableColumn } from '../../../components/DataTable'
 import SearchInput from '../../../components/ui/SearchInput';
 import StudentTableCell from '../../../components/ui/StudentTableCell';
+import { DateRangePicker } from '../../../components/ui/DateRangePicker'
 import { createCurrencyFormatter } from '../../../utils/currencyFormatter'
 import { TuitionPaymentModal } from './TuitionPaymentModal'
 
@@ -178,6 +179,12 @@ export function TuitionTab() {
     setOrderBy(columnKey)
   }
 
+  const handleDateRangeChange = (range: Record<string, string | null>) => {
+    setStartMonth(range.startMonth ?? '')
+    setEndMonth(range.endMonth ?? '')
+    setPage(0)
+  }
+
   const currencyFormatter = useMemo(() => createCurrencyFormatter(locale, 'MXN'), [locale])
 
   const parsePaymentData = (rawValue: unknown): PaymentMonthData | null => {
@@ -274,32 +281,16 @@ export function TuitionTab() {
                 inputClassName="w-100"
               />
               <div className="d-flex flex-column flex-lg-row align-items-lg-end gap-3">
-                <div className="d-flex flex-column flex-lg-row gap-3">
-                  <label className="d-flex flex-column gap-1 small text-muted fw-semibold">
-                    <span className="text-body-secondary">{t('startDate')}</span>
-                    <input
-                      type="month"
-                      value={startMonth}
-                      className="form-control"
-                      onChange={(event) => {
-                        setStartMonth(event.target.value)
-                        setPage(0)
-                      }}
-                    />
-                  </label>
-                  <label className="d-flex flex-column gap-1 small text-muted fw-semibold">
-                    <span className="text-body-secondary">{t('endDate')}</span>
-                    <input
-                      type="month"
-                      value={endMonth}
-                      className="form-control"
-                      onChange={(event) => {
-                        setEndMonth(event.target.value)
-                        setPage(0)
-                      }}
-                    />
-                  </label>
-                </div>
+                <DateRangePicker
+                  granularity="month"
+                  startKey="startMonth"
+                  endKey="endMonth"
+                  startLabel={t('startDate')}
+                  endLabel={t('endDate')}
+                  value={{ startMonth, endMonth }}
+                  onChange={handleDateRangeChange}
+                  className="w-100"
+                />
                 <button type="button" className="students-filter-button align-self-lg-center">
                   <svg
                     viewBox="0 0 20 20"

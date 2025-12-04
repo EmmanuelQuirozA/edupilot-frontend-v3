@@ -176,7 +176,7 @@ export function PaymentRequestsTab() {
       },
       { key: 'actions', label: 'actions', sortable: false,},
     ],
-    [],
+    [locale],
   )
 
   return (

@@ -19,10 +19,10 @@ interface PaymentsFinancePageProps {
 }
 
 export function PaymentsFinancePage({ onNavigate }: PaymentsFinancePageProps) {
-  const { token, hydrated } = useAuth()
+  const { hydrated } = useAuth()
   const { locale, t } = useLanguage()
 
-  const [error, setError] = useState<string | null>(null)
+  const [error] = useState<string | null>(null)
 
   // Tabs
   const [activeTab, setActiveTab] = useState<'tuitions' | 'paymentRequests' | 'payments'>('tuitions');
