@@ -224,8 +224,8 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     return `https://wa.me/${digitsOnly}`
   }
 
-  const isDateField = (field: string | null) => ['payment_date', 'created_at'].includes(field);
-  const isMonthField = (field: string | null) => ['payment_month'].includes(field);
+  const isDateField = (field: string | null) => (field ? ['payment_date', 'created_at'].includes(field) : false)
+  const isMonthField = (field: string | null) => (field ? ['payment_month'].includes(field) : false)
 
   if (!hydrated) {
     return (
