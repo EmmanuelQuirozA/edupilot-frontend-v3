@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Tabs from '../../components/ui/Tabs'
 import { Layout } from '../../layout/Layout'
 import { useAuth } from '../../context/AuthContext'
@@ -16,9 +16,10 @@ import type { BreadcrumbItem } from '../../components/Breadcrumb'
 
 interface PaymentsFinancePageProps {
   onNavigate: (path: string) => void
+  currentPath: string
 }
 
-export function PaymentsFinancePage({ onNavigate }: PaymentsFinancePageProps) {
+export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinancePageProps) {
   const { hydrated } = useAuth()
   const { locale, t } = useLanguage()
 
@@ -43,6 +44,29 @@ export function PaymentsFinancePage({ onNavigate }: PaymentsFinancePageProps) {
     [locale, onNavigate, t],
   )
 
+  useEffect(() => {
+    if (currentPath.includes('/finance/payments')) {
+      setActiveTab('payments')
+    } else if (currentPath.includes('/finance/request')) {
+      setActiveTab('paymentRequests')
+    } else {
+      setActiveTab('tuitions')
+    }
+  }, [currentPath])
+
+  const handleTabChange = (key: string) => {
+    const nextTab = key as 'tuitions' | 'paymentRequests' | 'payments'
+    setActiveTab(nextTab)
+
+    if (nextTab === 'payments') {
+      onNavigate(`/${locale}/finance/payments`)
+    } else if (nextTab === 'paymentRequests') {
+      onNavigate(`/${locale}/finance/request`)
+    } else {
+      onNavigate(`/${locale}/finance`)
+    }
+  }
+
   if (!hydrated) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')} breadcrumbItems={breadcrumbItems}>
@@ -65,7 +89,7 @@ export function PaymentsFinancePage({ onNavigate }: PaymentsFinancePageProps) {
             <Tabs
               tabs={tabs}
               activeKey={activeTab}
-              onSelect={(key) => setActiveTab(key as 'tuitions' | 'paymentRequests' | 'payments')}
+              onSelect={handleTabChange}
             />
           </div>
         </div>
@@ -76,12 +100,12 @@ export function PaymentsFinancePage({ onNavigate }: PaymentsFinancePageProps) {
         )}
         {activeTab === 'paymentRequests' && (
           <>
-            <PaymentRequestsTab/>
+            <PaymentRequestsTab onNavigate={onNavigate}/>
           </>
         )}
         {activeTab === 'payments' && (
           <>
-            <PaymentsTab/>
+            <PaymentsTab onNavigate={onNavigate}/>
           </>
         )}
       </div>
