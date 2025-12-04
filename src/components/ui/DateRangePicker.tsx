@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./date-range-picker.css";
 
 export type DateGranularity = "day" | "month" | "year";
@@ -56,12 +56,22 @@ export function DateRangePicker({
   const [range, setRange] = useState<Record<string, string | null>>(() =>
     resolveRange(startKey, endKey, value ?? defaultValue),
   );
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (value) {
-      setRange(resolveRange(startKey, endKey, value));
-    }
-  }, [value, startKey, endKey]);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const inputConfig = useMemo(() => {
     if (granularity === "month") {
@@ -75,50 +85,102 @@ export function DateRangePicker({
     return { type: "date", placeholder: "AAAA-MM-DD" } as const;
   }, [granularity]);
 
+  const controlledRange = useMemo(
+    () => (value ? resolveRange(startKey, endKey, value) : null),
+    [endKey, startKey, value],
+  );
+
+  const currentRange = controlledRange ?? range;
+
   const handleChange = (key: string, rawValue: string) => {
     const parsedValue = rawValue.trim() === "" ? null : rawValue;
     const nextRange = {
-      ...resolveRange(startKey, endKey, range),
+      ...resolveRange(startKey, endKey, currentRange),
       [key]: parsedValue,
     } satisfies Record<string, string | null>;
 
-    setRange(nextRange);
+    if (!value) {
+      setRange(nextRange);
+    }
     onChange?.(nextRange);
   };
 
-  const startValue = range[startKey] ?? "";
-  const endValue = range[endKey] ?? "";
+  const startValue = currentRange[startKey] ?? "";
+  const endValue = currentRange[endKey] ?? "";
+
+  const displayLabel = useMemo(() => {
+    if (startValue && endValue) {
+      return `${startValue} - ${endValue}`;
+    }
+
+    if (startValue) {
+      return `${startValue} →`;
+    }
+
+    if (endValue) {
+      return `← ${endValue}`;
+    }
+
+    return "Selecciona un rango";
+  }, [startValue, endValue]);
 
   return (
-    <section className={["date-range-picker", className].filter(Boolean).join(" ")}>
-      <header className="date-range-picker__header">
-        <div className="date-range-picker__title">Rango de fechas</div>
-        <span className="date-range-picker__granularity">{labelByGranularity[granularity]}</span>
-      </header>
-
-      <div className="date-range-picker__fields">
-        <label className="date-range-picker__field">
-          <span className="date-range-picker__label">{startLabel}</span>
-          <input
-            {...inputConfig}
-            value={startValue}
-            className="date-range-picker__input"
-            onChange={(event) => handleChange(startKey, event.target.value)}
+    <div className={["date-range-picker__container", className].filter(Boolean).join(" ")} ref={containerRef}>
+      <button
+        type="button"
+        className="date-range-picker__toggle"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((prev) => !prev)}
+      >
+        <div className="date-range-picker__toggle-content">
+          <div className="date-range-picker__toggle-label">
+            <span className="date-range-picker__title">Rango de fechas</span>
+            <span className="date-range-picker__granularity">{labelByGranularity[granularity]}</span>
+          </div>
+          <span className="date-range-picker__toggle-value">{displayLabel}</span>
+        </div>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className={`date-range-picker__chevron${isOpen ? " date-range-picker__chevron--open" : ""}`}
+          aria-hidden="true"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.086l3.71-3.855a.75.75 0 1 1 1.08 1.04l-4.24 4.4a.75.75 0 0 1-1.08 0l-4.24-4.4a.75.75 0 0 1 .02-1.06Z"
+            clipRule="evenodd"
           />
-        </label>
+        </svg>
+      </button>
 
-        <label className="date-range-picker__field">
-          <span className="date-range-picker__label">{endLabel}</span>
-          <input
-            {...inputConfig}
-            value={endValue}
-            className="date-range-picker__input"
-            onChange={(event) => handleChange(endKey, event.target.value)}
-          />
-        </label>
-      </div>
+      {isOpen ? (
+        <section className="date-range-picker" role="dialog" aria-label="Selector de rango de fechas">
+          <div className="date-range-picker__fields">
+            <label className="date-range-picker__field">
+              <span className="date-range-picker__label">{startLabel}</span>
+              <input
+                {...inputConfig}
+                value={startValue}
+                className="date-range-picker__input"
+                onChange={(event) => handleChange(startKey, event.target.value)}
+              />
+            </label>
 
-      {helperText ? <p className="date-range-picker__helper">{helperText}</p> : null}
-    </section>
+            <label className="date-range-picker__field">
+              <span className="date-range-picker__label">{endLabel}</span>
+              <input
+                {...inputConfig}
+                value={endValue}
+                className="date-range-picker__input"
+                onChange={(event) => handleChange(endKey, event.target.value)}
+              />
+            </label>
+          </div>
+
+          {helperText ? <p className="date-range-picker__helper">{helperText}</p> : null}
+        </section>
+      ) : null}
+    </div>
   );
 }

@@ -1,19 +1,37 @@
-.date-range-picker {
-  display: grid;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--ui-color-surface, #ffffff);
-  border: 1px solid var(--ui-color-border, #e2e8f0);
-  border-radius: var(--ui-radius-lg, 1rem);
-  box-shadow: 0 16px 36px -28px rgba(15, 23, 42, 0.45);
+.date-range-picker__container {
+  position: relative;
+  display: inline-block;
+  min-width: 280px;
 }
 
-.date-range-picker__header {
+.date-range-picker__toggle {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  padding: 0.9rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--ui-color-border, #e2e8f0);
+  background: var(--ui-color-surface, #ffffff);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.date-range-picker__toggle:hover {
+  border-color: var(--ui-color-primary, #2563eb);
+  box-shadow: 0 8px 30px -22px rgba(37, 99, 235, 0.45);
+}
+
+.date-range-picker__toggle:active {
+  transform: scale(0.995);
+}
+
+.date-range-picker__toggle-content {
+  display: grid;
+  gap: 0.25rem;
+  text-align: left;
 }
 
 .date-range-picker__title {
@@ -31,6 +49,38 @@
   background: var(--ui-color-primary-light, #eff6ff);
   border-radius: 999px;
   border: 1px solid var(--ui-color-border, #e2e8f0);
+}
+
+.date-range-picker__toggle-value {
+  font-weight: 600;
+  color: var(--ui-color-secondary, #334155);
+  font-size: 0.95rem;
+}
+
+.date-range-picker__chevron {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--ui-color-muted, #64748b);
+  transition: transform 0.2s ease;
+}
+
+.date-range-picker__chevron--open {
+  transform: rotate(180deg);
+}
+
+.date-range-picker {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--ui-color-surface, #ffffff);
+  border: 1px solid var(--ui-color-border, #e2e8f0);
+  border-radius: var(--ui-radius-lg, 1rem);
+  box-shadow: 0 16px 36px -28px rgba(15, 23, 42, 0.45);
+  min-width: 360px;
 }
 
 .date-range-picker__fields {
@@ -78,7 +128,12 @@
 }
 
 @media (max-width: 640px) {
+  .date-range-picker__container {
+    width: 100%;
+  }
+
   .date-range-picker {
-    padding: 0.9rem;
+    position: static;
+    width: 100%;
   }
 }
