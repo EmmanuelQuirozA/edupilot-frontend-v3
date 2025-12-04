@@ -34,6 +34,27 @@
   text-align: left;
 }
 
+.date-range-picker__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--ui-color-border, #e2e8f0);
+  background: var(--ui-color-surface, #ffffff);
+  color: var(--ui-color-muted, #64748b);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.date-range-picker__clear:hover {
+  color: var(--ui-color-primary, #2563eb);
+  border-color: var(--ui-color-primary, #2563eb);
+  background: var(--ui-color-primary-light, #eff6ff);
+}
+
 .date-range-picker__title {
   font-weight: 700;
   color: var(--ui-color-secondary, #334155);
@@ -81,6 +102,28 @@
   border-radius: var(--ui-radius-lg, 1rem);
   box-shadow: 0 16px 36px -28px rgba(15, 23, 42, 0.45);
   min-width: 360px;
+}
+
+.date-range-picker__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.date-range-picker__clear-button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--ui-color-border, #e2e8f0);
+  background: var(--ui-color-surface, #ffffff);
+  color: var(--ui-color-secondary, #334155);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.date-range-picker__clear-button:hover {
+  color: var(--ui-color-primary, #2563eb);
+  border-color: var(--ui-color-primary, #2563eb);
+  background: var(--ui-color-primary-light, #eff6ff);
 }
 
 .date-range-picker__fields {

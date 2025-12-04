@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./date-range-picker.css";
+import { formatDate } from "../../utils/formatDate";
 
 export type DateGranularity = "day" | "month" | "year";
 
@@ -108,21 +109,51 @@ export function DateRangePicker({
   const startValue = currentRange[startKey] ?? "";
   const endValue = currentRange[endKey] ?? "";
 
+  const formatDisplayValue = useCallback(
+    (value: string | null) => {
+      if (!value) return "";
+
+      if (granularity === "month") {
+        return formatDate(value, "es-ES", { year: "numeric", month: "long" });
+      }
+
+      if (granularity === "year") {
+        return formatDate(`${value}-01-01`, "es-ES", { year: "numeric" });
+      }
+
+      return value;
+    },
+    [granularity],
+  );
+
+  const clearRange = () => {
+    const emptyRange = resolveRange(startKey, endKey, { [startKey]: null, [endKey]: null });
+
+    if (!value) {
+      setRange(emptyRange);
+    }
+
+    onChange?.(emptyRange);
+  };
+
   const displayLabel = useMemo(() => {
-    if (startValue && endValue) {
-      return `${startValue} - ${endValue}`;
+    const formattedStart = formatDisplayValue(startValue);
+    const formattedEnd = formatDisplayValue(endValue);
+
+    if (formattedStart && formattedEnd) {
+      return `${formattedStart} - ${formattedEnd}`;
     }
 
-    if (startValue) {
-      return `${startValue} →`;
+    if (formattedStart) {
+      return `${formattedStart} →`;
     }
 
-    if (endValue) {
-      return `← ${endValue}`;
+    if (formattedEnd) {
+      return `← ${formattedEnd}`;
     }
 
     return "Selecciona un rango";
-  }, [startValue, endValue]);
+  }, [formatDisplayValue, startValue, endValue]);
 
   return (
     <div className={["date-range-picker__container", className].filter(Boolean).join(" ")} ref={containerRef}>
@@ -132,6 +163,17 @@ export function DateRangePicker({
         aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
       >
+        <div
+          className="date-range-picker__clear"
+          onClick={(event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            clearRange();
+          }}
+          aria-label="Limpiar rango"
+        >
+          <span aria-hidden="true">×</span>
+        </div>
         <div className="date-range-picker__toggle-content">
           <div className="date-range-picker__toggle-label">
             <span className="date-range-picker__title">Rango de fechas</span>
@@ -156,6 +198,11 @@ export function DateRangePicker({
 
       {isOpen ? (
         <section className="date-range-picker" role="dialog" aria-label="Selector de rango de fechas">
+          <div className="date-range-picker__actions">
+            <button type="button" className="date-range-picker__clear-button" onClick={clearRange}>
+              Borrar filtro
+            </button>
+          </div>
           <div className="date-range-picker__fields">
             <label className="date-range-picker__field">
               <span className="date-range-picker__label">{startLabel}</span>
