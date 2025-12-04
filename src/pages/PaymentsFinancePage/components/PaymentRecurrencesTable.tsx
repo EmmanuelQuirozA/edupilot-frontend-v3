@@ -1,6 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
 import type { PaymentRecurrenceRow } from '../types'
-import { FinanceTable, type FinanceTableColumn } from './FinanceTable'
 
 interface PaymentRecurrencesTableProps {
   rows: PaymentRecurrenceRow[]
@@ -59,12 +58,6 @@ export function PaymentRecurrencesTable({ rows, isLoading, error, strings, onSor
   )
 
   return (
-    <FinanceTable
-      columns={columns}
-      rows={decoratedRows}
-      isLoading={isLoading}
-      error={error}
-      emptyLabel={strings.empty}
-    />
+    <div></div>
   )
 }

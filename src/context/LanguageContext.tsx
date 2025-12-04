@@ -137,6 +137,18 @@ const translations: TranslationMap = {
     paymentRequestPlaceholder: 'La página de detalle para la solicitud #{id} estará disponible pronto.',
     loadingRequest: 'Cargando solicitud...',
     groupLabel: 'Grupo: {{group}} · Nivel: {{level}} · Generación: {{generation}}',
+    payment_concept_id: 'Concepto de pago',
+    payment_month: 'Mes de colegiatura',
+    payment_status_id: 'Estatus del pago',
+    validated_by_user_id: 'Validado por',
+    validated_at: 'Fecha de validación',
+    created_at: 'Fecha de creación',
+    updated_at: 'Fecha de actualización',
+    payment_request_id: 'Solicitud de pago',
+    payment_through_id: 'Método de pago',
+    receipt_path: 'Recibo',
+    receipt_file_name: 'Nombre de recibo',
+    payment_date: 'Fecha de pago',
 
   },
   en: {
@@ -270,6 +282,18 @@ const translations: TranslationMap = {
     paymentRequestPlaceholder: 'The detail page for request #{id} will be available soon.',
     loadingRequest: 'Loading request...',
     groupLabel: 'Group: {{group}} · Level: {{level}} · Generation: {{generation}}',
+    payment_concept_id: 'Payment concept',
+    payment_month: 'Tuition month',
+    payment_status_id: 'Payment status',
+    validated_by_user_id: 'Validated by',
+    validated_at: 'Validation date',
+    created_at: 'Creation date',
+    updated_at: 'Update date',
+    payment_request_id: 'Payment request',
+    payment_through_id: 'Payment method',
+    receipt_path: 'Receipt',
+    receipt_file_name: 'Receipt name',
+    payment_date: 'Payment date'
 
   },
 }

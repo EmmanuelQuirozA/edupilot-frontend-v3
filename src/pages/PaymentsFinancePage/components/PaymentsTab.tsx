@@ -199,10 +199,10 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
         render: (row) => (
           <button
             type="button"
-            className="btn btn-outline-primary btn-sm"
+            className="btn btn-link p-0"
             onClick={() => onNavigate(`/${locale}/finance/payments/${row.payment_id}`)}
           >
-            {t('tableViewDetails')}
+            {t('viewDetails')}
           </button>
         ),
       },

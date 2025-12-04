@@ -27,6 +27,32 @@
   font-family: 'Inter', sans-serif;
 }
 
+.card.shadow-none {
+  box-shadow: none !important;
+}
+
+.log-entry {
+  list-style-type: none;
+  border-left: 2px solid blue;
+}
+
+.emailIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  fill: currentColor;
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0d6efd;
+}
+
+.bi-whatsapp {
+  color: #25d366;
+}
+
 .ghost-button:hover{
   background-color: #f4f5f7;
   transition: background 0.18s ease;
@@ -377,4 +403,34 @@ a:hover {
 
 .bg-white\/20 {
     background-color: rgb(255 255 255 / 0.2);
+}
+
+.btn-print:hover {
+  color: black !important;
+}
+
+.btn-edit:hover {
+  color: rgb(56, 82, 231) !important;
+}
+
+.btn-reject {
+ border: 1.5px solid rgba(212, 212, 212, 0.685);
+ border-radius: 10px 0 0 10px;
+}
+
+.btn-reject:hover {
+  border: 1.5px solid rgba(185, 28, 28, 0.603);
+  background-color: rgb(254 242 242);
+  color: rgba(185, 28, 28, 0.829) !important;
+}
+
+.btn-approve {
+ border: 1.5px solid rgba(0, 0, 0, 0.685);
+ border-radius: 0 10px 10px 0;
+ background-color: #212529;
+ color: white !important;
+}
+
+.btn-approve:hover {
+  background-color: rgb(46, 46, 46);
 }
