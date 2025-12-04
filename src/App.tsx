@@ -21,6 +21,8 @@ import { SchoolsPage } from "./pages/SchoolsPage";
 import { SchoolDetailsPage } from "./pages/SchoolDetailsPage";
 import { StudentsPage } from "./pages/StudentsPage";
 import { PaymentsFinancePage } from "./pages/PaymentsFinancePage/PaymentsFinancePage";
+import { PaymentDetailPage } from "./pages/PaymentsFinancePage/PaymentDetailPage";
+import { PaymentRequestDetailPage } from "./pages/PaymentsFinancePage/PaymentRequestDetailPage";
 
 import { LoadingSkeleton } from "./components/LoadingSkeleton";
 import { Layout } from "./layout/Layout";
@@ -109,7 +111,10 @@ function Router() {
   const schoolDetailMatch = path.match(/^\/(es|en)\/schools\/(\d+)$/);
   const isSchoolDetailPath = Boolean(schoolDetailMatch);
   const isStudentsPath = /^\/(es|en)\/students$/.test(path);
-  const isFinancePath = /^\/(es|en)\/finance$/.test(path);
+  const financeMatch = path.match(/^\/(es|en)\/finance(?:\/(payments|request)(?:\/(\d+))?)?$/);
+  const isFinancePath = Boolean(financeMatch);
+  const financeSection = financeMatch?.[2];
+  const financeEntityId = financeMatch?.[3];
 
   // ------------------------------------------------------
   // LOADING
@@ -141,7 +146,25 @@ function Router() {
 
     if (isSchoolsPath) return <SchoolsPage onNavigate={navigate} />;
     if (isStudentsPath) return <StudentsPage onNavigate={navigate} />;
-    if (isFinancePath) return <PaymentsFinancePage onNavigate={navigate} />;
+    if (isFinancePath && financeSection === 'payments' && financeEntityId) {
+      return (
+        <PaymentDetailPage
+          onNavigate={navigate}
+          paymentId={Number(financeEntityId)}
+        />
+      );
+    }
+
+    if (isFinancePath && financeSection === 'request' && financeEntityId) {
+      return (
+        <PaymentRequestDetailPage
+          onNavigate={navigate}
+          paymentRequestId={Number(financeEntityId)}
+        />
+      );
+    }
+
+    if (isFinancePath) return <PaymentsFinancePage onNavigate={navigate} currentPath={path} />;
 
     if (isRootPath) {
       switch (role) {

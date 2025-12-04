@@ -57,7 +57,11 @@ interface DataResponse {
   totalPages: number
 }
 
-export function PaymentsTab() {
+interface PaymentsTabProps {
+  onNavigate: (path: string) => void
+}
+
+export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
 
@@ -188,18 +192,22 @@ export function PaymentsTab() {
         sortable: true,
         currency: 'MXN'
       },
-      { key: 'actions', label: 'actions', sortable: false,
-        render: (content) => (
-          <button 
-            className="btn btn-link p-0"
-            onClick={() => onNavigate(`/${locale}/finance/payments/${content.payment_id}`)}
+      {
+        key: 'actions',
+        label: t('tableActions'),
+        sortable: false,
+        render: (row) => (
+          <button
+            type="button"
+            className="btn btn-outline-primary btn-sm"
+            onClick={() => onNavigate(`/${locale}/finance/payments/${row.payment_id}`)}
           >
-            {t("viewDetails")}
+            {t('tableViewDetails')}
           </button>
-        )
+        ),
       },
     ],
-    [],
+    [locale, onNavigate, t],
   )
 
   return (
