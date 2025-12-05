@@ -88,6 +88,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
   const [logsError, setLogsError] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isSavingReceipt, setIsSavingReceipt] = useState(false)
+  const [isRemovingReceipt, setIsRemovingReceipt] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [hasRemovedReceipt, setHasRemovedReceipt] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
@@ -287,11 +288,67 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     setHasRemovedReceipt(true)
   }
 
-  const handleRemoveExistingReceipt = () => {
-    setHasRemovedReceipt(true)
-    setSelectedFile(null)
-    if (payment) {
+  const handleRemoveExistingReceipt = async () => {
+    if (!token || !payment) return
+
+    const confirmation = await Swal.fire({
+      icon: 'warning',
+      title: t('removeReceipt') || 'Eliminar comprobante',
+      text: t('areYouSure') || '¿Deseas eliminar el comprobante?',
+      showCancelButton: true,
+      confirmButtonText: t('accept') || 'Aceptar',
+      cancelButtonText: t('cancel') || 'Cancelar',
+    })
+
+    if (!confirmation.isConfirmed) return
+
+    setIsRemovingReceipt(true)
+
+    try {
+      const normalizedLanguage = locale || 'es'
+      const params = new URLSearchParams({ lang: normalizedLanguage, removeReceipt: 'true' })
+      const url = `${API_BASE_URL}/payments/update/${payment.payment_id}?${params.toString()}`
+
+      const formData = new FormData()
+      formData.append('request', new Blob([JSON.stringify({})], { type: 'application/json' }))
+
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('failed_request')
+      }
+
+      const result = await response.json()
+
+      Swal.fire({
+        icon: result?.success ? 'success' : 'error',
+        title: result?.title || t('defaultError'),
+        text: result?.message || t('defaultError'),
+      })
+
+      if (!result?.success) return
+
+      await fetchPaymentDetails()
+      setHasRemovedReceipt(true)
+      setSelectedFile(null)
       setPayment({ ...payment, receipt_path: null, receipt_file_name: null })
+    } catch (requestError) {
+      Swal.fire({
+        icon: 'error',
+        title: t('defaultError'),
+        text: t('defaultError'),
+      })
+      if ((requestError as Error).name !== 'AbortError') {
+        setError(t('defaultError'))
+      }
+    } finally {
+      setIsRemovingReceipt(false)
     }
   }
 
@@ -804,7 +861,12 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                   {t('viewReceipt')}
                 </button>
                 {canUpdatePayment ? (
-                  <button type="button" className="btn btn-outline-danger btn-sm" onClick={handleRemoveExistingReceipt}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger btn-sm"
+                    onClick={handleRemoveExistingReceipt}
+                    disabled={isRemovingReceipt}
+                  >
                     {t('removeReceipt')}
                   </button>
                 ) : null}
