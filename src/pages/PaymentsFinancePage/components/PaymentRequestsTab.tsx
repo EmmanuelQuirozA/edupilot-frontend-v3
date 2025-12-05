@@ -165,7 +165,7 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
         sortable: true,
         render: (row) => (
           <small 
-            className={'cell-chip px-4 text-nowrap ' + (row.payment_status_id === 3 ? 'bg-success' : row.payment_status_id === 1 ? 'bg-warning' : 'bg-danger')}
+            className={'cell-chip px-4 text-nowrap ' + (row.payment_status_id === 7 ? 'bg-success' : row.payment_status_id === 8 ? 'bg-danger' : 'bg-warning')}
           > {row.ps_pr_name} </small>
         ),
       },

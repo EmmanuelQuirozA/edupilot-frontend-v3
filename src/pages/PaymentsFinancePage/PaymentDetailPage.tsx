@@ -378,33 +378,39 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
           </div>
           <div className="card-body">
             <div className="row">
-              <div className="col-md-6 mb-3">
-                <strong className="d-block text-sm text-gray-500">{t('amount')}</strong>
-                <span className="fw-medium">${payment.amount?.toFixed(2)}</span>
+              <div className="col-md-3">
+                <div className="text-muted small mb-1">{t('paymentRequestDetail')}</div>
+                <div className="fw-semibold">#{payment.payment_id}</div>
               </div>
-              <div className="col-md-6 mb-3">
-                <strong className="d-block text-sm text-gray-500">{t('status')}</strong>
-                <span className="fw-medium">{payment.payment_status_name}</span>
+              <div className="col-md-3 mb-3">
+                <div className="text-muted small mb-1">{t('amount')}</div>
+                <div className="fw-semibold">${payment.amount?.toFixed(2)}</div>
               </div>
-              <div className="col-md-6 mb-3">
-                <strong className="d-block text-sm text-gray-500">{t('paymentType')}</strong>
-                <span className="fw-medium">{payment.pt_name}</span>
+              <div className="col-md-3 mb-3">
+                <div className="text-muted small mb-1">{t('paymentDate')}</div>
+                <div className="fw-semibold">{formatDate(payment.payment_date, locale, { dateStyle: 'full', timeStyle: 'short' })}</div>
               </div>
-              <div className="col-md-6 mb-3">
-                <strong className="d-block text-sm text-gray-500">{t('paymentThrough')}</strong>
-                <span className="fw-medium">{payment.payt_name}</span>
+              <div className="col-md-3 mb-3">
+                <div className="text-muted small mb-1">{t('status')}</div>
+                <small className={'cell-chip px-4 text-nowrap ' + (payment.payment_status_id === 3 ? 'bg-success' : payment.payment_status_id === 4 ? 'bg-danger' : 'bg-warning')}>
+                  {payment.payment_status_name}
+                </small>
               </div>
-              <div className="col-md-6 mb-3">
-                <strong className="d-block text-sm text-gray-500">{t('paymentReference')}</strong>
-                <span className="fw-medium">{payment.payment_reference || t('noInformation')}</span>
+              <div className="col-md-3 mb-3">
+                <div className="text-muted small mb-1">{t('paymentType')}</div>
+                <div className="fw-semibold">{payment.pt_name}</div>
               </div>
-              <div className="col-md-6 mb-3">
-                <strong className="d-block text-sm text-gray-500">{t('paymentDate')}</strong>
-                <span className="fw-medium">{formatDate(payment.payment_date, locale, { dateStyle: 'full', timeStyle: 'short' })}</span>
+              <div className="col-md-3 mb-3">
+                <div className="text-muted small mb-1">{t('paymentThrough')}</div>
+                <div className="fw-semibold">{payment.payt_name}</div>
               </div>
-              <div className="col-md-6 mb-3">
-                <strong className="d-block text-sm text-gray-500">{t('paymentMonth')}</strong>
-                <span className="fw-medium">{formatDate(payment.payment_month, locale, {year: 'numeric', month: 'long'})}</span>
+              <div className="col-md-3 mb-3">
+                <div className="text-muted small mb-1">{t('paymentReference')}</div>
+                <div className="fw-semibold">{payment.payment_reference || t('noInformation')}</div>
+              </div>
+              <div className="col-md-3 mb-3">
+                <div className="text-muted small mb-1">{t('paymentMonth')}</div>
+                <div className="fw-semibold">{formatDate(payment.payment_month, locale, {year: 'numeric', month: 'long'})}</div>
               </div>
             </div>
           </div>

@@ -268,9 +268,12 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
   const canCreatePayment = permissions?.createAllowed ?? false
   const canUpdatePayment = permissions?.updateAllowed ?? false
 
-  const formatCurrency = (value: number) =>
-    value.toLocaleString(locale === 'es' ? 'es-MX' : 'en-US', { style: 'currency', currency: 'MXN' })
-
+  const formatCurrency = (value: number | null | undefined) =>
+    (value ?? 0).toLocaleString(
+      locale === 'es' ? 'es-MX' : 'en-US',
+      { style: 'currency', currency: 'MXN' }
+    );
+    
   const groupLabel = t('groupLabel')
     .replace('{{group}}', student.grade_group || '-')
     .replace('{{level}}', student.scholar_level_name || '-')
@@ -438,7 +441,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
               </div>
               <div className="col-md-3">
                 <div className="text-muted small mb-1">{t('status')}</div>
-                <small className={'cell-chip px-4 text-nowrap ' + (paymentRequest.payment_status_id === 3 ? 'bg-success' : paymentRequest.payment_status_id === 1 ? 'bg-warning' : 'bg-danger')}>
+                <small className={'cell-chip px-4 text-nowrap ' + (paymentRequest.payment_status_id === 7 ? 'bg-success' : paymentRequest.payment_status_id === 8 ? 'bg-danger' : 'bg-warning')}>
                   {paymentRequest.ps_pr_name}
                 </small>
               </div>
