@@ -320,7 +320,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
       formData.append('request', new Blob([JSON.stringify(payload)], { type: 'application/json' }))
 
       const response = await fetch(url, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -576,7 +576,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                     onChange={(event) => handlePaymentFormChange('amount', event.target.value)}
                     disabled={isUpdatingPayment}
                     min="0"
-                    step="0.01"
+                    step="1"
                     required
                   />
                 </div>

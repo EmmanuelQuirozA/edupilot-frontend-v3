@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { API_BASE_URL } from '../config'
+import { useAuth } from '../context/AuthContext'
 
 export interface CatalogOption {
   id: number
@@ -26,6 +27,7 @@ export const useCatalogOptions = (
   lang: string,
   initialOptions: CatalogOption[] = [],
 ): UseCatalogOptionsResult => {
+  const { token } = useAuth()
   const [options, setOptions] = useState<CatalogOption[]>(initialOptions)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,6 +40,8 @@ export const useCatalogOptions = (
   }, [])
 
   useEffect(() => {
+    if (!token) return
+    
     const controller = new AbortController()
 
     const fetchOptions = async () => {
@@ -45,7 +49,12 @@ export const useCatalogOptions = (
       setError(null)
 
       try {
-        const response = await fetch(url, { signal: controller.signal })
+        const response = await fetch(url, { 
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal 
+        })
 
         if (!response.ok) {
           throw new Error('Failed to load catalog options')
