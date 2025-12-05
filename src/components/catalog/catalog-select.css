@@ -1,0 +1,15 @@
+.catalog-select {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.catalog-select select.form-control {
+  width: 100%;
+}
+
+.catalog-select__error {
+  color: #b3261e;
+  font-size: 0.9rem;
+  margin: 0;
+}
