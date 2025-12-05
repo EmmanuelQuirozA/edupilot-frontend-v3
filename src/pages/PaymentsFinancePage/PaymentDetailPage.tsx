@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react'
 import Swal from 'sweetalert2'
 import { Layout } from '../../layout/Layout'
 import { useLanguage } from '../../context/LanguageContext'
@@ -87,6 +87,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
   const [error, setError] = useState<string | null>(null)
   const [logsError, setLogsError] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isSavingReceipt, setIsSavingReceipt] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [hasRemovedReceipt, setHasRemovedReceipt] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
@@ -118,11 +119,10 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     [locale, onNavigate, paymentId, t],
   )
 
-  useEffect(() => {
-    if (!token || !permissionsLoaded || !permissions?.readAllowed) return
+  const fetchPaymentDetails = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!token || !permissionsLoaded || !permissions?.readAllowed) return
 
-    const controller = new AbortController()
-    const fetchPayment = async () => {
       setIsLoading(true)
       setError(null)
       try {
@@ -133,7 +133,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
 
         const response = await fetch(`${API_BASE_URL}/reports/payments?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
+          signal,
         })
 
         if (!response.ok) {
@@ -147,14 +147,19 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
           setError(t('defaultError'))
         }
       } finally {
-        setIsLoading(false)
+        if (!signal || !signal.aborted) {
+          setIsLoading(false)
+        }
       }
-    }
+    },
+    [locale, paymentId, permissions?.readAllowed, permissionsLoaded, t, token],
+  )
 
-    fetchPayment()
-
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchPaymentDetails(controller.signal)
     return () => controller.abort()
-  }, [locale, paymentId, permissions?.readAllowed, permissionsLoaded, t, token])
+  }, [fetchPaymentDetails])
 
   useEffect(() => {
     if (!token || !permissionsLoaded || !permissions?.readAllowed) return
@@ -216,6 +221,65 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     const file = event.dataTransfer.files?.[0]
     handleFileSelect(file ?? null)
     setIsDragOver(false)
+  }
+
+  const handleReceiptSave = async () => {
+    if (!token || !payment || !selectedFile) return
+
+    setIsSavingReceipt(true)
+
+    try {
+      const normalizedLanguage = locale || 'es'
+      const url = `${API_BASE_URL}/payments/update/${payment.payment_id}?lang=${normalizedLanguage}`
+
+      const formData = new FormData()
+      formData.append('request', new Blob([JSON.stringify({})], { type: 'application/json' }))
+      formData.append('receipt', selectedFile)
+
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('failed_request')
+      }
+
+      const result = await response.json()
+
+      if (!result?.success) {
+        Swal.fire({
+          icon: 'error',
+          title: result?.title || t('defaultError'),
+          text: result?.message || t('defaultError'),
+        })
+        return
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: result?.title || '',
+        text: result?.message || '',
+      })
+
+      await fetchPaymentDetails()
+      setSelectedFile(null)
+      setHasRemovedReceipt(false)
+    } catch (requestError) {
+      Swal.fire({
+        icon: 'error',
+        title: t('defaultError'),
+        text: t('defaultError'),
+      })
+      if ((requestError as Error).name !== 'AbortError') {
+        setError(t('defaultError'))
+      }
+    } finally {
+      setIsSavingReceipt(false)
+    }
   }
 
   const handleRemoveFile = () => {
@@ -356,21 +420,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
         text: result?.message || '',
       })
 
-      if (result.payload) {
-        setPayment((prev) => {
-          if (!prev) return prev
-
-          return {
-            ...prev,
-            ...result.payload,
-            payment_status_id: result.payload.payment_status_id ?? prev.payment_status_id,
-            payment_status_name: result.payload.payment_status_name ?? prev.payment_status_name,
-            validator_full_name: result.payload.validator_full_name ?? prev.validator_full_name,
-            validator_username: result.payload.validator_username ?? prev.validator_username,
-            validator_phone_number: result.payload.validator_phone_number ?? prev.validator_phone_number,
-          }
-        })
-      }
+      await fetchPaymentDetails()
     } catch (requestError) {
       Swal.fire({
         icon: 'error',
@@ -437,24 +487,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
         text: result?.message || '',
       })
 
-      if (result.payload) {
-        setPayment((prev) => {
-          if (!prev) return prev
-
-          return {
-            ...prev,
-            ...result.payload,
-            payment_concept_id: result.payload.payment_concept_id ?? prev.payment_concept_id,
-            payment_through_id: result.payload.payment_through_id ?? prev.payment_through_id,
-            payment_month: result.payload.payment_month ?? prev.payment_month,
-            amount: result.payload.amount ?? prev.amount,
-            comments: result.payload.comments ?? prev.comments,
-            payment_date: result.payload.payment_date ?? prev.payment_date,
-            payment_created_at: result.payload.created_at ?? prev.payment_created_at,
-          }
-        })
-      }
-
+      await fetchPaymentDetails()
       setIsEditingPayment(false)
     } catch (requestError) {
       Swal.fire({
@@ -520,6 +553,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     .replace('{{generation}}', payment.generation || '-')
 
   const canUpdatePayment = permissions?.updateAllowed ?? false
+  const isFinalStatus = payment.payment_status_id === 3 || payment.payment_status_id === 4
   const hasReceipt = Boolean(payment.receipt_path && !hasRemovedReceipt)
 
   return (
@@ -591,7 +625,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                     </svg>
                     {t('print')}
                   </button>
-                  {canUpdatePayment ? (
+                  {canUpdatePayment && !isFinalStatus ? (
                     <>
                       <button
                         type="button"
@@ -780,7 +814,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
           <div className="card-body">
             {hasReceipt ? (
               <p className="mb-0 text-muted">{payment.receipt_file_name ?? t('receipt')}</p>
-            ) : canUpdatePayment ? (
+            ) : canUpdatePayment && !isFinalStatus ? (
               <>
                 <div
                   className={`border rounded p-4 text-center ${isDragOver ? 'bg-light' : ''}`}
@@ -799,6 +833,14 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                       <button type="button" className="btn btn-outline-danger btn-sm" onClick={handleRemoveFile}>
                         {t('removeReceipt')}
                       </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={handleReceiptSave}
+                        disabled={isSavingReceipt}
+                      >
+                        {isSavingReceipt ? t('saving') || t('loading') : t('save')}
+                      </button>
                     </div>
                   ) : (
                     <p className="text-muted small mb-0">{t('dropInstruction')}</p>
@@ -806,7 +848,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                 </div>
               </>
             ) : (
-              <p className="mb-0 text-muted">{t('noReceiptPermission')}</p>
+              <p className="mb-0 text-muted">{t('noInformation')}</p>
             )}
           </div>
         </div>
