@@ -262,7 +262,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     <Layout onNavigate={onNavigate} pageTitle={t('paymentDetail')} breadcrumbItems={breadcrumbItems}>
       <div className="d-flex flex-column gap-3">
         <div className="card shadow-sm border-0">
-          <div className="card-header bg-white d-flex justify-content-between align-items-center">
+          <div className="card-header border-bottom-0 bg-white d-flex justify-content-between align-items-center">
             <h5 className="mb-0">{t('studentInformation')}</h5>
           </div>
           <div className="card-body">
@@ -282,7 +282,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                   <span className="text-sm text-gray-500">{t('email')}</span>
                   {payment.email ? (
                     <a className="d-flex align-items-center btn btn-link p-0 align-items-center link-secondary" href={`mailto:${payment.email}`}>
-                      <svg className="emailIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.01L12 13l8-5.99V7H4zm0 10h16V9.24l-7.553 5.65a1 1 0 0 1-1.194 0L4 9.24V17z"></path></svg>
+                      <svg className="emailIcon me-1" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.01L12 13l8-5.99V7H4zm0 10h16V9.24l-7.553 5.65a1 1 0 0 1-1.194 0L4 9.24V17z"></path></svg>
                       {payment.email}
                     </a>
                   ) : (
@@ -314,7 +314,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
         </div>
 
         <div className="card shadow-sm border-0">
-          <div className="d-flex align-items-center justify-content-between card-header bg-white">
+          <div className="d-flex align-items-center justify-content-between card-header border-bottom-0 bg-white">
             <h5 className="mb-0">{t('paymentInformation')}</h5>
 
             <div className="d-flex flex-wrap gap-2 justify-content-end">
@@ -383,7 +383,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
         </div>
 
         <div className="card shadow-sm border-0">
-          <div className="card-header bg-white d-flex justify-content-between align-items-center">
+          <div className="card-header border-bottom-0 bg-white d-flex justify-content-between align-items-center">
             <h5 className="mb-0">{t('receipt')}</h5>
             {payment.receipt_path && !hasRemovedReceipt ? (
               <div className="d-flex gap-2">
@@ -430,7 +430,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
         <div className="card shadow-sm border-0">
 
           <div className="card shadow-none bg-light bg-gradient mb-3">
-            <div className="card-header bg-transparent">
+            <div className="card-header border-bottom-0 bg-transparent">
               <h3 className="mb-0">{t('comments')}</h3>
             </div>
             <div className="card-body">
@@ -457,7 +457,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
           </div>
 
           <div className="card shadow-none bg-light bg-gradient">
-            <div className="card-header bg-transparent">
+            <div className="card-header border-bottom-0 bg-transparent">
               <h3 className="mb-0">{t('activityLog')}</h3>
             </div>
             <div className="card-body">

@@ -205,6 +205,17 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     return () => controller.abort()
   }, [locale, paymentRequestId, t, token])
 
+  const handlePrint = () => {
+    window.print()
+  }
+  
+  const formatPhoneLink = (phone: string | null) => {
+    if (!phone) return null
+    const digitsOnly = phone.replace(/\D/g, '')
+    if (!digitsOnly) return null
+    return `https://wa.me/${digitsOnly}`
+  }
+
   if (!hydrated) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentsFinance')} breadcrumbItems={breadcrumbItems}>
@@ -255,7 +266,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     <Layout onNavigate={onNavigate} pageTitle={t('paymentRequestDetail')} breadcrumbItems={breadcrumbItems}>
       <div className="d-flex flex-column gap-3">
         <div className="card shadow-sm border-0">
-          <div className="card-header bg-white">
+          <div className="card-header border-bottom-0 bg-white">
             <h5 className="mb-0">{t('paymentSummary')}</h5>
           </div>
           <div className="card-body">
@@ -269,8 +280,8 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
                 value: paymentInfo.latePeriods,
               },
               {
-                label: t('lateFeeTotal'),
-                value: formatCurrency(paymentInfo.lateFeeTotal),
+                label: t('requestedAmount'),
+                value: formatCurrency(paymentRequest.pr_amount),
               },
               {
                 label: t('accumulatedFees'),
@@ -290,9 +301,8 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
             </div>
           </div>
         </div>
-
         <div className="card shadow-sm border-0">
-          <div className="card-header bg-white d-flex justify-content-between align-items-center">
+          <div className="card-header border-bottom-0 bg-white d-flex justify-content-between align-items-center">
             <h5 className="mb-0">{t('studentInformation')}</h5>
           </div>
           <div className="card-body">
@@ -302,26 +312,38 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
               </div>
               <div className="flex-grow-1">
                 <h6 className="mb-1">{student.full_name}</h6>
-                <small className="text-muted">{groupLabel}</small>
+                <small className="text-muted">
+                  {groupLabel}
+                </small>
               </div>
             </div>
             <div className="row mt-4">
               <div className="col-md-6 mb-3 mb-md-0">
-                <span className="text-sm text-gray-500">{t('email')}</span>
-                {student.email ? (
-                  <a className="d-flex align-items-center btn btn-link p-0 align-items-center link-secondary" href={`mailto:${student.email}`}>
-                    <svg className="emailIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.01L12 13l8-5.99V7H4zm0 10h16V9.24l-7.553 5.65a1 1 0 0 1-1.194 0L4 9.24V17z"></path></svg>
-                    {student.email}
-                  </a>
-                ) : (
-                  <span className="text-sm text-gray-500">{t('noInformation')}</span>
-                )}
+                  <span className="text-sm text-gray-500">{t('email')}</span>
+                  {student.email ? (
+                    <a className="d-flex align-items-center btn btn-link p-0 align-items-center link-secondary" href={`mailto:${student.email}`}>
+                      <svg className="emailIcon me-1" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.01L12 13l8-5.99V7H4zm0 10h16V9.24l-7.553 5.65a1 1 0 0 1-1.194 0L4 9.24V17z"></path></svg>
+                      {student.email}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-gray-500">{t('noInformation')}</span>
+                  )}
               </div>
               <div className="col-md-6">
                 <div className="d-flex flex-column align-items-start">
                   <span className="text-sm text-gray-500">{t('phone')}</span>
-                  {student.phone_number ? (
-                    <span className="text-sm text-gray-500">{student.phone_number}</span>
+                  {formatPhoneLink(student.phone_number) ? (
+                    <a
+                      className="d-flex align-items-center btn btn-link p-0 align-items-center link-secondary"
+                      href={formatPhoneLink(student.phone_number) ?? '#'}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-whatsapp me-1" viewBox="0 0 16 16">
+                        <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+                      </svg>
+                      {student.phone_number}
+                    </a>
                   ) : (
                     <span className="text-sm text-gray-500">{t('noInformation')}</span>
                   )}
@@ -332,9 +354,44 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
         </div>
 
         <div className="card shadow-sm border-0">
-          <div className="d-flex align-items-center justify-content-between card-header bg-white">
-            <h5 className="mb-0">{t('paymentInformation')}</h5>
+          
+          <div className="d-flex align-items-center justify-content-between card-header border-bottom-0 bg-white">
+            <h5 className="mb-0">{t('paymentRequestInformation')}</h5>
+
+            <div className="d-flex flex-wrap gap-2 justify-content-end">
+              <button type="button" className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium" onClick={handlePrint}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-printer" viewBox="0 0 16 16">
+                  <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"/>
+                  <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/>
+                </svg>
+                {t('print')}
+              </button>
+              <button type="button" className="btn d-flex align-items-center gap-2 btn-edit text-muted fw-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil" viewBox="0 0 16 16">
+                  <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                </svg>
+                {t('edit')}
+              </button>
+              <div className='d-flex inline-flex rounded-md '>
+                <button type="button" className="btn shadow-sm d-flex align-items-center gap-2 btn-closeRequest text-muted fw-medium">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-dash-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
+                  </svg>
+                  {t('close')}
+                </button>
+                <button type="button" className="btn shadow-sm d-flex align-items-center gap-2 btn-approve text-muted fw-medium">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" font-weight="bold" className="bi bi-hand-thumbs-up" viewBox="0 0 16 16">
+                    <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2 2 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a10 10 0 0 0-.443.05 9.4 9.4 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111zM11.5 14.721H8c-.51 0-.863-.069-1.14-.164-.281-.097-.506-.228-.776-.393l-.04-.024c-.555-.339-1.198-.731-2.49-.868-.333-.036-.554-.29-.554-.55V8.72c0-.254.226-.543.62-.65 1.095-.3 1.977-.996 2.614-1.708.635-.71 1.064-1.475 1.238-1.978.243-.7.407-1.768.482-2.85.025-.362.36-.594.667-.518l.262.066c.16.04.258.143.288.255a8.34 8.34 0 0 1-.145 4.725.5.5 0 0 0 .595.644l.003-.001.014-.003.058-.014a9 9 0 0 1 1.036-.157c.663-.06 1.457-.054 2.11.164.175.058.45.3.57.65.107.308.087.67-.266 1.022l-.353.353.353.354c.043.043.105.141.154.315.048.167.075.37.075.581 0 .212-.027.414-.075.582-.05.174-.111.272-.154.315l-.353.353.353.354c.047.047.109.177.005.488a2.2 2.2 0 0 1-.505.805l-.353.353.353.354c.006.005.041.05.041.17a.9.9 0 0 1-.121.416c-.165.288-.503.56-1.066.56z"/>
+                  </svg>
+                  {t('approve')}
+                </button>
+              </div>
+            </div>
+          
           </div>
+
+
           <div className="card-body">
             <div className="row g-3">
               <div className="col-md-3">
@@ -362,36 +419,37 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
                 <div className="fw-semibold">{paymentRequest.pt_name}</div>
               </div>
               <div className="col-md-3">
-                <div className="text-muted small mb-1">{t('lateFeeTotal')}</div>
+                <div className="text-muted small mb-1">{t('lateFee')}</div>
                 <div className="fw-semibold">{formatCurrency(paymentRequest.late_fee)}</div>
               </div>
               <div className="col-md-3">
                 <div className="text-muted small mb-1">{t('partialPayment')}</div>
                 <div className="fw-semibold">{paymentRequest.partial_payment_transformed}</div>
               </div>
-              <div className="col-md-12">
-                <div className="text-muted small mb-1">{t('comments')}</div>
-                <div className="fw-semibold">{commentsText}</div>
-              </div>
             </div>
           </div>
         </div>
 
         <div className="card shadow-sm border-0">
-          <div className="card-header bg-white">
+          <div className="d-flex align-items-center justify-content-between card-header border-bottom-0 bg-white">
             <h5 className="mb-0">{t('paymentsList')}</h5>
+            <button type="button" className="btn d-flex align-items-center gap-2 btn-edit text-muted fw-medium">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-plus" viewBox="0 0 16 16">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+              </svg>
+              {t('addPayment')}
+            </button>
           </div>
           <div className="card-body p-0">
             <div className="table-responsive">
-              <table className="table align-middle mb-0">
-                <thead className="table-light">
+              <table className="table align-middle mb-0 table-striped table-hover">
+                <thead className="">
                   <tr>
                     <th scope="col">ID</th>
                     <th scope="col">{t('paymentType')}</th>
                     <th scope="col">{t('status')}</th>
                     <th scope="col">{t('paymentDate')}</th>
                     <th scope="col">{t('amount')}</th>
-                    <th scope="col">{t('comments')}</th>
                     <th scope="col">{t('viewDetails')}</th>
                   </tr>
                 </thead>
@@ -414,7 +472,6 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
                         </td>
                         <td>{formatDate(payment.payment_date, locale, { dateStyle: 'medium', timeStyle: 'short' })}</td>
                         <td className="fw-semibold">{formatCurrency(payment.amount)}</td>
-                        <td>{payment.comments ?? '—'}</td>
                         <td>
                           <button
                             type="button"
@@ -434,7 +491,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
         </div>
 
         <div className="card shadow-sm border-0">
-          <div className="card-header bg-white border-0 pb-0">
+          <div className="card-header border-bottom-0 bg-white border-0 pb-0">
             <div className="d-flex align-items-center gap-3">
               <button
                 type="button"
@@ -456,8 +513,8 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
           <div className="card-body">
             {activeTab === 'breakdown' ? (
               <div className="table-responsive">
-                <table className="table align-middle mb-0">
-                  <thead className="table-light">
+                <table className="table align-middle mb-0 table-striped table-hover">
+                  <thead className="">
                     <tr>
                       <th scope="col">ID</th>
                       <th scope="col">{t('paymentType')}</th>
@@ -471,13 +528,22 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
                     {breakdown.map((entry, index) => (
                       <tr key={`${entry.type}-${entry.date}-${index}`}>
                         <td>{entry.payment_id ?? '—'}</td>
-                        <td className="fw-semibold">{conceptLabel(entry.type)}</td>
-                        <td>{entry.status_name ?? '—'}</td>
+                        <td className="fw-light">{conceptLabel(entry.type)}</td>
+                        <td>
+                          <small className={'cell-chip px-3 text-nowrap ' + 
+                            (entry.payment_status_id === null ? '' 
+                            : entry.payment_status_id === 3 ? 'bg-success' 
+                            : 
+                            entry.payment_status_id === 1 ? 'bg-warning' : 'bg-danger'
+                            )}>
+                            {entry.status_name}
+                          </small>
+                        </td>
                         <td>{formatDate(entry.date, locale, { dateStyle: 'medium', timeStyle: 'short' })}</td>
-                        <td className={entry.amount < 0 ? 'text-danger fw-semibold' : 'text-success fw-semibold'}>
+                        <td className={entry.amount < 0 ? 'text-danger fw-light' : 'text-success fw-light'}>
                           {formatCurrency(entry.amount)}
                         </td>
-                        <td className={entry.balance < 0 ? 'text-danger fw-semibold' : 'text-success fw-semibold'}>
+                        <td className={entry.balance < 0 ? 'text-danger fw-light' : 'text-success fw-light'}>
                           {formatCurrency(entry.balance)}
                         </td>
                       </tr>
@@ -488,7 +554,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
             ) : (
               <div className="d-flex flex-column gap-4">
                 <div className="card shadow-none bg-light bg-gradient mb-0">
-                  <div className="card-header bg-transparent">
+                  <div className="card-header border-bottom-0 bg-transparent">
                     <h3 className="mb-0">{t('comments')}</h3>
                   </div>
                   <div className="card-body">
@@ -511,7 +577,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
                 </div>
 
                 <div className="card shadow-none bg-light bg-gradient mb-0">
-                  <div className="card-header bg-transparent">
+                  <div className="card-header border-bottom-0 bg-transparent">
                     <h3 className="mb-0">{t('activityLog')}</h3>
                   </div>
                   <div className="card-body">

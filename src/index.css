@@ -434,3 +434,18 @@ a:hover {
 .btn-approve:hover {
   background-color: rgb(46, 46, 46);
 }
+
+.btn-closeRequest {
+ border: 1.5px solid rgba(212, 212, 212, 0.685);
+ border-radius: 10px 0 0 10px;
+}
+
+.btn-closeRequest:hover {
+  border: 1.5px solid rgba(28, 109, 185, 0.603);
+  background-color: rgb(242, 254, 254);
+  color: rgba(28, 31, 185, 0.829) !important;
+}
+
+.table-striped {
+  --bs-table-striped-bg: #8080800c; /* Light green for striped rows */
+}
