@@ -169,6 +169,9 @@ const translations: TranslationMap = {
     payment_date: 'Fecha de pago',
     close: 'Cerrar',
     addPayment: 'Añadir pago',
+    noPermissionTitle: 'Sin permisos',
+    noPermissionDescription: 'No tienes los permisos necesarios para acceder a esta sección. Por favor, contacta al administrador.',
+    noReceiptPermission: 'No tienes permisos para cargar o modificar el comprobante.',
 
   },
   en: {
@@ -334,6 +337,9 @@ const translations: TranslationMap = {
     payment_date: 'Payment date',
     close: 'Close',
     addPayment: 'Add payment',
+    noPermissionTitle: 'No permissions',
+    noPermissionDescription: 'You do not have the required permissions to access this section. Please contact your administrator.',
+    noReceiptPermission: 'You do not have permission to upload or modify the receipt.',
 
   },
 }
