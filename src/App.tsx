@@ -20,7 +20,6 @@ import { KitchenPage } from "./pages/KitchenPage";
 import { SchoolsPage } from "./pages/SchoolsPage";
 import { SchoolDetailsPage } from "./pages/SchoolDetailsPage";
 import { StudentsPage } from "./pages/StudentsPage";
-import StudentDetailPage from "./pages/StudentDetailPage";
 import { PaymentsFinancePage } from "./pages/PaymentsFinancePage/PaymentsFinancePage";
 import { PaymentDetailPage } from "./pages/PaymentsFinancePage/PaymentDetailPage";
 import { PaymentRequestDetailPage } from "./pages/PaymentsFinancePage/PaymentRequestDetailPage";
@@ -112,8 +111,6 @@ function Router() {
   const schoolDetailMatch = path.match(/^\/(es|en)\/schools\/(\d+)$/);
   const isSchoolDetailPath = Boolean(schoolDetailMatch);
   const isStudentsPath = /^\/(es|en)\/students$/.test(path);
-  const studentDetailMatch = path.match(/^\/(es|en)\/students\/(\d+)$/);
-  const isStudentDetailPath = Boolean(studentDetailMatch);
   const financeMatch = path.match(/^\/(es|en)\/finance(?:\/(payments|request)(?:\/(\d+))?)?$/);
   const isFinancePath = Boolean(financeMatch);
   const financeSection = financeMatch?.[2];
@@ -143,15 +140,6 @@ function Router() {
         <SchoolDetailsPage
           onNavigate={navigate}
           schoolId={Number(schoolDetailMatch[2])}
-        />
-      );
-    }
-
-    if (isStudentDetailPath && studentDetailMatch) {
-      return (
-        <StudentDetailPage
-          studentId={Number(studentDetailMatch[2])}
-          language={locale}
         />
       );
     }
