@@ -40,8 +40,6 @@ export default function StudentDetailPage({ onNavigate, studentId, language: _la
   const [paymentRows] = useState<PaymentRow[]>([])
   const [requestRows] = useState<RequestRow[]>([])
   const [topupRows] = useState<TopupRow[]>([])
-
-  const [isEditing] = useState(false)
   const [formValues, setFormValues] = useState<FormState>({
     firstName: '',
     lastName: '',
@@ -257,7 +255,13 @@ export default function StudentDetailPage({ onNavigate, studentId, language: _la
             />
           </div>
           <div className="col-12 col-lg-6">
-            <StudentContactCard student={student} />
+            <StudentContactCard
+              student={student}
+              formValues={formValues}
+              formErrors={formErrors}
+              isEditing={isEditing}
+              onChange={handleFormChange}
+            />
           </div>
         </div>
 
