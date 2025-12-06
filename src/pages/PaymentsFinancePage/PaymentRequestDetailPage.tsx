@@ -8,6 +8,7 @@ import { NoPermission } from '../../components/NoPermission'
 import { API_BASE_URL } from '../../config'
 import { formatDate } from '../../utils/formatDate'
 import { useModulePermissions } from '../../hooks/useModulePermissions'
+import { RequestPaymentModal } from '../../components/payments/PaymentRegistrationModal'
 
 interface PaymentRequestDetailPageProps {
   onNavigate: (path: string) => void
@@ -134,6 +135,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
   const [isEditingRequest, setIsEditingRequest] = useState(false)
   const [updateError, setUpdateError] = useState<string | null>(null)
   const [isUpdatingRequest, setIsUpdatingRequest] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [requestForm, setRequestForm] = useState<PaymentRequestForm>({
     amount: '',
     payBy: '',
@@ -193,6 +195,11 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     },
     [locale, paymentRequestId, permissions?.readAllowed, permissionsLoaded, t, token],
   )
+
+  const handlePaymentSuccess = useCallback(() => {
+    setIsPaymentModalOpen(false)
+    loadPaymentRequest()
+  }, [loadPaymentRequest])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -431,6 +438,22 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
   const canCreatePayment = permissions?.createAllowed ?? false
   const canUpdatePayment = permissions?.updateAllowed ?? false
 
+  const defaultPaymentMonth = paymentRequest.payment_month
+    ? toMonthInputValue(paymentRequest.payment_month)
+    : undefined
+
+  const paymentRequestSummary = useMemo(
+    () => ({
+      tuitionLabel: paymentRequest.payment_month
+        ? formatDate(paymentRequest.payment_month, locale, { year: 'numeric', month: 'long' })
+        : t('noInformation'),
+      conceptName: paymentRequest.pt_name,
+      pendingAmount: paymentInfo.pendingPayment,
+      isPartialPayment: paymentRequest.partial_payment,
+    }),
+    [locale, paymentInfo.pendingPayment, paymentRequest.partial_payment, paymentRequest.payment_month, paymentRequest.pt_name, t],
+  )
+
   const formatCurrency = (value: number | null | undefined) =>
     (value ?? 0).toLocaleString(
       locale === 'es' ? 'es-MX' : 'en-US',
@@ -454,6 +477,16 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('paymentRequestDetail')} breadcrumbItems={breadcrumbItems}>
+      <RequestPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        studentId={student.student_id}
+        paymentRequestId={paymentRequest.payment_request_id}
+        defaultPaymentMonth={defaultPaymentMonth}
+        requestSummary={paymentRequestSummary}
+        lang={locale}
+        onSuccess={handlePaymentSuccess}
+      />
       <div className="d-flex flex-column gap-3">
         <div className="card shadow-sm border-0">
           <div className="card-header border-bottom-0 bg-white">
@@ -759,7 +792,11 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
           <div className="d-flex align-items-center justify-content-between card-header border-bottom-0 bg-white">
             <h5 className="mb-0">{t('paymentsList')}</h5>
             {canCreatePayment ? (
-              <button type="button" className="btn d-flex align-items-center gap-2 btn-edit text-muted fw-medium">
+              <button
+                type="button"
+                className="btn d-flex align-items-center gap-2 btn-edit text-muted fw-medium"
+                onClick={() => setIsPaymentModalOpen(true)}
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-plus" viewBox="0 0 16 16">
                   <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
                 </svg>
