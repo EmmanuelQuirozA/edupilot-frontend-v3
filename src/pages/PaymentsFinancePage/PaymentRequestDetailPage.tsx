@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Layout } from '../../layout/Layout'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
@@ -108,6 +108,17 @@ interface PaymentRequestDetailResponse {
   breakdown: BreakdownEntry[]
 }
 
+interface PaymentRequestForm {
+  amount: string
+  payBy: string
+  comments: string
+  lateFee: string
+  feeType: string
+  lateFeeFrequency: string
+  paymentMonth: string
+  partialPayment: boolean
+}
+
 export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: PaymentRequestDetailPageProps) {
   const { t, locale } = useLanguage()
   const { token, hydrated } = useAuth()
@@ -120,6 +131,19 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
   const [error, setError] = useState<string | null>(null)
   const [logsError, setLogsError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'breakdown' | 'activity'>('breakdown')
+  const [isEditingRequest, setIsEditingRequest] = useState(false)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [isUpdatingRequest, setIsUpdatingRequest] = useState(false)
+  const [requestForm, setRequestForm] = useState<PaymentRequestForm>({
+    amount: '',
+    payBy: '',
+    comments: '',
+    lateFee: '',
+    feeType: '$',
+    lateFeeFrequency: '',
+    paymentMonth: '',
+    partialPayment: false,
+  })
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -136,11 +160,10 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     [locale, onNavigate, paymentRequestId, t],
   )
 
-  useEffect(() => {
-    if (!token || !permissionsLoaded || !permissions?.readAllowed) return
+  const loadPaymentRequest = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!token || !permissionsLoaded || !permissions?.readAllowed) return
 
-    const controller = new AbortController()
-    const fetchPaymentRequest = async () => {
       setIsLoading(true)
       setError(null)
       try {
@@ -151,7 +174,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
 
         const response = await fetch(`${API_BASE_URL}/reports/paymentrequest/details?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
+          signal,
         })
 
         if (!response.ok) {
@@ -167,12 +190,16 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
       } finally {
         setIsLoading(false)
       }
-    }
+    },
+    [locale, paymentRequestId, permissions?.readAllowed, permissionsLoaded, t, token],
+  )
 
-    fetchPaymentRequest()
+  useEffect(() => {
+    const controller = new AbortController()
+    loadPaymentRequest(controller.signal)
 
     return () => controller.abort()
-  }, [locale, paymentRequestId, permissions?.readAllowed, permissionsLoaded, t, token])
+  }, [loadPaymentRequest])
 
   useEffect(() => {
     if (!token || !permissionsLoaded || !permissions?.readAllowed) return
@@ -217,6 +244,114 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     const digitsOnly = phone.replace(/\D/g, '')
     if (!digitsOnly) return null
     return `https://wa.me/${digitsOnly}`
+  }
+
+  const toDateInputValue = (value: string | null) => {
+    if (!value) return ''
+
+    const parsed = new Date(value.replace(' ', 'T'))
+
+    if (Number.isNaN(parsed.getTime())) {
+      return value.slice(0, 10)
+    }
+
+    return parsed.toISOString().slice(0, 10)
+  }
+
+  const toMonthInputValue = (value: string | null) => {
+    if (!value) return ''
+    const parsedDate = new Date(value)
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return value.slice(0, 7)
+    }
+
+    return parsedDate.toISOString().slice(0, 7)
+  }
+
+  const handleEditRequestClick = () => {
+    if (!paymentRequestDetail) return
+
+    const { paymentRequest } = paymentRequestDetail
+
+    setRequestForm({
+      amount: paymentRequest.pr_amount ? String(paymentRequest.pr_amount) : '',
+      payBy: toDateInputValue(paymentRequest.pr_pay_by),
+      comments: paymentRequest.pr_comments ?? '',
+      lateFee: paymentRequest.late_fee ? String(paymentRequest.late_fee) : '',
+      feeType: paymentRequest.fee_type ?? '$',
+      lateFeeFrequency: paymentRequest.late_fee_frequency ? String(paymentRequest.late_fee_frequency) : '',
+      paymentMonth: toMonthInputValue(paymentRequest.payment_month),
+      partialPayment: paymentRequest.partial_payment,
+    })
+    setIsEditingRequest(true)
+  }
+
+  const handleRequestFormChange = (field: keyof PaymentRequestForm, value: string | boolean) => {
+    setRequestForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  const handleUpdateRequest = async (statusId?: number) => {
+    if (!token || !paymentRequestDetail) return
+
+    setIsUpdatingRequest(true)
+    setUpdateError(null)
+
+    try {
+      const url = `${API_BASE_URL}/reports/payment-request/update/${paymentRequestDetail.paymentRequest.payment_request_id}`
+      const formData = isEditingRequest
+        ? requestForm
+        : {
+            amount: paymentRequestDetail.paymentRequest.pr_amount ? String(paymentRequestDetail.paymentRequest.pr_amount) : '',
+            payBy: toDateInputValue(paymentRequestDetail.paymentRequest.pr_pay_by),
+            comments: paymentRequestDetail.paymentRequest.pr_comments ?? '',
+            lateFee: paymentRequestDetail.paymentRequest.late_fee
+              ? String(paymentRequestDetail.paymentRequest.late_fee)
+              : '',
+            feeType: paymentRequestDetail.paymentRequest.fee_type ?? '$',
+            lateFeeFrequency: paymentRequestDetail.paymentRequest.late_fee_frequency
+              ? String(paymentRequestDetail.paymentRequest.late_fee_frequency)
+              : '',
+            paymentMonth: toMonthInputValue(paymentRequestDetail.paymentRequest.payment_month),
+            partialPayment: paymentRequestDetail.paymentRequest.partial_payment,
+          }
+      const payload = {
+        data: {
+          amount: formData.amount ? Number(formData.amount) : 0,
+          pay_by: formData.payBy ? `${formData.payBy} 00:00:00` : '',
+          comments: formData.comments ?? '',
+          late_fee: formData.lateFee ? Number(formData.lateFee) : 0,
+          fee_type: formData.feeType,
+          late_fee_frequency: formData.lateFeeFrequency ? Number(formData.lateFeeFrequency) : 0,
+          payment_month: formData.paymentMonth ? `${formData.paymentMonth}-01` : '',
+          partial_payment: formData.partialPayment,
+          ...(statusId ? { payment_status_id: statusId } : {}),
+        },
+      }
+
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error('failed_request')
+      }
+
+      await loadPaymentRequest()
+      setIsEditingRequest(false)
+    } catch (requestError) {
+      setUpdateError(t('defaultError'))
+    } finally {
+      setIsUpdatingRequest(false)
+    }
   }
 
   if (!hydrated || permissionsLoading || !permissionsLoaded) {
@@ -395,70 +530,201 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
             </button>
             {canUpdatePayment ? (
               <>
-                <button type="button" className="btn d-flex align-items-center gap-2 btn-edit text-muted fw-medium">
+                <button
+                  type="button"
+                  className="btn d-flex align-items-center gap-2 btn-edit text-muted fw-medium"
+                  onClick={handleEditRequestClick}
+                  disabled={isUpdatingRequest}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil" viewBox="0 0 16 16">
                     <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
                   </svg>
                   {t('edit')}
                 </button>
                 <div className='d-flex inline-flex rounded-md '>
-                  <button type="button" className="btn shadow-sm d-flex align-items-center gap-2 btn-closeRequest text-muted fw-medium">
+                  <button
+                    type="button"
+                    className="btn shadow-sm d-flex align-items-center gap-2 btn-closeRequest text-muted fw-medium"
+                    onClick={() => handleUpdateRequest(8)}
+                    disabled={isUpdatingRequest}
+                  >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-dash-circle" viewBox="0 0 16 16">
                       <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                       <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
                     </svg>
-                    {t('close')}
+                    {t('cancel')}
                   </button>
-                  <button type="button" className="btn shadow-sm d-flex align-items-center gap-2 btn-approve text-muted fw-medium">
+                  <button
+                    type="button"
+                    className="btn shadow-sm d-flex align-items-center gap-2 btn-approve text-muted fw-medium"
+                    onClick={() => handleUpdateRequest(7)}
+                    disabled={isUpdatingRequest}
+                  >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" font-weight="bold" className="bi bi-hand-thumbs-up" viewBox="0 0 16 16">
                       <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2 2 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a10 10 0 0 0-.443.05 9.4 9.4 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111zM11.5 14.721H8c-.51 0-.863-.069-1.14-.164-.281-.097-.506-.228-.776-.393l-.04-.024c-.555-.339-1.198-.731-2.49-.868-.333-.036-.554-.29-.554-.55V8.72c0-.254.226-.543.62-.65 1.095-.3 1.977-.996 2.614-1.708.635-.71 1.064-1.475 1.238-1.978.243-.7.407-1.768.482-2.85.025-.362.36-.594.667-.518l.262.066c.16.04.258.143.288.255a8.34 8.34 0 0 1-.145 4.725.5.5 0 0 0 .595.644l.003-.001.014-.003.058-.014a9 9 0 0 1 1.036-.157c.663-.06 1.457-.054 2.11.164.175.058.45.3.57.65.107.308.087.67-.266 1.022l-.353.353.353.354c.043.043.105.141.154.315.048.167.075.37.075.581 0 .212-.027.414-.075.582-.05.174-.111.272-.154.315l-.353.353.353.354c.047.047.109.177.005.488a2.2 2.2 0 0 1-.505.805l-.353.353.353.354c.006.005.041.05.041.17a.9.9 0 0 1-.121.416c-.165.288-.503.56-1.066.56z"/>
                     </svg>
-                    {t('approve')}
+                    {t('close')}
                   </button>
                 </div>
               </>
             ) : null}
           </div>
-          
+
           </div>
 
+          {updateError ? (
+            <div className="alert alert-danger mx-3" role="alert">
+              {updateError}
+            </div>
+          ) : null}
 
-          <div className="card-body">
-            <div className="row g-3">
-              <div className="col-md-3">
-                <div className="text-muted small mb-1">{t('paymentRequestDetail')}</div>
-                <div className="fw-semibold">#{paymentRequest.payment_request_id}</div>
-              </div>
-              <div className="col-md-3">
-                <div className="text-muted small mb-1">{t('amount')}</div>
-                <div className="fw-semibold">{formatCurrency(paymentRequest.pr_amount)}</div>
-              </div>
-              <div className="col-md-3">
-                <div className="text-muted small mb-1">{t('due_date')}</div>
-                <div className="fw-semibold">
-                  {formatDate(paymentRequest.pr_pay_by, locale, { dateStyle: 'medium', timeStyle: 'short' })}
+          {isEditingRequest ? (
+            <div className="card-body">
+              <div className="row g-3">
+                <div className="col-md-3">
+                  <label className="form-label text-muted small" htmlFor="requestAmount">{t('amount')}</label>
+                  <input
+                    id="requestAmount"
+                    type="number"
+                    className="form-control"
+                    value={requestForm.amount}
+                    onChange={(event) => handleRequestFormChange('amount', event.target.value)}
+                    min="0"
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label text-muted small" htmlFor="requestPayBy">{t('due_date')}</label>
+                  <input
+                    id="requestPayBy"
+                    type="date"
+                    className="form-control"
+                    value={requestForm.payBy}
+                    onChange={(event) => handleRequestFormChange('payBy', event.target.value)}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label text-muted small" htmlFor="requestLateFee">{t('lateFee')}</label>
+                  <input
+                    id="requestLateFee"
+                    type="number"
+                    className="form-control"
+                    value={requestForm.lateFee}
+                    onChange={(event) => handleRequestFormChange('lateFee', event.target.value)}
+                    min="0"
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label text-muted small" htmlFor="requestFeeType">{t('fee_type') ?? 'Tipo de recargo'}</label>
+                  <select
+                    id="requestFeeType"
+                    className="form-select"
+                    value={requestForm.feeType}
+                    onChange={(event) => handleRequestFormChange('feeType', event.target.value)}
+                  >
+                    <option value="$">$</option>
+                    <option value="%">%</option>
+                  </select>
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label text-muted small" htmlFor="requestLateFeeFrequency">{t('late_fee_frequency') ?? 'Frecuencia de recargo (días)'}</label>
+                  <input
+                    id="requestLateFeeFrequency"
+                    type="number"
+                    className="form-control"
+                    value={requestForm.lateFeeFrequency}
+                    onChange={(event) => handleRequestFormChange('lateFeeFrequency', event.target.value)}
+                    min="0"
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label text-muted small" htmlFor="requestPaymentMonth">{t('paymentMonth')}</label>
+                  <input
+                    id="requestPaymentMonth"
+                    type="month"
+                    className="form-control"
+                    value={requestForm.paymentMonth}
+                    onChange={(event) => handleRequestFormChange('paymentMonth', event.target.value)}
+                  />
+                </div>
+                <div className="col-md-12">
+                  <label className="form-label text-muted small" htmlFor="requestComments">{t('comments')}</label>
+                  <textarea
+                    id="requestComments"
+                    className="form-control"
+                    rows={3}
+                    value={requestForm.comments}
+                    onChange={(event) => handleRequestFormChange('comments', event.target.value)}
+                  />
+                </div>
+                <div className="col-md-12 form-check form-switch">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id="requestPartialPayment"
+                    checked={requestForm.partialPayment}
+                    onChange={(event) => handleRequestFormChange('partialPayment', event.target.checked)}
+                  />
+                  <label className="form-check-label" htmlFor="requestPartialPayment">{t('partialPayment')}</label>
                 </div>
               </div>
-              <div className="col-md-3">
-                <div className="text-muted small mb-1">{t('status')}</div>
-                <small className={'cell-chip px-4 text-nowrap ' + (paymentRequest.payment_status_id === 7 ? 'bg-success' : paymentRequest.payment_status_id === 8 ? 'bg-danger' : 'bg-warning')}>
-                  {paymentRequest.ps_pr_name}
-                </small>
-              </div>
-              <div className="col-md-3">
-                <div className="text-muted small mb-1">{t('paymentType')}</div>
-                <div className="fw-semibold">{paymentRequest.pt_name}</div>
-              </div>
-              <div className="col-md-3">
-                <div className="text-muted small mb-1">{t('lateFee')}</div>
-                <div className="fw-semibold">{formatCurrency(paymentRequest.late_fee)}</div>
-              </div>
-              <div className="col-md-3">
-                <div className="text-muted small mb-1">{t('partialPayment')}</div>
-                <div className="fw-semibold">{paymentRequest.partial_payment_transformed}</div>
+              <div className="d-flex justify-content-end gap-2 mt-3">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => setIsEditingRequest(false)}
+                  disabled={isUpdatingRequest}
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => handleUpdateRequest()}
+                  disabled={isUpdatingRequest}
+                >
+                  {isUpdatingRequest ? t('saving') ?? t('loading') : t('save') ?? t('approve')}
+                </button>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="card-body">
+              <div className="row g-3">
+                <div className="col-md-3">
+                  <div className="text-muted small mb-1">{t('paymentRequestDetail')}</div>
+                  <div className="fw-semibold">#{paymentRequest.payment_request_id}</div>
+                </div>
+                <div className="col-md-3">
+                  <div className="text-muted small mb-1">{t('amount')}</div>
+                  <div className="fw-semibold">{formatCurrency(paymentRequest.pr_amount)}</div>
+                </div>
+                <div className="col-md-3">
+                  <div className="text-muted small mb-1">{t('due_date')}</div>
+                  <div className="fw-semibold">
+                    {formatDate(paymentRequest.pr_pay_by, locale, { dateStyle: 'medium', timeStyle: 'short' })}
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <div className="text-muted small mb-1">{t('status')}</div>
+                  <small className={'cell-chip px-4 text-nowrap ' + (paymentRequest.payment_status_id === 7 ? 'bg-success' : paymentRequest.payment_status_id === 8 ? 'bg-danger' : 'bg-warning')}>
+                    {paymentRequest.ps_pr_name}
+                  </small>
+                </div>
+                <div className="col-md-3">
+                  <div className="text-muted small mb-1">{t('paymentType')}</div>
+                  <div className="fw-semibold">{paymentRequest.pt_name}</div>
+                </div>
+                <div className="col-md-3">
+                  <div className="text-muted small mb-1">{t('lateFee')}</div>
+                  <div className="fw-semibold">{formatCurrency(paymentRequest.late_fee)}</div>
+                </div>
+                <div className="col-md-3">
+                  <div className="text-muted small mb-1">{t('partialPayment')}</div>
+                  <div className="fw-semibold">{paymentRequest.partial_payment_transformed}</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="card shadow-sm border-0">

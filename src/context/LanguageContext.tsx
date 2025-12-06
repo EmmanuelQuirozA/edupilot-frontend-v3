@@ -134,6 +134,8 @@ const translations: TranslationMap = {
     latePeriods: 'Periodos con recargo',
     lateFeeTotal: 'Total de recargos',
     lateFee: 'Recargos',
+    fee_type: 'Tipo de recargo',
+    late_fee_frequency: 'Frecuencia de recargo (días)',
     accumulatedFees: 'Cargos acumulados',
     pendingPayment: 'Pendiente de pago',
     paymentsList: 'Pagos de la solicitud',
@@ -176,6 +178,8 @@ const translations: TranslationMap = {
     confirmRejectPayment: '¿Estás seguro que quieres rechazar este pago?',
     cancel: 'Cancelar',
     confirm: 'Confirmar',
+    save: 'Guardar',
+    saving: 'Guardando...',
 
   },
   en: {
@@ -306,6 +310,8 @@ const translations: TranslationMap = {
     latePeriods: 'Late periods',
     lateFeeTotal: 'Total late fees',
     lateFee: 'Late fee',
+    fee_type: 'Fee type',
+    late_fee_frequency: 'Late fee frequency (days)',
     accumulatedFees: 'Accumulated charges',
     pendingPayment: 'Pending payment',
     paymentsList: 'Request payments',
@@ -348,6 +354,8 @@ const translations: TranslationMap = {
     confirmRejectPayment: 'Do you want to reject this payment',
     cancel: 'Cancel',
     confirm: 'Confirm',
+    save: 'Save',
+    saving: 'Saving...',
 
   },
 }
