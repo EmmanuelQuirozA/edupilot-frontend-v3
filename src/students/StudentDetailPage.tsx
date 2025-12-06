@@ -32,6 +32,10 @@ export default function StudentDetailPage({ onNavigate, studentId, language: _la
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [userStatusDraft, setUserStatusDraft] = useState(false)
+
   const [tuitionRows] = useState<TuitionRow[]>([])
   const [paymentRows] = useState<PaymentRow[]>([])
   const [requestRows] = useState<RequestRow[]>([])
@@ -137,6 +141,69 @@ export default function StudentDetailPage({ onNavigate, studentId, language: _la
     [isLoading, paymentRows, requestRows, t, topupRows, tuitionRows],
   )
 
+  const statusLabels = useMemo(
+    () => ({
+      active: t('schoolStatusActive'),
+      inactive: t('schoolStatusInactive'),
+    }),
+    [t],
+  )
+
+  const studentName = useMemo(() => {
+    if (!student) {
+      return t('student')
+    }
+
+    const parts = [student.firstName, student.lastName].filter(Boolean)
+    if (parts.length) {
+      return parts.join(' ')
+    }
+
+    return student.email ?? t('student')
+  }, [student, t])
+
+  const studentInitials = useMemo(() => {
+    if (!student) return ''
+
+    const names = [student.firstName, student.lastName].filter(Boolean)
+    if (!names.length && student.email) {
+      return student.email.substring(0, 2).toUpperCase()
+    }
+
+    return names
+      .join(' ')
+      .split(' ')
+      .filter(Boolean)
+      .map((namePart) => namePart[0]?.toUpperCase() ?? '')
+      .join('')
+      .slice(0, 2)
+  }, [student])
+
+  const normalizeStatus = (value?: string) => value?.toLowerCase().trim()
+
+  useEffect(() => {
+    setUserStatusDraft(normalizeStatus(student?.status) === normalizeStatus(statusLabels.active))
+  }, [statusLabels.active, student])
+
+  const activeInGroupLabel = locale === 'es' ? 'Activo en grupo' : 'Active in group'
+  const resetPasswordLabel = locale === 'es' ? 'Restablecer contraseña' : 'Reset password'
+
+  const handleStartEdit = () => setIsEditing(true)
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setUserStatusDraft(normalizeStatus(student?.status) === normalizeStatus(statusLabels.active))
+  }
+
+  const handleSave = () => {
+    setIsSaving(true)
+    setIsEditing(false)
+    setIsSaving(false)
+  }
+
+  const statusTone =
+    normalizeStatus(student?.status) === normalizeStatus(statusLabels.active) ? 'success' : 'warning'
+
   if (!hydrated) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('studentsTitle')} breadcrumbItems={breadcrumbItems}>
@@ -154,7 +221,29 @@ export default function StudentDetailPage({ onNavigate, studentId, language: _la
           </div>
         ) : null}
 
-        <StudentHeader student={student} isLoading={isLoading} />
+        <StudentHeader
+          isLoading={isLoading}
+          initials={studentInitials}
+          studentName={studentName}
+          activeInGroupLabel={activeInGroupLabel}
+          statusChipLabel={student?.status ?? statusLabels.inactive}
+          roleChipLabel={student?.institutionName ?? t('student')}
+          statusTone={statusTone}
+          isEditing={isEditing}
+          isSaving={isSaving}
+          isStatusActive={userStatusDraft}
+          statusLabels={statusLabels}
+          onStatusToggle={setUserStatusDraft}
+          onStartEdit={handleStartEdit}
+          onCancelEdit={handleCancelEdit}
+          onSave={handleSave}
+          editButtonLabel={t('edit')}
+          cancelButtonLabel={t('cancel')}
+          saveButtonLabel={t('save')}
+          savingLabel={t('saving')}
+          resetPasswordLabel={resetPasswordLabel}
+          disableActions={isLoading}
+        />
 
         <div className="row g-3">
           <div className="col-12 col-lg-6">
