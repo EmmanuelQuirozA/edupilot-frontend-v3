@@ -218,7 +218,7 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
                 onChange={(val) => setSearchTerm(val)}
                 onSubmit={handleSearchSubmit}
                 onClear={handleClearSearch}
-                placeholder={t("searchBy")}
+                placeholder={t("searchByStudent")}
                 className="flex-grow-1"
                 inputClassName="w-100"
               />

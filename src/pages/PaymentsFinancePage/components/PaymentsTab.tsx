@@ -177,7 +177,7 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
         sortable: true,
       },
       { 
-        key: 'payment_status_name', 
+        key: 'payment_status_id', 
         label: t('schoolsStatusColumn'),
         sortable: true,
         render: (row) => (
@@ -227,7 +227,7 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
                 onChange={(val) => setSearchTerm(val)}
                 onSubmit={handleSearchSubmit}
                 onClear={handleClearSearch}
-                placeholder={t("searchBy")}
+                placeholder={t("searchByStudent")}
                 className="flex-grow-1"
                 inputClassName="w-100"
               />

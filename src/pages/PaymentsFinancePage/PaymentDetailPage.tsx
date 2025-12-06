@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react'
-import Swal from 'sweetalert2'
 import { Layout } from '../../layout/Layout'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
@@ -95,6 +94,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
   const [isEditingPayment, setIsEditingPayment] = useState(false)
   const [isUpdatingPayment, setIsUpdatingPayment] = useState(false)
   const [isStatusUpdating, setIsStatusUpdating] = useState(false)
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null)
   const [paymentForm, setPaymentForm] = useState({
     payment_concept_id: '' as number | '',
     payment_through_id: '' as number | '',
@@ -104,6 +104,61 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     amount: '',
     comments: '',
   })
+
+  const receiptUrl = useMemo(() => {
+    const receiptPath = payment?.receipt_path
+
+    if (!receiptPath || hasRemovedReceipt) {
+      return null
+    }
+
+    const normalizedPath = receiptPath.startsWith('/') ? receiptPath.slice(1) : receiptPath
+
+    return `${API_BASE_URL}/protectedfiles/${normalizedPath}`
+  }, [payment?.receipt_path, hasRemovedReceipt])
+  const hasReceipt = Boolean(receiptUrl)
+
+  useEffect(() => {
+    if (!receiptUrl || !token) {
+      setReceiptPreviewUrl(null)
+      return
+    }
+
+    const controller = new AbortController()
+    let objectUrl: string | null = null
+
+    const fetchReceiptPreview = async () => {
+      try {
+        const response = await fetch(receiptUrl, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const blob = await response.blob()
+        objectUrl = URL.createObjectURL(blob)
+        setReceiptPreviewUrl(objectUrl)
+      } catch (fetchError) {
+        if ((fetchError as Error).name !== 'AbortError') {
+          setReceiptPreviewUrl(null)
+        }
+      }
+    }
+
+    fetchReceiptPreview()
+
+    return () => {
+      controller.abort()
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+  }, [receiptUrl, token])
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -611,7 +666,6 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
 
   const canUpdatePayment = permissions?.updateAllowed ?? false
   const isFinalStatus = payment.payment_status_id === 3 || payment.payment_status_id === 4
-  const hasReceipt = Boolean(payment.receipt_path && !hasRemovedReceipt)
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('paymentDetail')} breadcrumbItems={breadcrumbItems}>
@@ -1014,7 +1068,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowModal(false)} />
               </div>
               <div className="modal-body">
-                <iframe title="receipt-preview" src={payment.receipt_path} className="w-100" style={{ minHeight: 400 }} />
+                <iframe title="receipt-preview" src={receiptPreviewUrl ?? undefined} className="w-100" style={{ minHeight: 400 }} />
               </div>
             </div>
           </div>

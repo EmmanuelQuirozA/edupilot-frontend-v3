@@ -103,6 +103,7 @@ const translations: TranslationMap = {
     results: 'Resultados',
     searchStudentByName: 'Buscar estudiante por nombre',
     searchByGroup: 'Buscar por grupo',
+    searchByStudent: 'Buscar por estudiante',
     studentsGroups: 'Alumnos y Grupos',
     tuitions: 'Colegiaturas',
     paymentRequests: 'Solicitudes de Pago',
@@ -172,6 +173,9 @@ const translations: TranslationMap = {
     noPermissionTitle: 'Sin permisos',
     noPermissionDescription: 'No tienes los permisos necesarios para acceder a esta sección. Por favor, contacta al administrador.',
     noReceiptPermission: 'No tienes permisos para cargar o modificar el comprobante.',
+    confirmRejectPayment: '¿Estás seguro que quieres rechazar este pago?',
+    cancel: 'Cancelar',
+    confirm: 'Confirmar',
 
   },
   en: {
@@ -271,6 +275,7 @@ const translations: TranslationMap = {
     results: 'Resultados',
     searchStudentByName: 'Search student by name',
     searchByGroup: 'Search by group',
+    searchByStudent: 'Search by student',
     studentsGroups: 'Students and Classes',
     tuitions: 'Tuitions',
     paymentRequests: 'Payment Requests',
@@ -340,6 +345,9 @@ const translations: TranslationMap = {
     noPermissionTitle: 'No permissions',
     noPermissionDescription: 'You do not have the required permissions to access this section. Please contact your administrator.',
     noReceiptPermission: 'You do not have permission to upload or modify the receipt.',
+    confirmRejectPayment: 'Do you want to reject this payment',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
 
   },
 }
