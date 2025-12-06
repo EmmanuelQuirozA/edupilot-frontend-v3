@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { API_BASE_URL } from '../config'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
-import type { PaymentRow, RequestRow, Student, TopupRow, TuitionRow } from './types'
+import type { FormState, PaymentRow, RequestRow, Student, TopupRow, TuitionRow } from './types'
 import {
   StudentContactCard,
   StudentHeader,
@@ -16,6 +16,7 @@ import {
   StudentTuitionTable,
   TabbedSection,
 } from './components'
+import type { StudentCatalogs } from './components/StudentInstitutionCard'
 
 interface StudentDetailPageProps {
   onNavigate: (path: string) => void
@@ -35,6 +36,21 @@ export default function StudentDetailPage({ onNavigate, studentId, language: _la
   const [paymentRows] = useState<PaymentRow[]>([])
   const [requestRows] = useState<RequestRow[]>([])
   const [topupRows] = useState<TopupRow[]>([])
+
+  const [isEditing] = useState(false)
+  const [formValues, setFormValues] = useState<FormState>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    institutionName: '',
+    status: '',
+  })
+  const [formErrors] = useState<Partial<Record<keyof FormState, string>>>({})
+  const [catalogs] = useState<StudentCatalogs>({
+    institutions: [],
+    statuses: [],
+  })
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -75,6 +91,25 @@ export default function StudentDetailPage({ onNavigate, studentId, language: _la
 
     return () => controller.abort()
   }, [locale, studentId, t, token])
+
+  useEffect(() => {
+    setFormValues((previous) => ({
+      ...previous,
+      firstName: student?.firstName ?? '',
+      lastName: student?.lastName ?? '',
+      email: student?.email ?? '',
+      phone: student?.phone ?? '',
+      institutionName: student?.institutionName ?? '',
+      status: student?.status ?? '',
+    }))
+  }, [student])
+
+  const handleFormChange = (field: keyof FormState, value: FormState[keyof FormState]) => {
+    setFormValues((previous) => ({
+      ...previous,
+      [field]: typeof value === 'string' ? value : value ?? '',
+    }))
+  }
 
   const tabConfig = useMemo(
     () => [
@@ -123,7 +158,14 @@ export default function StudentDetailPage({ onNavigate, studentId, language: _la
 
         <div className="row g-3">
           <div className="col-12 col-lg-6">
-            <StudentInstitutionCard student={student} />
+            <StudentInstitutionCard
+              student={student}
+              formValues={formValues}
+              formErrors={formErrors}
+              isEditing={isEditing}
+              onChange={handleFormChange}
+              catalogs={catalogs}
+            />
           </div>
           <div className="col-12 col-lg-6">
             <StudentContactCard student={student} />
