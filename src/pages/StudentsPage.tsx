@@ -181,13 +181,17 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
         label: 'Alumno',
         sortable: true,
         render: (student) => (
-          <div className="d-flex align-items-center gap-3">
+          <button
+            type="button"
+            className="students-name-button d-flex align-items-center gap-3"
+            onClick={() => onNavigate(`/${locale}/students/${student.student_id}`)}
+          >
             <div className="avatar-circle">{student.full_name[0]}</div>
-            <div className="d-flex flex-column">
+            <div className="d-flex flex-column align-items-start">
               <span className="fw-semibold text-black">{student.full_name}</span>
               <small className="text-muted">Matrícula: {student.register_id}</small>
             </div>
-          </div>
+          </button>
         ),
       },
       {
@@ -218,7 +222,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
         ),
       },
     ],
-    [],
+    [locale, onNavigate],
   )
   
   // Groups
