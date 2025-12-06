@@ -150,6 +150,7 @@ function Router() {
     if (isStudentDetailPath && studentDetailMatch) {
       return (
         <StudentDetailPage
+          onNavigate={navigate}
           studentId={Number(studentDetailMatch[2])}
           language={locale}
         />
