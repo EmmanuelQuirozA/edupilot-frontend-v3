@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import PaymentConceptSelect from '../catalog/PaymentConceptSelect'
 import PaymentThroughSelect from '../catalog/PaymentThroughSelect'
+import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE_URL } from '../../config'
 import { createCurrencyFormatter } from '../../utils/currencyFormatter'
@@ -64,6 +65,7 @@ export function PaymentRegistrationModal({
   description = 'Ingresa la información del pago para continuar.',
 }: PaymentRegistrationModalProps) {
   const { token } = useAuth()
+  const { t } = useLanguage()
   const [form, setForm] = useState<PaymentFormState>({
     amount: '',
     paymentMonth: defaultPaymentMonth || '',
@@ -185,6 +187,23 @@ export function PaymentRegistrationModal({
         const message = await response.text()
         throw new Error(message || 'No se pudo registrar el pago')
       }
+
+      const result = await response.json()
+
+      if (!result?.success) {
+        Swal.fire({
+          icon: 'error',
+          title: result?.title || t('defaultError'),
+          text: result?.message || t('defaultError'),
+        })
+        return
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: result?.title || '',
+        text: result?.message || '',
+      })
 
       setSuccessMessage('Pago registrado correctamente')
       onSuccess?.()
