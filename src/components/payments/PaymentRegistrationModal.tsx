@@ -81,14 +81,17 @@ export function PaymentRegistrationModal({
     [],
   )
 
+  const hasPaymentRequestContext = Boolean(requestSummary)
   const requireFullPendingPayment = !!requestSummary && !requestSummary.isPartialPayment
 
   useEffect(() => {
     if (!isOpen) return
 
+    const pendingAmount = requestSummary?.pendingAmount ?? null
+
     setForm({
-      amount: requireFullPendingPayment
-        ? requestSummary.pendingAmount.toFixed(2)
+      amount: pendingAmount !== null
+        ? pendingAmount.toFixed(2)
         : '',
       paymentMonth: defaultPaymentMonth || '',
       paymentConceptId: defaultPaymentConceptId ?? '',
@@ -103,8 +106,8 @@ export function PaymentRegistrationModal({
     defaultPaymentMonth,
     defaultPaymentThroughId,
     isOpen,
+    requestSummary,
     requireFullPendingPayment,
-    requestSummary?.pendingAmount,
   ])
 
   const handleChange = <K extends keyof PaymentFormState>(
@@ -286,22 +289,26 @@ export function PaymentRegistrationModal({
                       required
                     />
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Concepto de pago</label>
-                    <PaymentConceptSelect
-                      value={form.paymentConceptId}
-                      onChange={(value) => handleChange('paymentConceptId', value)}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Mes de pago</label>
-                    <input
-                      type="month"
-                      value={form.paymentMonth}
-                      onChange={(e) => handleChange('paymentMonth', e.target.value)}
-                      className="form-control"
-                    />
-                  </div>
+                  {!hasPaymentRequestContext && (
+                    <>
+                      <div className="col-md-6">
+                        <label className="form-label">Concepto de pago</label>
+                        <PaymentConceptSelect
+                          value={form.paymentConceptId}
+                          onChange={(value) => handleChange('paymentConceptId', value)}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Mes de pago</label>
+                        <input
+                          type="month"
+                          value={form.paymentMonth}
+                          onChange={(e) => handleChange('paymentMonth', e.target.value)}
+                          className="form-control"
+                        />
+                      </div>
+                    </>
+                  )}
                   <div className="col-12">
                     <label className="form-label">Comentarios</label>
                     <textarea
