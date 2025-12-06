@@ -201,6 +201,29 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     loadPaymentRequest()
   }, [loadPaymentRequest])
 
+  const paymentRequestSummary = useMemo(
+    () => {
+      if (!paymentRequestDetail) {
+        return {
+          tuitionLabel: '',
+          conceptName: '',
+          pendingAmount: 0,
+          isPartialPayment: false,
+        }
+      }
+
+      return {
+        tuitionLabel: paymentRequestDetail.paymentRequest.payment_month
+          ? formatDate(paymentRequestDetail.paymentRequest.payment_month, locale, { year: 'numeric', month: 'long' })
+          : t('noInformation'),
+        conceptName: paymentRequestDetail.paymentRequest.pt_name,
+        pendingAmount: paymentRequestDetail.paymentInfo.pendingPayment,
+        isPartialPayment: paymentRequestDetail.paymentRequest.partial_payment,
+      }
+    },
+    [locale, paymentRequestDetail, t],
+  )
+
   useEffect(() => {
     const controller = new AbortController()
     loadPaymentRequest(controller.signal)
@@ -441,18 +464,6 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
   const defaultPaymentMonth = paymentRequest.payment_month
     ? toMonthInputValue(paymentRequest.payment_month)
     : undefined
-
-  const paymentRequestSummary = useMemo(
-    () => ({
-      tuitionLabel: paymentRequest.payment_month
-        ? formatDate(paymentRequest.payment_month, locale, { year: 'numeric', month: 'long' })
-        : t('noInformation'),
-      conceptName: paymentRequest.pt_name,
-      pendingAmount: paymentInfo.pendingPayment,
-      isPartialPayment: paymentRequest.partial_payment,
-    }),
-    [locale, paymentInfo.pendingPayment, paymentRequest.partial_payment, paymentRequest.payment_month, paymentRequest.pt_name, t],
-  )
 
   const formatCurrency = (value: number | null | undefined) =>
     (value ?? 0).toLocaleString(
