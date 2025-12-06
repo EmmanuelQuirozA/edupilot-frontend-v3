@@ -180,9 +180,12 @@ const translations: TranslationMap = {
     noReceiptPermission: 'No tienes permisos para cargar o modificar el comprobante.',
     confirmRejectPayment: '¿Estás seguro que quieres rechazar este pago?',
     cancel: 'Cancelar',
+    accept: 'Aceptar',
     confirm: 'Confirmar',
     save: 'Guardar',
     saving: 'Guardando...',
+    areYouSureCloseRequest: '¿Estás seguro que deseas cerrar esta solicitud?',
+    areYouSureCancelRequest: '¿Estás seguro que deseas cancelar esta solicitud?',
 
   },
   en: {
@@ -359,9 +362,12 @@ const translations: TranslationMap = {
     noReceiptPermission: 'You do not have permission to upload or modify the receipt.',
     confirmRejectPayment: 'Do you want to reject this payment',
     cancel: 'Cancel',
+    accept: 'Accept',
     confirm: 'Confirm',
     save: 'Save',
     saving: 'Saving...',
+    areYouSureCloseRequest: 'Are you sure you want to close this request?',
+    areYouSureCancelRequest: 'Are you sure you want to cancel this request?',
 
   },
 }

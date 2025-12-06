@@ -331,6 +331,30 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
   const handleUpdateRequest = async (statusId?: number) => {
     if (!token || !paymentRequestDetail) return
 
+    if (statusId === 7) {
+      const confirmation = await Swal.fire({
+        icon: 'warning',
+        title: t('close') || 'Cerrar',
+        text: t('areYouSureCloseRequest') || '¿Deseas cerrar esta solicitud?',
+        showCancelButton: true,
+        confirmButtonText: t('confirm') || 'Aceptar',
+        cancelButtonText: t('cancel') || 'Cancelar',
+      })
+
+      if (!confirmation.isConfirmed) return
+    } else if (statusId === 8) {
+      const confirmation = await Swal.fire({
+        icon: 'warning',
+        title: t('cancel') || 'Cancelar',
+        text: t('areYouSureCancelRequest') || '¿Deseas cancelar esta solicitud?',
+        showCancelButton: true,
+        confirmButtonText: t('confirm') || 'Aceptar',
+        cancelButtonText: t('cancel') || 'Cancelar',
+      })
+
+      if (!confirmation.isConfirmed) return
+    }
+
     setIsUpdatingRequest(true)
     setUpdateError(null)
 
@@ -460,6 +484,8 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
 
   const canCreatePayment = permissions?.createAllowed ?? false
   const canUpdatePayment = permissions?.updateAllowed ?? false
+  const isFinalStatus = paymentRequest.payment_status_id === 7 || paymentRequest.payment_status_id === 8
+
 
   const defaultPaymentMonth = paymentRequest.payment_month
     ? toMonthInputValue(paymentRequest.payment_month)
@@ -600,7 +626,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
               </svg>
               {t('print')}
             </button>
-            {canUpdatePayment ? (
+            {canUpdatePayment && !isEditingRequest && !isFinalStatus ? (
               <>
                 <button
                   type="button"
@@ -802,7 +828,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
         <div className="card shadow-sm border-0">
           <div className="d-flex align-items-center justify-content-between card-header border-bottom-0 bg-white">
             <h5 className="mb-0">{t('paymentsList')}</h5>
-            {canCreatePayment ? (
+            {canCreatePayment && !isFinalStatus ? (
               <button
                 type="button"
                 className="btn d-flex align-items-center gap-2 btn-edit text-muted fw-medium"
