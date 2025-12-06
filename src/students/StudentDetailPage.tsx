@@ -1,21 +1,26 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Layout } from '../layout/Layout'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 import { API_BASE_URL } from '../config'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
-import type { FormState, PaymentRow, RequestRow, Student, TopupRow, TuitionRow } from './types'
+import type { DataTablePagination } from '../components/DataTable'
+import type { FormState, Student } from './types'
 import {
+  PaymentsTable,
+  RequestsTable,
   StudentContactCard,
   StudentHeader,
   StudentInstitutionCard,
-  StudentPaymentsTable,
-  StudentRequestsTable,
-  StudentTopupsTable,
-  StudentTuitionTable,
   TabbedSection,
+  TopupsTable,
+  TuitionTable,
 } from './components'
+import type { StudentPayment } from './components/PaymentsTable'
+import type { StudentPaymentRequest } from './components/RequestsTable'
+import type { StudentTopup } from './components/TopupsTable'
+import type { TuitionRow } from './components/TuitionTable'
 import type { StudentCatalogs } from './components/StudentInstitutionCard'
 
 interface StudentDetailPageProps {
@@ -27,6 +32,7 @@ interface StudentDetailPageProps {
 export default function StudentDetailPage({ onNavigate, studentId, language: _language }: StudentDetailPageProps) {
   const { token, hydrated } = useAuth()
   const { locale, t } = useLanguage()
+  void _language
 
   const [student, setStudent] = useState<Student | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -37,9 +43,12 @@ export default function StudentDetailPage({ onNavigate, studentId, language: _la
   const [userStatusDraft, setUserStatusDraft] = useState(false)
 
   const [tuitionRows] = useState<TuitionRow[]>([])
-  const [paymentRows] = useState<PaymentRow[]>([])
-  const [requestRows] = useState<RequestRow[]>([])
-  const [topupRows] = useState<TopupRow[]>([])
+  const [payments] = useState<StudentPayment[]>([])
+  const [requests] = useState<StudentPaymentRequest[]>([])
+  const [topups] = useState<StudentTopup[]>([])
+  const [paymentsPagination] = useState<DataTablePagination | undefined>()
+  const [requestsPagination] = useState<DataTablePagination | undefined>()
+  const [topupsPagination] = useState<DataTablePagination | undefined>()
   const [formValues, setFormValues] = useState<FormState>({
     firstName: '',
     lastName: '',
@@ -113,30 +122,104 @@ export default function StudentDetailPage({ onNavigate, studentId, language: _la
     }))
   }
 
+  const tuitionLoading = isLoading
+  const paymentsLoading = isLoading
+  const requestsLoading = isLoading
+  const topupsLoading = isLoading
+
+  const handleOpenMonthDetail = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (row: TuitionRow, month: string, details: any) => {
+      void row
+      void month
+      void details
+    },
+    [],
+  )
+
+  const handleOpenPayment = useCallback((paymentId: number) => {
+    void paymentId
+  }, [])
+
+  const handleOpenRequest = useCallback((requestId: number) => {
+    void requestId
+  }, [])
+
   const tabConfig = useMemo(
     () => [
       {
         key: 'tuition',
         label: t('tuitionLabel'),
-        content: <StudentTuitionTable data={tuitionRows} isLoading={isLoading} />,
+        content: (
+          <TuitionTable
+            data={tuitionRows}
+            isLoading={tuitionLoading}
+            locale={locale}
+            t={t}
+            onOpenMonthDetail={handleOpenMonthDetail}
+          />
+        ),
       },
       {
         key: 'payments',
         label: t('paymentsLabel'),
-        content: <StudentPaymentsTable data={paymentRows} isLoading={isLoading} />,
+        content: (
+          <PaymentsTable
+            data={payments}
+            isLoading={paymentsLoading}
+            locale={locale}
+            t={t}
+            onViewPayment={handleOpenPayment}
+            pagination={paymentsPagination}
+          />
+        ),
       },
       {
         key: 'requests',
         label: t('requestsLabel'),
-        content: <StudentRequestsTable data={requestRows} isLoading={isLoading} />,
+        content: (
+          <RequestsTable
+            data={requests}
+            isLoading={requestsLoading}
+            locale={locale}
+            t={t}
+            onViewRequest={handleOpenRequest}
+            pagination={requestsPagination}
+          />
+        ),
       },
       {
         key: 'topups',
         label: t('topupsLabel'),
-        content: <StudentTopupsTable data={topupRows} isLoading={isLoading} />,
+        content: (
+          <TopupsTable
+            data={topups}
+            isLoading={topupsLoading}
+            locale={locale}
+            t={t}
+            pagination={topupsPagination}
+          />
+        ),
       },
     ],
-    [isLoading, paymentRows, requestRows, t, topupRows, tuitionRows],
+    [
+      handleOpenMonthDetail,
+      handleOpenPayment,
+      handleOpenRequest,
+      locale,
+      payments,
+      paymentsLoading,
+      paymentsPagination,
+      requests,
+      requestsLoading,
+      requestsPagination,
+      t,
+      topups,
+      topupsLoading,
+      topupsPagination,
+      tuitionLoading,
+      tuitionRows,
+    ],
   )
 
   const statusLabels = useMemo(
