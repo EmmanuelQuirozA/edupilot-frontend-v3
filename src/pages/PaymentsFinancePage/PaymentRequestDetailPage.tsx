@@ -46,6 +46,7 @@ interface PaymentRequestInfo {
   pr_payment_status_id: number | null
   ps_pr_name: string
   pt_name: string
+  payment_concept_id?: number | null
   closed_at: string | null
 }
 
@@ -491,6 +492,8 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     ? toMonthInputValue(paymentRequest.payment_month)
     : undefined
 
+  const defaultPaymentConceptId = paymentRequest.payment_concept_id ?? undefined
+
   const formatCurrency = (value: number | null | undefined) =>
     (value ?? 0).toLocaleString(
       locale === 'es' ? 'es-MX' : 'en-US',
@@ -520,6 +523,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
         studentId={student.student_id}
         paymentRequestId={paymentRequest.payment_request_id}
         defaultPaymentMonth={defaultPaymentMonth}
+        defaultPaymentConceptId={defaultPaymentConceptId}
         requestSummary={paymentRequestSummary}
         lang={locale}
         onSuccess={handlePaymentSuccess}
