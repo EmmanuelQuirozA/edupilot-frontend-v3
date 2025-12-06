@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
-import { DataTable, type DataTableColumn } from '../../components/DataTable'
-import { createCurrencyFormatter } from '../../utils/currencyFormatter'
+import { DataTable, type DataTableColumn } from '../../../components/DataTable'
+import { createCurrencyFormatter } from '../../../utils/currencyFormatter'
 
 const MONTH_KEY_REGEX = /^[A-Za-z]{3}-\d{2}$/
 

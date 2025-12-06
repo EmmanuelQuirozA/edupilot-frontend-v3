@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
-import { DataTable, type DataTableColumn, type DataTablePagination } from '../../components/DataTable'
-import { createCurrencyFormatter } from '../../utils/currencyFormatter'
-import { formatDate } from '../../utils/formatDate'
+import { DataTable, type DataTableColumn, type DataTablePagination } from '../../../components/DataTable'
+import { createCurrencyFormatter } from '../../../utils/currencyFormatter'
+import { formatDate } from '../../../utils/formatDate'
 
 export interface StudentPayment {
   payment_id: number

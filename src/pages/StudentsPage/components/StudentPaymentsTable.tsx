@@ -1,4 +1,4 @@
-import { DataTable, type DataTableColumn } from '../../components/DataTable'
+import { DataTable, type DataTableColumn } from '../../../components/DataTable'
 import type { PaymentRow } from '../types'
 
 interface StudentPaymentsTableProps {
