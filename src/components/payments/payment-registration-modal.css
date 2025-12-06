@@ -1,0 +1,32 @@
+.payment-summary-card {
+  background: linear-gradient(90deg, #f5f7fb 0%, #fdfdff 100%);
+  border: 1px solid #e3e6ed;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.payment-summary-card__header,
+.payment-summary-card__body {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.payment-summary-card__body {
+  margin-top: 8px;
+  align-items: flex-end;
+}
+
+.payment-file-drop {
+  border: 1px dashed #ced4da;
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.payment-file-drop:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+}
