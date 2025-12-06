@@ -210,7 +210,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
       setLogsError(null)
       try {
         const params = new URLSearchParams({ lang: locale })
-        const response = await fetch(`${API_BASE_URL}/logs/payment/${paymentRequestId}?${params.toString()}`, {
+        const response = await fetch(`${API_BASE_URL}/logs/payment-requests/${paymentRequestId}?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         })
@@ -245,6 +245,10 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     if (!digitsOnly) return null
     return `https://wa.me/${digitsOnly}`
   }
+
+  const isDateField = (field: string | null) => (field ? ['pay_by'].includes(field) : false)
+  const isMonthField = (field: string | null) => (field ? ['payment_month'].includes(field) : false)
+
 
   const toDateInputValue = (value: string | null) => {
     if (!value) return ''
@@ -345,10 +349,34 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
         throw new Error('failed_request')
       }
 
+      const result = await response.json()
+
+      if (!result?.success) {
+        Swal.fire({
+          icon: 'error',
+          title: result?.title || t('defaultError'),
+          text: result?.message || t('defaultError'),
+        })
+        return
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: result?.title || '',
+        text: result?.message || '',
+      })
+
       await loadPaymentRequest()
       setIsEditingRequest(false)
     } catch (requestError) {
-      setUpdateError(t('defaultError'))
+      Swal.fire({
+        icon: 'error',
+        title: t('defaultError'),
+        text: t('defaultError'),
+      })
+      if ((requestError as Error).name !== 'AbortError') {
+        setError(t('defaultError'))
+      }
     } finally {
       setIsUpdatingRequest(false)
     }
@@ -906,8 +934,24 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
                               <ul className="log-entry mb-0 ps-3 small text-muted">
                                 {log.changes?.map((change, changeIndex) => (
                                   <li key={`${change.field}-${changeIndex}`}>
-                                    <span className="fw-semibold">{change.field ?? t('noInformation')}</span>
-                                    : {change.from ?? '—'} → {change.to ?? '—'}
+                                    <span className="fw-semibold">
+                                        {change.field ? t(change.field) : t('noInformation')}
+                                      </span>
+                                      : {
+                                        isDateField(change.field)
+                                          ? formatDate(change.from, locale, { dateStyle: 'medium', timeStyle: 'short' })
+                                          : isMonthField(change.field) 
+                                            ? formatDate(change.from, locale, {year: 'numeric', month: 'long'})
+                                            : change.from ?? '—'
+                                      }
+                                      {" → "}
+                                      {
+                                        isDateField(change.field)
+                                          ? formatDate(change.to, locale, { dateStyle: 'medium', timeStyle: 'short' })
+                                          : isMonthField(change.field) 
+                                            ? formatDate(change.to, locale, {year: 'numeric', month: 'long'})
+                                            : change.to ?? '—'
+                                      }
                                   </li>
                                 ))}
                               </ul>
