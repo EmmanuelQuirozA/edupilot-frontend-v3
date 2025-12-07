@@ -186,6 +186,10 @@ const translations: TranslationMap = {
     saving: 'Guardando...',
     areYouSureCloseRequest: '¿Estás seguro que deseas cerrar esta solicitud?',
     areYouSureCancelRequest: '¿Estás seguro que deseas cancelar esta solicitud?',
+    school: 'Escuela',
+    scholarLevel: 'Nivel escolar',
+    metaSchoolCard: 'Agrega o actualiza la información escolar.',
+
 
   },
   en: {
@@ -368,6 +372,9 @@ const translations: TranslationMap = {
     saving: 'Saving...',
     areYouSureCloseRequest: 'Are you sure you want to close this request?',
     areYouSureCancelRequest: 'Are you sure you want to cancel this request?',
+    school: 'School',
+    scholarLevel: 'Scholar level',
+    metaSchoolCard: 'Add or update the school information.',
 
   },
 }

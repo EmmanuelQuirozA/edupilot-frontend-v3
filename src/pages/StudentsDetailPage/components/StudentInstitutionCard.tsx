@@ -35,7 +35,7 @@ export function StudentInstitutionCard({
 
   const institutionStrings = {
     fields: {
-      schoolId: t('schoolId') || 'Institución',
+      school: t('school') || 'Institución',
       groupId: t('groupId') || 'Grupo',
       curp: t('curp') || 'CURP',
       scholarLevel: t('scholarLevel') || 'Nivel escolar',
@@ -148,15 +148,15 @@ export function StudentInstitutionCard({
   return (
     <div className="student-card__info">
       <div>
-        <p className="info-card__label">{t('institute')}</p>
+        <p className="info-card__label">{t('school')}</p>
         <h3>{student.business_name || student.commercial_name || emptyValue}</h3>
         <p className="info-card__meta">{t('metaSchoolCard')}</p>
       </div>
       {isEditing ? (
-        <div className="row mt-3 gy-3">
+        <div className="row gy-3">
           <div className="col-md-4">
-            {renderSelectField(institutionStrings.fields.schoolId, 'school_id', schoolOptions, {
-              placeholder: institutionStrings.fields.schoolId,
+            {renderSelectField(institutionStrings.fields.school, 'school_id', schoolOptions, {
+              placeholder: institutionStrings.fields.school,
               displayValueOverride:
                 selectedSchool?.label || student.business_name || student.commercial_name || emptyValue,
             })}
@@ -184,10 +184,10 @@ export function StudentInstitutionCard({
           </div>
         </div>
       ) : (
-        <div className="row mt-3 gy-3">
+        <div className="row gy-3">
           <div className="col-md-4">
             <div className="field">
-              <span>{institutionStrings.fields.schoolId}</span>
+              <span>{institutionStrings.fields.school}</span>
               <div className="field__value">{student.business_name || emptyValue}</div>
             </div>
           </div>

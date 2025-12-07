@@ -2,6 +2,7 @@ import type { ChangeEvent } from 'react'
 import { InfoCard } from './InfoCard'
 import type { FormState } from '../types/FormState'
 import type { Student } from '../types/Student'
+import { formatDate } from "../../../utils/formatDate";
 
 interface StudentContactCardProps {
   student: Student
@@ -26,222 +27,205 @@ export function StudentContactCard({
   }
 
   return (
-    <InfoCard title="Contacto" subtitle="Información de contacto">
-      {isEditing ? (
-        <div className="row gy-3">
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="first_name">
-              Nombre
-            </label>
-            <input
-              id="first_name"
-              name="first_name"
-              className="form-control"
-              value={formValues.first_name}
-              onChange={handleInputChange}
-            />
-            {formErrors.first_name ? <small className="text-danger">{formErrors.first_name}</small> : null}
+    <div className='col-md-12'>
+      <div className="info-card">
+        <div className="info-card__header">
+          <div>
+            <p className="info-card__label">{contactStrings.label}</p>
+            <h3>{student.username}</h3>
+            <p className="info-card__meta">{student.email || contactStrings.meta}</p>
           </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="last_name_father">
-              Apellido paterno
-            </label>
-            <input
-              id="last_name_father"
-              name="last_name_father"
-              className="form-control"
-              value={formValues.last_name_father}
-              onChange={handleInputChange}
-            />
-            {formErrors.last_name_father ? <small className="text-danger">{formErrors.last_name_father}</small> : null}
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="last_name_mother">
-              Apellido materno
-            </label>
-            <input
-              id="last_name_mother"
-              name="last_name_mother"
-              className="form-control"
-              value={formValues.last_name_mother}
-              onChange={handleInputChange}
-            />
-            {formErrors.last_name_mother ? <small className="text-danger">{formErrors.last_name_mother}</small> : null}
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="birth_date">
-              Fecha de nacimiento
-            </label>
-            <input
-              id="birth_date"
-              name="birth_date"
-              type="date"
-              className="form-control"
-              value={formValues.birth_date ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="phone_number">
-              Teléfono
-            </label>
-            <input
-              id="phone_number"
-              name="phone_number"
-              className="form-control"
-              value={formValues.phone_number ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="tax_id">
-              RFC
-            </label>
-            <input
-              id="tax_id"
-              name="tax_id"
-              className="form-control"
-              value={formValues.tax_id ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="email">
-              Correo institucional
-            </label>
-            <input
-              id="email"
-              name="email"
-              className="form-control"
-              value={formValues.email}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="personal_email">
-              Correo personal
-            </label>
-            <input
-              id="personal_email"
-              name="personal_email"
-              className="form-control"
-              value={formValues.personal_email ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="street">
-              Calle
-            </label>
-            <input
-              id="street"
-              name="street"
-              className="form-control"
-              value={formValues.street ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="ext_number">
-              Número exterior
-            </label>
-            <input
-              id="ext_number"
-              name="ext_number"
-              className="form-control"
-              value={formValues.ext_number ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="int_number">
-              Número interior
-            </label>
-            <input
-              id="int_number"
-              name="int_number"
-              className="form-control"
-              value={formValues.int_number ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="suburb">
-              Colonia
-            </label>
-            <input
-              id="suburb"
-              name="suburb"
-              className="form-control"
-              value={formValues.suburb ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="locality">
-              Localidad
-            </label>
-            <input
-              id="locality"
-              name="locality"
-              className="form-control"
-              value={formValues.locality ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="municipality">
-              Municipio
-            </label>
-            <input
-              id="municipality"
-              name="municipality"
-              className="form-control"
-              value={formValues.municipality ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-          <div className="col-md-4">
-            <label className="form-label small text-muted" htmlFor="state">
-              Estado
-            </label>
-            <input
-              id="state"
-              name="state"
-              className="form-control"
-              value={formValues.state ?? ''}
-              onChange={handleInputChange}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="row gy-3">
-          <div className="col-md-3">
-            <small className="text-muted d-block">Nombre</small>
-            <span className="fw-semibold text-black">{student.full_name || student.fullName || emptyValue}</span>
-          </div>
-          <div className="col-md-3">
-            <small className="text-muted d-block">Correo</small>
-            <span className="fw-semibold text-black">{student.email || emptyValue}</span>
-          </div>
-          <div className="col-md-3">
-            <small className="text-muted d-block">Correo personal</small>
-            <span className="fw-semibold text-black">{student.personal_email || emptyValue}</span>
-          </div>
-          <div className="col-md-3">
-            <small className="text-muted d-block">Teléfono</small>
-            <span className="fw-semibold text-black">{student.phone_number || student.phone || emptyValue}</span>
-          </div>
-          <div className="col-12">
-            <small className="text-muted d-block">Dirección</small>
-            <span className="fw-semibold text-black">
-              {[student.street, student.ext_number, student.int_number, student.suburb, student.locality, student.municipality, student.state]
-                .filter(Boolean)
-                .join(', ') || emptyValue}
+          <div className="info-card__status">
+            <span className="student-detail-page__chip chip--info">
+              {student.role_name || contactStrings.roleChip || roleFallback}
+            </span>
+            <span
+              className={`student-detail-page__chip ${
+                (isEditing ? userStatusDraft : student.user_enabled) ? 'chip--success' : 'chip--warning'
+              }`}
+            >
+              {isEditing
+                ? userStatusDraft
+                  ? userStatusLabels.active
+                  : userStatusLabels.inactive
+                : student.user_status || contactStrings.roleStatusChip || contactStrings.emptyValue}
             </span>
           </div>
         </div>
-      )}
-    </InfoCard>
+        {isEditing ? (
+          <>
+            <div className="row">
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.firstName, 'first_name', {
+                  placeholder: contactStrings.fields.firstName,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.lastNameFather, 'last_name_father', {
+                  placeholder: contactStrings.fields.lastNameFather,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.lastNameMother, 'last_name_mother', {
+                  placeholder: contactStrings.fields.lastNameMother,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.birthDate, 'birth_date', {
+                  placeholder: contactStrings.fields.birthDate,
+                  type: 'date',
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.phoneNumber, 'phone_number', {
+                  placeholder: contactStrings.fields.phoneNumber,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.taxId, 'tax_id', {
+                  placeholder: contactStrings.fields.taxId,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.email, 'email', {
+                  placeholder: contactStrings.fields.email,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.personalEmail, 'personal_email', {
+                  placeholder: contactStrings.fields.personalEmail,
+                  inputClassName: 'input',
+                })}
+              </div>
+            </div>
+            <div className="row">
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.street, 'street', {
+                  placeholder: contactStrings.fields.street,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.extNumber, 'ext_number', {
+                  placeholder: contactStrings.fields.extNumber,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.intNumber, 'int_number', {
+                  placeholder: contactStrings.fields.intNumber,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.suburb, 'suburb', {
+                  placeholder: contactStrings.fields.suburb,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.locality, 'locality', {
+                  placeholder: contactStrings.fields.locality,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.municipality, 'municipality', {
+                  placeholder: contactStrings.fields.municipality,
+                  inputClassName: 'input',
+                })}
+              </div>
+              <div className='col-md-4'>
+                {renderEditableField(contactStrings.fields.state, 'state', {
+                  placeholder: contactStrings.fields.state,
+                  inputClassName: 'input',
+                })}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="info-card__summary">
+            <p className="info-card__summary-title">{contactStrings.summaryTitle}</p>
+            <div className="row">
+              <div className='col-md-4'>
+                <dt>{contactStrings.fields.firstName}:</dt>{' '}
+                {student.full_name}
+              </div>
+              <div className='col-md-4'>
+                <dt>{contactStrings.summary.phone}:</dt>{' '}
+                {whatsappLink ? (
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="payment-request-detail__phone-link"
+                  >
+                    <WhatsappIcon />
+                    <span className='text-black'>{normalizedStudentPhone}</span>
+                  </a>
+                ) : (
+                  student.phone_number || emptyValue
+                )}
+                {/* <dt>{contactStrings.summary.phone}:</dt>{' '}
+                {student.phone_number || emptyValue} */}
+              </div>
+              <div className='col-md-4'>
+                <dt>{contactStrings.summary.birthDate}:</dt>{' '}
+                {formatDateValue(student.birth_date, language) || emptyValue}
+              </div>
+              <div className='col-md-4'>
+                <dt>{contactStrings.summary.taxId}:</dt>{' '}
+                {student.tax_id || emptyValue}
+              </div>
+              <div className='col-md-4'>
+                <dt>{contactStrings.summary.institutionalEmail}:</dt>{' '}
+                {normalizedEmail ? (
+                  <button
+                    type="button"
+                    className="student-detail-page__email-button"
+                    onClick={handleEmailClick}
+                  >
+                    <EmailIcon />
+                    <span className='text-black'>{normalizedEmail}</span>
+                  </button>
+                ) : (
+                  <span>—</span>
+                )}
+                {/* {student.email || emptyValue} */}
+              </div>
+              <div className='col-md-4'>
+                <dt>{contactStrings.summary.personalEmail}:</dt>{' '}
+                {normalizedPersonalEmail ? (
+                  <button
+                    type="button"
+                    className="student-detail-page__email-button"
+                    onClick={handlePersonalEmailClick}
+                  >
+                    <EmailIcon />
+                    <span className='text-black'>{normalizedPersonalEmail}</span>
+                  </button>
+                ) : (
+                  <span>—</span>
+                )}
+                {/* <dt>{contactStrings.summary.personalEmail}:</dt>{' '}
+                {student.personal_email || emptyValue} */}
+              </div>
+            </div>
+            <div className="info-card__address">
+              <p className="info-card__summary-title">{contactStrings.summary.address}</p>
+              <p className="info-card__meta">{contactStrings.addressHelper}</p>
+              <p className="field__value">{buildAddressString(student, emptyValue)}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
