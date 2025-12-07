@@ -2,11 +2,19 @@ export interface Student {
   id?: number
   externalId?: string
   firstName?: string
+  first_name?: string
   lastName?: string
+  last_name_father?: string
+  last_name_mother?: string
   email?: string
   phone?: string
   status?: string
+  fullName?: string
+  full_name?: string
   institutionName?: string
+  registerId?: string
+  register_id?: string
+  user_id?: number
   avatarUrl?: string
 }
 
