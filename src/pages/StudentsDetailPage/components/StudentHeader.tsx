@@ -3,17 +3,23 @@ import type { Student } from '../types/Student'
 interface StudentHeaderProps {
   student: Student
   isEditing: boolean
+  statusDraft: boolean
+  statusLabel: string
   onEdit: () => void
   onSave: () => void
   onCancel: () => void
+  onToggleStatus: () => void
 }
 
 export function StudentHeader({
   student,
   isEditing,
+  statusDraft,
+  statusLabel,
   onEdit,
   onSave,
   onCancel,
+  onToggleStatus,
 }: StudentHeaderProps) {
   const initials = student.fullName
     .split(' ')
@@ -44,13 +50,15 @@ export function StudentHeader({
                 >
                   <input
                     type="checkbox"
+                    checked={statusDraft}
+                    onChange={onToggleStatus}
                   />
                   <span className="table__switch-track">
                     <span className="table__switch-thumb" />
                   </span>
                 </label>
                 <span>
-                  {student.status}
+                  {statusLabel}
                 </span>
               </div>
             ) : (
@@ -61,7 +69,7 @@ export function StudentHeader({
                   background: (student?.user_enabled ? 'rgba(16, 185, 129, 0.12)' : 'rgba(185, 16, 16, 0.12)'),
                 }}
               >
-                {student.status}
+                {statusLabel}
               </span>
             )}
             <span className="pill-chip"

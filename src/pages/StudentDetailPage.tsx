@@ -235,8 +235,9 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
 
   const [isEditing, setIsEditing] = useState(false)
   const [formValues, setFormValues] = useState<FormState>(() => buildFormState(null))
+  const [initialFormValues, setInitialFormValues] = useState<FormState>(() => buildFormState(null))
   const [formErrors] = useState<Partial<Record<keyof FormState, string>>>({})
-  const [catalogs] = useState<StudentCatalogs>({ schools: [], groups: [] })
+  const [catalogs, setCatalogs] = useState<StudentCatalogs>({ schools: [], groups: [] })
 
   const [activeTab, setActiveTab] = useState<TabKey>('tuition')
 
@@ -273,6 +274,8 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false)
   const [paymentModal, setPaymentModal] = useState<ModalState<Payment>>({ isOpen: false })
   const [requestModal, setRequestModal] = useState<ModalState<PaymentRequest>>({ isOpen: false })
+  const [isSaving, setIsSaving] = useState(false)
+  const [statusDraft, setStatusDraft] = useState<boolean | null>(null)
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -373,7 +376,10 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           registerId: detail.registerId,
           paymentReference: detail.paymentReference,
         })
-        setFormValues(buildFormState(detail))
+        const state = buildFormState(detail)
+        setFormValues(state)
+        setInitialFormValues(state)
+        setStatusDraft(null)
       } catch (fetchError) {
         if ((fetchError as Error).name !== 'AbortError') {
           setStudentError(t('defaultError'))
@@ -535,30 +541,226 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
     setFormValues((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSave = () => {
-    setIsEditing(false)
-    setStudent((prev) =>
-      prev
-        ? {
-            ...prev,
-            firstName: formValues.first_name || formValues.firstName,
-            lastName: `${formValues.last_name_father ?? ''} ${formValues.last_name_mother ?? ''}`.trim() ||
-              formValues.lastName,
-            email: formValues.email,
-            phone: formValues.phone_number || formValues.phone,
-            paymentReference: formValues.payment_reference || formValues.paymentReference,
-            registerId: formValues.register_id ?? prev.registerId,
-          }
-        : prev,
-    )
+  useEffect(() => {
+    if (!token) return
+    const controller = new AbortController()
+
+    const fetchGroups = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/groups/catalog?lang=${locale}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const data = (await response.json()) as unknown[]
+
+        setCatalogs((prev) => ({
+          ...prev,
+          groups: data.map((item) => {
+            const group = item as StudentCatalogs['groups'][number]
+            return {
+              ...group,
+              id: (group as { group_id?: number | string }).group_id ?? group.id,
+              label: `${(group as { grade_group?: string }).grade_group ?? ''} - ${(group as { scholar_level_name?: string }).scholar_level_name ?? ''}`.trim(),
+            }
+          }),
+        }))
+      } catch (fetchError) {
+        if ((fetchError as Error).name !== 'AbortError') {
+          // swallow catalog errors silently
+        }
+      }
+    }
+
+    fetchGroups()
+    return () => controller.abort()
+  }, [locale, token])
+
+  const handleSave = async () => {
+    if (!student || !token || isSaving) return
+
+    const formKeys: (keyof FormState)[] = [
+      'school_id',
+      'group_id',
+      'register_id',
+      'payment_reference',
+      'first_name',
+      'last_name_father',
+      'last_name_mother',
+      'birth_date',
+      'phone_number',
+      'tax_id',
+      'curp',
+      'street',
+      'ext_number',
+      'int_number',
+      'suburb',
+      'locality',
+      'municipality',
+      'state',
+      'personal_email',
+      'email',
+    ]
+
+    const studentDataChanged = formKeys.some((key) => {
+      const currentValue = formValues[key]
+      const initialValue = initialFormValues[key]
+      return String(currentValue ?? '') !== String(initialValue ?? '')
+    })
+
+    const originalStatus = student.user_enabled ?? student.isActive
+    const nextStatus = statusDraft ?? originalStatus
+    const statusChanged = nextStatus !== originalStatus
+
+    if (!studentDataChanged && !statusChanged) {
+      setIsEditing(false)
+      return
+    }
+
+    setIsSaving(true)
+    setStudentError(null)
+
+    try {
+      if (studentDataChanged) {
+        const payload = {
+          school_id: String(formValues.school_id ?? student.school_id ?? ''),
+          group_id: String(formValues.group_id ?? student.group_id ?? ''),
+          register_id: formValues.register_id ?? student.register_id ?? '',
+          payment_reference: formValues.payment_reference ?? student.payment_reference ?? null,
+          first_name: formValues.first_name ?? student.first_name ?? '',
+          last_name_father: formValues.last_name_father ?? student.last_name_father ?? '',
+          last_name_mother: formValues.last_name_mother ?? student.last_name_mother ?? '',
+          birth_date: formValues.birth_date ?? student.birth_date ?? '',
+          phone_number: formValues.phone_number ?? student.phone_number ?? '',
+          tax_id: formValues.tax_id ?? student.tax_id ?? '',
+          curp: formValues.curp ?? student.curp ?? '',
+          street: formValues.street ?? student.street ?? '',
+          ext_number: formValues.ext_number ?? student.ext_number ?? '',
+          int_number: formValues.int_number ?? student.int_number ?? '',
+          suburb: formValues.suburb ?? student.suburb ?? '',
+          locality: formValues.locality ?? student.locality ?? '',
+          municipality: formValues.municipality ?? student.municipality ?? '',
+          state: formValues.state ?? student.state ?? '',
+          personal_email: formValues.personal_email ?? student.personal_email ?? '',
+          email: formValues.email ?? student.email ?? '',
+        }
+
+        const response = await fetch(
+          `${API_BASE_URL}/students/update/${encodeURIComponent(student.student_id)}?lang=${locale}`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          },
+        )
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        setStudent((prev) =>
+          prev
+            ? {
+                ...prev,
+                register_id: payload.register_id,
+                registerId: payload.register_id,
+                payment_reference: payload.payment_reference ?? undefined,
+                paymentReference: payload.payment_reference ?? undefined,
+                first_name: payload.first_name,
+                firstName: payload.first_name,
+                last_name_father: payload.last_name_father,
+                last_name_mother: payload.last_name_mother,
+                lastName: `${payload.last_name_father} ${payload.last_name_mother}`.trim(),
+                birth_date: payload.birth_date,
+                phone_number: payload.phone_number,
+                phone: payload.phone_number,
+                tax_id: payload.tax_id,
+                curp: payload.curp,
+                street: payload.street,
+                ext_number: payload.ext_number,
+                int_number: payload.int_number,
+                suburb: payload.suburb,
+                locality: payload.locality,
+                municipality: payload.municipality,
+                state: payload.state,
+                personal_email: payload.personal_email,
+                email: payload.email,
+                group_id: Number(payload.group_id),
+                school_id: Number(payload.school_id),
+                group_name:
+                  catalogs.groups.find((item) => String(item.group_id) === String(payload.group_id))?.grade_group ??
+                  prev.group_name,
+                scholar_level_name:
+                  catalogs.groups.find((item) => String(item.group_id) === String(payload.group_id))?.scholar_level_name ??
+                  prev.scholar_level_name,
+                grade_group:
+                  catalogs.groups.find((item) => String(item.group_id) === String(payload.group_id))?.grade_group ??
+                  prev.grade_group,
+                generation:
+                  catalogs.groups.find((item) => String(item.group_id) === String(payload.group_id))?.generation ??
+                  prev.generation,
+              }
+            : prev,
+        )
+
+        setStudentSummary((prev) =>
+          prev
+            ? {
+                ...prev,
+                registerId: payload.register_id,
+                paymentReference: payload.payment_reference ?? undefined,
+              }
+            : prev,
+        )
+        setInitialFormValues({ ...formValues })
+      }
+
+      if (statusChanged) {
+        const response = await fetch(
+          `${API_BASE_URL}/users/update/${encodeURIComponent(student.user_id)}/status?lang=${locale}`,
+          {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: nextStatus ? 'Activo' : 'Inactivo' }),
+          },
+        )
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        setStudent((prev) =>
+          prev ? { ...prev, user_enabled: nextStatus, isActive: nextStatus, status: nextStatus ? 'Activo' : 'Inactivo' } : prev,
+        )
+        setStatusDraft(nextStatus)
+      }
+
+      setIsEditing(false)
+    } catch (error) {
+      setStudentError(t('defaultError'))
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleToggleStatus = () => {
-    setStudent((prev) => (prev ? { ...prev, isActive: !prev.isActive } : prev))
+    const originalStatus = student?.user_enabled ?? student?.isActive ?? false
+    const currentStatus = statusDraft ?? originalStatus
+    setStatusDraft(!currentStatus)
   }
 
   const emptyValue = '—'
   const enrollment = t('enrollment') || 'Matrícula'
+
+  const currentStatus = statusDraft ?? student?.user_enabled ?? student?.isActive ?? false
+  const statusLabel = currentStatus ? 'Activo' : 'Inactivo'
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -591,10 +793,13 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
               <StudentHeader
                 student={student}
                 isEditing={isEditing}
+                statusDraft={currentStatus}
+                statusLabel={statusLabel}
                 onEdit={() => setIsEditing(true)}
                 onCancel={() => {
                   setIsEditing(false)
                   setFormValues(buildFormState(student))
+                  setStatusDraft(null)
                 }}
                 onSave={handleSave}
                 onToggleStatus={handleToggleStatus}
