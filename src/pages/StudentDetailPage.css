@@ -196,6 +196,74 @@
   font-size: 13px;
 }
 
+.sweet-alert-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 16px;
+}
+
+.sweet-alert {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  width: min(520px, 100%);
+  box-shadow: 0 20px 70px -40px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sweet-alert__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #fff;
+  font-size: 18px;
+  align-self: flex-start;
+}
+
+.sweet-alert__icon--success {
+  background: #16a34a;
+}
+
+.sweet-alert__icon--error {
+  background: #dc2626;
+}
+
+.sweet-alert__icon--info {
+  background: #2563eb;
+}
+
+.sweet-alert__title {
+  margin: 0;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.sweet-alert__text {
+  margin: 0;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px;
+  white-space: pre-wrap;
+  color: #0f172a;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.sweet-alert__button {
+  align-self: flex-end;
+  padding: 10px 16px;
+}
+
 .student-card__value {
   margin: 0;
   font-weight: 700;

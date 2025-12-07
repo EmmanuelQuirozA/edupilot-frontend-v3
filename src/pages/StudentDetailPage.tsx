@@ -14,6 +14,7 @@ import { PaymentsTable } from './StudentsDetailPage/components/PaymentsTable'
 import { RequestsTable } from './StudentsDetailPage/components/RequestsTable'
 import { TopupsTable } from './StudentsDetailPage/components/TopupsTable'
 import { Tabs } from './StudentsDetailPage/components/Tabs'
+import { showSweetAlert } from '../utils/sweetAlert'
 import type { Student, StudentCatalogs, StudentSummary } from './StudentsDetailPage/types/Student'
 import type { FormState } from './StudentsDetailPage/types/FormState'
 import type { Payment } from './StudentsDetailPage/types/Payments'
@@ -196,6 +197,26 @@ function normalizeTopup(item: unknown, index: number): Topup {
     id: (raw.balance_recharge_id as number) ?? index,
     amount: Number(raw.amount ?? 0),
     date: (raw.created_at ?? '') as string,
+  }
+}
+
+async function readResponsePayload(response: Response): Promise<unknown> {
+  const contentType = response.headers.get('content-type') ?? ''
+  if (contentType.includes('application/json')) {
+    try {
+      return await response.json()
+    } catch (error) {
+      console.error('Error parsing JSON response', error)
+      return 'Respuesta JSON no válida'
+    }
+  }
+
+  try {
+    const text = await response.text()
+    return text || 'Sin contenido'
+  } catch (error) {
+    console.error('Error reading response body', error)
+    return 'Sin contenido'
   }
 }
 
@@ -623,6 +644,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
 
     setIsSaving(true)
     setStudentError(null)
+    const alerts: { title: string; payload: unknown }[] = []
 
     try {
       if (studentDataChanged) {
@@ -664,6 +686,9 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         if (!response.ok) {
           throw new Error('failed_request')
         }
+
+        const updateResponse = await readResponsePayload(response)
+        alerts.push({ title: 'Actualización de estudiante', payload: updateResponse })
 
         setStudent((prev) =>
           prev
@@ -736,14 +761,22 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           throw new Error('failed_request')
         }
 
+        const statusResponse = await readResponsePayload(response)
+        alerts.push({ title: 'Actualización de estado', payload: statusResponse })
+
         setStudent((prev) =>
           prev ? { ...prev, user_enabled: nextStatus, isActive: nextStatus, status: nextStatus ? 'Activo' : 'Inactivo' } : prev,
         )
         setStatusDraft(nextStatus)
       }
 
+      alerts.forEach(({ title, payload }) => {
+        const text = JSON.stringify(payload, null, 2) ?? 'Sin contenido'
+        showSweetAlert({ title, text, icon: 'success' })
+      })
+
       setIsEditing(false)
-    } catch (error) {
+    } catch {
       setStudentError(t('defaultError'))
     } finally {
       setIsSaving(false)

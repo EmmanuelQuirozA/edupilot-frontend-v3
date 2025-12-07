@@ -43,23 +43,18 @@ export function StudentHeader({
           <div className="d-flex align-items-center gap-2">
             {isEditing ? (
               <div className="student-detail-page__status-toggle">
-                <label
-                  className="table__switch"
-                  aria-label={'Desactivar acceso del alumno temporalmente'
-                  }
-                >
+                <div className="form-check form-switch m-0">
                   <input
+                    className="form-check-input"
                     type="checkbox"
+                    role="switch"
+                    id="student-status-switch"
+                    aria-label="Desactivar acceso del alumno temporalmente"
                     checked={statusDraft}
                     onChange={onToggleStatus}
                   />
-                  <span className="table__switch-track">
-                    <span className="table__switch-thumb" />
-                  </span>
-                </label>
-                <span>
-                  {statusLabel}
-                </span>
+                </div>
+                <span>{statusLabel}</span>
               </div>
             ) : (
               <span className="pill-chip"
