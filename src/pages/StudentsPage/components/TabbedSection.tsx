@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 interface TabConfig {
@@ -9,14 +9,23 @@ interface TabConfig {
 
 interface TabbedSectionProps {
   tabs: TabConfig[]
+  activeKey?: string
+  onTabChange?: (key: string) => void
 }
 
-export function TabbedSection({ tabs }: TabbedSectionProps) {
-  const [activeKey, setActiveKey] = useState(() => tabs[0]?.key ?? '')
+export function TabbedSection({ tabs, activeKey: controlledActiveKey, onTabChange }: TabbedSectionProps) {
+  const [activeKey, setActiveKey] = useState(() => controlledActiveKey ?? tabs[0]?.key ?? '')
+  const currentKey = controlledActiveKey ?? activeKey
+
+  useEffect(() => {
+    if (controlledActiveKey !== undefined) {
+      setActiveKey(controlledActiveKey)
+    }
+  }, [controlledActiveKey])
 
   const activeContent = useMemo(
-    () => tabs.find((tab) => tab.key === activeKey)?.content ?? null,
-    [activeKey, tabs],
+    () => tabs.find((tab) => tab.key === currentKey)?.content ?? null,
+    [currentKey, tabs],
   )
 
   return (
@@ -26,8 +35,11 @@ export function TabbedSection({ tabs }: TabbedSectionProps) {
           <button
             key={tab.key}
             type="button"
-            className={`btn btn-sm ${tab.key === activeKey ? 'btn-primary' : 'btn-outline-primary'}`}
-            onClick={() => setActiveKey(tab.key)}
+            className={`btn btn-sm ${tab.key === currentKey ? 'btn-primary' : 'btn-outline-primary'}`}
+            onClick={() => {
+              setActiveKey(tab.key)
+              onTabChange?.(tab.key)
+            }}
           >
             {tab.label}
           </button>
