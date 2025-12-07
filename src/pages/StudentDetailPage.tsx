@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { API_BASE_URL } from '../config'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { BalanceRechargeModal } from '../components/payments/BalanceRechargeModal'
 import { StudentHeader } from './StudentsDetailPage/components/StudentHeader'
 import { StudentInstitutionCard } from './StudentsDetailPage/components/StudentInstitutionCard'
 import { StudentContactCard } from './StudentsDetailPage/components/StudentContactCard'
@@ -273,7 +274,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   const [topupsSortBy, setTopupsSortBy] = useState<string | undefined>('date')
   const [topupsSortDirection, setTopupsSortDirection] = useState<SortDirection>('DESC')
 
-  const [balanceModal, setBalanceModal] = useState<ModalState<StudentSummary>>({ isOpen: false })
+  const [isBalanceModalOpen, setIsBalanceModalOpen] = useState(false)
   const [paymentModal, setPaymentModal] = useState<ModalState<Payment>>({ isOpen: false })
   const [requestModal, setRequestModal] = useState<ModalState<PaymentRequest>>({ isOpen: false })
 
@@ -568,8 +569,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
     handleFieldChange(name as keyof FormState, value)
   }
 
-  const handleOpenBalanceModal = () =>
-    setBalanceModal({ isOpen: true, payload: studentSummary ?? undefined })
+  const handleOpenBalanceModal = () => setIsBalanceModalOpen(true)
 
   if (!hydrated) {
     return (
@@ -781,11 +781,26 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         />
       </>
 
-      <InlineModal
-        title="Recargar saldo"
-        open={balanceModal.isOpen}
-        onClose={() => setBalanceModal({ isOpen: false })}
-        content={balanceModal.payload}
+      <BalanceRechargeModal
+        isOpen={isBalanceModalOpen}
+        onClose={() => setIsBalanceModalOpen(false)}
+        user={student && {
+          userId: student.userId ?? student.user_id,
+          fullName:
+            student.fullName ||
+            [student.first_name, student.last_name_father, student.last_name_mother].filter(Boolean).join(' '),
+          group: student.group || student.group_name || student.groupName || student.grade_group,
+          level: student.level || student.scholar_level_name,
+          balance: studentSummary?.balance ?? student.balance ?? 0,
+        }}
+        onSuccess={(payload) => {
+          setStudentSummary((prev) => ({
+            balance: payload.newBalance,
+            registerId: prev?.registerId,
+            paymentReference: prev?.paymentReference,
+          }))
+          setStudent((prev) => (prev ? { ...prev, balance: payload.newBalance } : prev))
+        }}
       />
 
       <InlineModal
