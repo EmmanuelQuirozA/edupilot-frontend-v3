@@ -656,7 +656,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   }
 
   const emptyValue = '—'
-  const registerLabel = t('registerLabel') || 'Matrícula'
+  const enrollment = t('enrollment') || 'Matrícula'
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target
@@ -676,8 +676,8 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('students')} breadcrumbItems={breadcrumbItems}>
-      <section className="student-detail-page">
-      <div className="d-flex flex-column gap-4">
+      <div className="d-flex flex-column gap-3">
+      <>
         {studentError ? (
           <div className="alert alert-danger" role="alert">
             {studentError}
@@ -685,17 +685,21 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         ) : null}
 
         {student ? (
-          <StudentHeader
-            student={student}
-            isEditing={isEditing}
-            onEdit={() => setIsEditing(true)}
-            onCancel={() => {
-              setIsEditing(false)
-              setFormValues(buildFormState(student))
-            }}
-            onSave={handleSave}
-            onToggleStatus={handleToggleStatus}
-          />
+          <div className="card">
+            <div className="col-12 ">
+              <StudentHeader
+                student={student}
+                isEditing={isEditing}
+                onEdit={() => setIsEditing(true)}
+                onCancel={() => {
+                  setIsEditing(false)
+                  setFormValues(buildFormState(student))
+                }}
+                onSave={handleSave}
+                onToggleStatus={handleToggleStatus}
+              />
+            </div>
+          </div>
         ) : (
           <LoadingSkeleton variant="table" rowCount={1} />
         )}
@@ -703,10 +707,10 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         <div className="row gy-3">
           <div className="col-12 col-lg-4">
               {studentSummary ? (
-                  <section className="student-card h-100">
+                  <section className="card h-100 gap-3">
                     <div className="student-card__row">
                       <div>
-                        <p className="student-card__label">{registerLabel}</p>
+                        <p className="student-card__label">{enrollment}</p>
                         {isEditing ? (
                           <input
                             name="register_id"
@@ -740,7 +744,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                     <div className="student-card__divider" />
                     <div className="student-card__info">
                       <div>
-                        <p className="student-card__label">{t('balanceLabel')}</p>
+                        <p className="student-card__label">{t('balance')}</p>
                         <h3>{formatCurrency(studentSummary.balance)}</h3>
                       </div>
                     </div>
@@ -754,7 +758,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           </div>
           <div className="col-12 col-lg-8">
             {student ? (
-              <section className="student-card h-100">
+              <section className="card h-100">
                 <StudentInstitutionCard
                   student={student}
                   formValues={formValues}
@@ -889,7 +893,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
             },
           ]}
         />
-      </div>
+      </>
 
       <InlineModal
         title="Recargar saldo"
@@ -918,7 +922,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         onClose={() => setRequestModal({ isOpen: false })}
         content={requestModal.payload}
       />
-      </section>
+      </div>
     </Layout>
   )
 }

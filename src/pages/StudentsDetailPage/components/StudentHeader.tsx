@@ -32,7 +32,7 @@ export function StudentHeader({
         >
           <span className="fw-semibold">{initials || '?'}</span>
         </div>
-        <div className="d-flex flex-column">
+        <div className="d-flex flex-column gap-2">
           <h4 className="mb-1 fw-semibold text-black">{student.fullName}</h4>
           <div className="d-flex align-items-center gap-2">
             {isEditing ? (
@@ -54,13 +54,21 @@ export function StudentHeader({
                 </span>
               </div>
             ) : (
-              <span
-                className={`student-detail-page__chip ${student?.user_enabled ? 'chip--success' : 'chip--warning'}`}
+              <span className="pill-chip"
+                // style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#0f766e' }}
+                style={{
+                  color: (student?.user_enabled ? '#0f766e' : '#761b0fff'),
+                  background: (student?.user_enabled ? 'rgba(16, 185, 129, 0.12)' : 'rgba(185, 16, 16, 0.12)'),
+                }}
               >
                 {student.status}
               </span>
             )}
-            <span className="student-detail-page__chip">{student?.role_name}</span>
+            <span className="pill-chip"
+              style={{ background: 'rgba(128, 128, 128, 0.25)', color: '#5a5a5aff' }}
+            >
+              {student?.role_name}
+            </span>
           </div>
         </div>
       </div>
