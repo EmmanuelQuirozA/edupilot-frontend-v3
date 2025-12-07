@@ -36,6 +36,35 @@ export function StudentInstitutionCard({
 
   const selectedSchoolId = formValues.school_id ?? student.school_id
   const selectedGroupId = formValues.group_id ?? student.group_id
+  
+  const renderEditableField = (
+  label,
+  name,
+  { placeholder = '', type = 'text', valueOverride, errorOverride, inputClassName = 'input' } = {},
+) => {
+  const value = valueOverride ?? formValues[name] ?? '';
+  const error = errorOverride ?? formErrors[name];
+  const displayValue = value || emptyValue;
+
+  return (
+    <label className="field">
+      <span>{label}</span>
+      {isEditing ? (
+        <input
+          type={type}
+          name={name}
+          value={value}
+          onChange={handleChange}
+          className={error ? `${inputClassName} input--error` : inputClassName}
+          placeholder={placeholder}
+        />
+      ) : (
+        <p className="field__value">{displayValue}</p>
+      )}
+      {isEditing && error ? <span className="input__error">{error}</span> : null}
+    </label>
+  );
+};
 
   const renderSelectField = (
     label,
