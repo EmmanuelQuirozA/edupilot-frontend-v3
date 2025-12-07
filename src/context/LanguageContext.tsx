@@ -112,6 +112,7 @@ const translations: TranslationMap = {
     paymentsFinance: 'Pagos y Finanzas',
     student: 'Estudiante',
     paymentType: 'Concepto',
+    concept: 'Concepto',
     amount: 'Monto',
     status: 'Estatus',
     paymentThrough: 'Método de pago',
@@ -189,6 +190,7 @@ const translations: TranslationMap = {
     school: 'Escuela',
     scholarLevel: 'Nivel escolar',
     metaSchoolCard: 'Agrega o actualiza la información escolar.',
+    name: 'Nombre',
     firstName: 'Nombre',
     lastNameFather: 'Apellido paterno',
     lastNameMother: 'Apellido materno',
@@ -206,7 +208,10 @@ const translations: TranslationMap = {
     state: 'Estado',
     reference: 'Referencia',
     enrollment: 'Matrícula',
-
+    date: 'Fecha',
+    mainData: 'Datos principales',
+    address: 'Dirección',
+    addressHelper: 'Dirección del alumno.'
 
   },
   en: {
@@ -315,6 +320,7 @@ const translations: TranslationMap = {
     paymentsFinance: 'Payments and Finance',
     student: 'Student',
     paymentType: 'Concept',
+    concept: 'Concept',
     amount: 'Amount',
     status: 'Status',
     paymentThrough: 'Payment method',
@@ -392,6 +398,7 @@ const translations: TranslationMap = {
     school: 'School',
     scholarLevel: 'Scholar level',
     metaSchoolCard: 'Add or update the school information.',
+    name: 'Name',
     firstName: 'Name',
     lastNameFather: 'Last name',
     lastNameMother: 'Second last name',
@@ -409,6 +416,10 @@ const translations: TranslationMap = {
     state: 'State',
     reference: 'Reference',
     enrollment: 'Enrollment',
+    date: 'Date',
+    mainData: 'Main data',
+    address: 'Address',
+    addressHelper: 'Student address.'
 
   },
 }

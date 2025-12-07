@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { API_BASE_URL } from '../../config'
 import { useAuth } from '../../context/AuthContext'
 import { createCurrencyFormatter } from '../../utils/currencyFormatter'
+import { useLanguage } from '../../context/LanguageContext'
 import './balance-recharge-modal.css'
 
 export interface RechargeUserSummary {
@@ -23,6 +24,7 @@ interface RechargeResponse {
 
 export interface BalanceRechargeModalProps {
   isOpen: boolean
+  close: () => void
   onClose: () => void
   user?: RechargeUserSummary | null
   currency?: string
@@ -32,6 +34,7 @@ export interface BalanceRechargeModalProps {
 
 export function BalanceRechargeModal({
   isOpen,
+  close,
   onClose,
   user,
   currency = 'MXN',
@@ -39,11 +42,20 @@ export function BalanceRechargeModal({
   onSuccess,
 }: BalanceRechargeModalProps) {
   const { token } = useAuth()
+  const { t } = useLanguage()
   const [amount, setAmount] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [response, setResponse] = useState<RechargeResponse | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+
+  const handleClose = useCallback(() => {
+    if (isSubmitting) {
+      return;
+    }
+    close();
+  }, [close, isSubmitting]);
+  
   const currencyFormatter = useMemo(
     () => createCurrencyFormatter('es-MX', currency),
     [currency],
@@ -53,7 +65,6 @@ export function BalanceRechargeModal({
     if (!isOpen) return
     setAmount('')
     setError(null)
-    setResponse(null)
   }, [isOpen])
 
   if (!isOpen) return null
@@ -66,7 +77,6 @@ export function BalanceRechargeModal({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
-    setResponse(null)
 
     if (!user?.userId) {
       setError('No se encontró el usuario para recargar.')
@@ -86,6 +96,8 @@ export function BalanceRechargeModal({
 
     setSubmitting(true)
     try {
+      setIsSubmitting(true);
+      setError('');
       const result = await fetch(`${API_BASE_URL}/balances/recharge`, {
         method: 'POST',
         headers: {
@@ -104,9 +116,24 @@ export function BalanceRechargeModal({
         throw new Error(payload?.message || 'No se pudo procesar la recarga.')
       }
 
-      setResponse(payload)
+      if (!payload?.success) {
+        Swal.fire({
+          icon: 'error',
+          title: payload?.title || t('defaultError'),
+          text: payload?.message || t('defaultError'),
+        })
+        return
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: payload?.title || '',
+        text: payload?.message || '',
+      })
+
       if (payload?.newBalance !== undefined) {
         onSuccess?.({ newBalance: payload.newBalance, rechargeId: payload.rechargeId })
+        onClose()
       }
     } catch (submitError) {
       setError((submitError as Error)?.message || 'No se pudo procesar la recarga.')
@@ -116,111 +143,97 @@ export function BalanceRechargeModal({
   }
 
   return (
-    <div className="modal fade show d-block" role="dialog" aria-modal="true">
-      <div className="modal-dialog modal-lg modal-dialog-centered">
-        <div className="modal-content balance-modal">
-          <div className="modal-header">
-            <h5 className="modal-title">Añadir saldo a favor</h5>
-            <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
-          </div>
-          <div className="modal-body">
-            <p className="text-muted mb-3">Ingresa el monto que deseas abonar al saldo del usuario.</p>
-
-            <div className="balance-modal__user-card mb-4">
-              <h6 className="text-uppercase text-muted fw-semibold mb-3">Datos del usuario</h6>
-              <div className="row g-3">
-                <div className="col-6">
-                  <p className="balance-modal__label">Nombre</p>
-                  <p className="balance-modal__value">{user?.fullName || 'N/D'}</p>
-                </div>
-                <div className="col-6 text-end">
-                  <p className="balance-modal__label">Saldo actual</p>
-                  <p className="balance-modal__value">{currencyFormatter.format(user?.balance ?? 0)}</p>
-                </div>
-                <div className="col-6">
-                  <p className="balance-modal__label">Grupo</p>
-                  <p className="balance-modal__value">{user?.group || 'N/D'}</p>
-                </div>
-                <div className="col-6">
-                  <p className="balance-modal__label">Nivel escolar</p>
-                  <p className="balance-modal__value">{user?.level || 'N/D'}</p>
-                </div>
-              </div>
+    <>
+      <div className="modal-backdrop fade show" onClick={handleClose} />
+      <div className="modal fade show d-block" role="dialog" aria-modal="true">
+        <div className="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
+          <div className="modal-content balance-modal">
+            <div className="modal-header">
+              <h5 className="modal-title">Añadir saldo a favor</h5>
+              <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
             </div>
+            <div className="modal-body">
+              <p className="text-muted mb-3">Ingresa el monto que deseas abonar al saldo del usuario.</p>
 
-            <form className="d-flex flex-column gap-3" onSubmit={handleSubmit}>
-              <div>
-                <label htmlFor="rechargeAmount" className="form-label fw-semibold">
-                  Monto a abonar
-                </label>
-                <div className="input-group">
-                  <span className="input-group-text">$</span>
-                  <input
-                    id="rechargeAmount"
-                    type="number"
-                    min="0"
-                    step="1"
-                    className="form-control"
-                    placeholder="0"
-                    value={amount}
-                    onChange={(event) => setAmount(event.target.value)}
-                    required
-                  />
-                  <span className="input-group-text">{currency}</span>
-                </div>
-              </div>
-
-              <div className="d-flex flex-wrap gap-2">
-                {suggestedAmounts.map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    className="btn btn-outline-primary"
-                    onClick={() => handleSuggestedClick(value)}
-                  >
-                    {currencyFormatter.format(value)}
-                  </button>
-                ))}
-              </div>
-
-              {error ? (
-                <div className="alert alert-danger mb-0" role="alert">
-                  {error}
-                </div>
-              ) : null}
-
-              {response ? (
-                <div className="alert alert-success mb-0" role="alert">
-                  <div className="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h6 className="mb-1">{response.title || 'Recarga exitosa'}</h6>
-                      <p className="mb-1">{response.message || 'Recarga de saldo registrada.'}</p>
-                      {response.newBalance !== undefined ? (
-                        <p className="fw-semibold mb-0">
-                          Nuevo saldo: {currencyFormatter.format(response.newBalance)}
-                        </p>
-                      ) : null}
-                    </div>
-                    {response.rechargeId ? (
-                      <span className="badge bg-light text-dark">ID #{response.rechargeId}</span>
-                    ) : null}
+              <div className="balance-modal__user-card mb-4">
+                <h6 className="text-uppercase text-muted fw-semibold mb-3">Datos del usuario</h6>
+                <div className="row g-3">
+                  <div className="col-6">
+                    <p className="balance-modal__label">Nombre</p>
+                    <p className="balance-modal__value">{user?.fullName || 'N/D'}</p>
+                  </div>
+                  <div className="col-6 text-end">
+                    <p className="balance-modal__label">Saldo actual</p>
+                    <p className="balance-modal__value">{currencyFormatter.format(user?.balance ?? 0)}</p>
+                  </div>
+                  <div className="col-6">
+                    <p className="balance-modal__label">Grupo</p>
+                    <p className="balance-modal__value">{user?.group || 'N/D'}</p>
+                  </div>
+                  <div className="col-6">
+                    <p className="balance-modal__label">Nivel escolar</p>
+                    <p className="balance-modal__value">{user?.level || 'N/D'}</p>
                   </div>
                 </div>
-              ) : null}
-
-              <div className="d-flex justify-content-between align-items-center mt-2">
-                <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>
-                  {submitting ? 'Procesando...' : 'Confirmar recarga'}
-                </button>
               </div>
-            </form>
+
+              
+              <form className="d-flex flex-column gap-3" onSubmit={handleSubmit}>
+                <div className="balance-modal__user-card">
+                  <div>
+                    <label htmlFor="rechargeAmount" className="form-label fw-semibold">
+                      Monto a abonar
+                    </label>
+                    <div className="balance-recharge-modal__input">
+                      <span>$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={amount}
+                        onChange={(event) => setAmount(event.target.value)}
+                        placeholder='0'
+                        disabled={isSubmitting}
+                        inputMode="decimal"
+                      />
+                      <span>MXN</span>
+                    </div>
+                  </div>
+
+                  <div className="d-flex flex-wrap gap-2 mt-2">
+                    {suggestedAmounts.map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => handleSuggestedClick(value)}
+                      >
+                        {currencyFormatter.format(value)}
+                      </button>
+                    ))}
+                  </div>
+
+                  {error ? (
+                    <div className="alert alert-danger mb-0" role="alert">
+                      {error}
+                    </div>
+                  ) : null}
+
+                </div>
+
+                <div className="d-flex justify-content-between align-items-center mt-2">
+                  <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
+                    {t('cancel')}
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={submitting}>
+                    {submitting ? 'Procesando...' : 'Confirmar recarga'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
-      <div className="modal-backdrop fade show" />
-    </div>
+    </>
   )
 }

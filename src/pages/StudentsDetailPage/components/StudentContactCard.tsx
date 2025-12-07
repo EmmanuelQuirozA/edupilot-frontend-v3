@@ -198,7 +198,7 @@ export function StudentContactCard({
             <p className="info-card__summary-title">{t('mainData')}</p>
             <div className="row">
               <div className="col-md-4">
-                <dt>{t('fullName')}:</dt> {student.full_name}
+                <dt>{t('name')}:</dt> {student.full_name}
               </div>
               <div className="col-md-4">
                 <dt>{t('phone')}:</dt>{' '}

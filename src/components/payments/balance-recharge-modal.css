@@ -31,3 +31,29 @@
   border-radius: 20px;
   padding: 8px 16px;
 }
+
+.balance-recharge-modal__input {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 12px 14px;
+  gap: 8px;
+}
+
+.balance-recharge-modal__input span {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.balance-recharge-modal__input input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.balance-recharge-modal__input input:disabled {
+  background: transparent;
+}

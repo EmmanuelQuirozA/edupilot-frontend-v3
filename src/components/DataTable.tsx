@@ -76,7 +76,7 @@ export function DataTable<T>({
                         className="datatable__sort btn btn-link p-0 d-inline-flex align-items-center gap-2"
                         onClick={() => onSort?.(column.key)}
                       >
-                        <span className="fw-semibold text-uppercase small text-muted">{column.label}</span>
+                        <span className="fw-semibold text-uppercase small text-muted">{t(column.label)}</span>
                         <svg
                           viewBox="0 0 12 12"
                           aria-hidden="true"

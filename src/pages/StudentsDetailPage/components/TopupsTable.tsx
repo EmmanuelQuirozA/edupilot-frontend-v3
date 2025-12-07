@@ -1,6 +1,9 @@
 import { useMemo } from 'react'
 import { DataTable, type DataTableColumn, type DataTablePagination } from '../../../components/DataTable'
 import type { Topup } from '../types/Topups'
+import { useLanguage } from '../../../context/LanguageContext'
+import { formatDate } from '../../../utils/formatDate'
+
 
 interface TopupsTableProps {
   rows: Topup[]
@@ -21,15 +24,25 @@ export function TopupsTable({
   sortDirection,
   onSort,
 }: TopupsTableProps) {
+  const { locale } = useLanguage()
   const columns: Array<DataTableColumn<Topup>> = useMemo(
     () => [
-      { key: 'status', label: 'Estatus', sortable: true },
-      { key: 'method', label: 'Método', sortable: true },
-      { key: 'reference', label: 'Referencia' },
-      { key: 'date', label: 'Fecha', sortable: true },
-      { key: 'amount', label: 'Monto', currency: rows[0]?.currency ?? 'MXN', sortable: true },
+      {
+        key: 'id',
+        label: 'id',
+        sortable: true,
+      },
+      {
+        key: 'date',
+        label: 'date',
+        sortable: true,
+        render: (row) => (
+          formatDate(row?.date, locale, {year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+        )
+      },
+      { key: 'amount', label: 'amount', currency: 'MXN', sortable: true },
     ],
-    [rows],
+    [locale],
   )
 
   return (

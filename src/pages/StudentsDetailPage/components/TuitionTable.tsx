@@ -241,17 +241,6 @@ export function TuitionTable({ studentId }: TuitionTableProps) {
               onChange={handleDateRangeChange}
               className="w-100"
             />
-            <button type="button" className="students-filter-button align-self-lg-center">
-              <svg
-                viewBox="0 0 20 20"
-                aria-hidden="true"
-                className="students-filter-button__icon"
-                focusable="false"
-              >
-                <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
-              </svg>
-              <span className="fw-semibold">Filtros</span>
-            </button>
           </div>
         </div>
       </div>
@@ -261,13 +250,6 @@ export function TuitionTable({ studentId }: TuitionTableProps) {
         data={rows}
         isLoading={isLoading}
         emptyMessage={t('tableNoData')}
-        pagination={{
-          page,
-          size: pageSize,
-          totalPages,
-          totalElements,
-          onPageChange: (nextPage) => setPage(Math.max(0, Math.min(totalPages - 1, nextPage))),
-        }}
         sortBy={orderBy}
         sortDirection={orderDir}
         onSort={(columnKey) => handleSort(columnKey)}

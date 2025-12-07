@@ -193,13 +193,9 @@ function normalizeRequest(item: unknown): PaymentRequest {
 function normalizeTopup(item: unknown, index: number): Topup {
   const raw = (item ?? {}) as Record<string, unknown>
   return {
-    id: (raw.id as number) ?? index,
+    id: (raw.balance_recharge_id as number) ?? index,
     amount: Number(raw.amount ?? 0),
-    method: (raw.method ?? raw.payment_method ?? raw.payment_through ?? 'N/D') as string,
-    reference: (raw.reference ?? raw.payment_reference ?? '-') as string,
-    status: (raw.status ?? raw.transaction_status ?? 'Pendiente') as string,
-    date: (raw.date ?? raw.created_at ?? '') as string,
-    currency: (raw.currency as string | undefined) ?? 'MXN',
+    date: (raw.created_at ?? '') as string,
   }
 }
 
@@ -496,7 +492,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
       setTopupsError(null)
       try {
         const params = new URLSearchParams({
-          user_id: String(studentId),
+          user_id: String(student?.user_id),
           lang: locale,
           offset: String(topupsPage * topupsPageSize),
           limit: String(topupsPageSize),
@@ -786,8 +782,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         onClose={() => setIsBalanceModalOpen(false)}
         user={student && {
           userId: student.userId ?? student.user_id,
-          fullName:
-            student.fullName ||
+          fullName: student.fullName ||
             [student.first_name, student.last_name_father, student.last_name_mother].filter(Boolean).join(' '),
           group: student.group || student.group_name || student.groupName || student.grade_group,
           level: student.level || student.scholar_level_name,
@@ -800,7 +795,9 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
             paymentReference: prev?.paymentReference,
           }))
           setStudent((prev) => (prev ? { ...prev, balance: payload.newBalance } : prev))
-        }}
+        } } close={function (): void {
+          throw new Error('Function not implemented.')
+        } }      
       />
 
       <InlineModal
