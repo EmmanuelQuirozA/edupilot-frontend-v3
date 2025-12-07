@@ -1,0 +1,33 @@
+.balance-modal {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.balance-modal__user-card {
+  background: linear-gradient(90deg, #f7f9fd 0%, #ffffff 100%);
+  border: 1px solid #e5e8ef;
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.balance-modal__label {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #7a8194;
+}
+
+.balance-modal__value {
+  margin: 4px 0 0;
+  font-weight: 600;
+  color: #1f2a44;
+}
+
+.balance-modal .input-group-text {
+  background-color: #f1f3f6;
+  font-weight: 600;
+}
+
+.balance-modal .btn-outline-primary {
+  border-radius: 20px;
+  padding: 8px 16px;
+}
