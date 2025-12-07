@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
 import { Layout } from '../layout/Layout'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -55,6 +55,25 @@ function buildFormState(student: Student | null): FormState {
     groupId: undefined,
     paymentReference: student?.paymentReference,
     status: student?.status,
+    register_id: student?.register_id ?? student?.registerId ?? '',
+    payment_reference: student?.payment_reference ?? student?.paymentReference ?? '',
+    school_id: student?.school_id,
+    group_id: student?.group_id,
+    first_name: student?.first_name ?? student?.firstName ?? '',
+    last_name_father: student?.last_name_father ?? '',
+    last_name_mother: student?.last_name_mother ?? '',
+    birth_date: student?.birth_date ?? '',
+    phone_number: student?.phone_number ?? student?.phone ?? '',
+    tax_id: student?.tax_id ?? '',
+    personal_email: student?.personal_email ?? '',
+    street: student?.street ?? '',
+    ext_number: student?.ext_number ?? '',
+    int_number: student?.int_number ?? '',
+    suburb: student?.suburb ?? '',
+    locality: student?.locality ?? '',
+    municipality: student?.municipality ?? '',
+    state: student?.state ?? '',
+    curp: '',
   }
 }
 
@@ -614,11 +633,13 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
       prev
         ? {
             ...prev,
-            firstName: formValues.firstName,
-            lastName: formValues.lastName,
+            firstName: formValues.first_name || formValues.firstName,
+            lastName: `${formValues.last_name_father ?? ''} ${formValues.last_name_mother ?? ''}`.trim() ||
+              formValues.lastName,
             email: formValues.email,
-            phone: formValues.phone,
-            paymentReference: formValues.paymentReference,
+            phone: formValues.phone_number || formValues.phone,
+            paymentReference: formValues.payment_reference || formValues.paymentReference,
+            registerId: formValues.register_id ?? prev.registerId,
           }
         : prev,
     )
@@ -627,6 +648,17 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   const handleToggleStatus = () => {
     setStudent((prev) => (prev ? { ...prev, isActive: !prev.isActive } : prev))
   }
+
+  const emptyValue = '—'
+  const registerLabel = t('registerLabel') || 'Matrícula'
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target
+    handleFieldChange(name as keyof FormState, value)
+  }
+
+  const handleOpenBalanceModal = () =>
+    setBalanceModal({ isOpen: true, payload: studentSummary ?? undefined })
 
   if (!hydrated) {
     return (
@@ -667,7 +699,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
             <InfoCard
               title="Resumen"
               actions={
-                <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => setBalanceModal({ isOpen: true, payload: studentSummary ?? undefined })}>
+                <button type="button" className="btn btn-outline-primary btn-sm" onClick={handleOpenBalanceModal}>
                   Recargar saldo
                 </button>
               }
@@ -680,13 +712,13 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                         {isEditing ? (
                           <input
                             name="register_id"
-                            value={studentSummary.registerId}
-                            onChange={handleChange}
+                            value={formValues.register_id ?? studentSummary.registerId ?? ''}
+                            onChange={handleInputChange}
                             className={formErrors.register_id ? 'input input--error' : 'input'}
                             placeholder={t('registerPlaceholder')}
                           />
                         ) : (
-                          <p className="field__value">{studentSummary.registerId || emptyValue}</p>
+                          <p className="field__value">{formValues.register_id || studentSummary.registerId || emptyValue}</p>
                         )}
                         {isEditing && formErrors.register_id ? (
                           <span className="input__error">{formErrors.register_id}</span>
@@ -697,13 +729,13 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                         {isEditing ? (
                           <input
                             name="payment_reference"
-                            value={formValues.payment_reference ?? ''}
-                            onChange={handleChange}
+                            value={formValues.payment_reference ?? studentSummary.paymentReference ?? ''}
+                            onChange={handleInputChange}
                             className="input"
                             placeholder={t('paymentReferencePlaceholder')}
                           />
                         ) : (
-                          <p className="field__value">{formValues.payment_reference || emptyValue}</p>
+                          <p className="field__value">{formValues.payment_reference || studentSummary.paymentReference || emptyValue}</p>
                         )}
                       </div>
                     </div>
@@ -711,7 +743,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                     <div className="student-card__info">
                       <div>
                         <p className="student-card__label">{t('balanceLabel')}</p>
-                        <h3>{formatCurrency(student.balance)}</h3>
+                        <h3>{formatCurrency(studentSummary.balance ?? student.balance)}</h3>
                         <p className="student-card__hint">{t('lastPayment')}</p>
                       </div>
                     </div>
