@@ -16,7 +16,6 @@ import { TopupsTable } from './StudentsDetailPage/components/TopupsTable'
 import { Tabs } from './StudentsDetailPage/components/Tabs'
 import type { Student, StudentCatalogs, StudentSummary } from './StudentsDetailPage/types/Student'
 import type { FormState } from './StudentsDetailPage/types/FormState'
-import type { TuitionRow } from './StudentsDetailPage/types/Tuition'
 import type { Payment } from './StudentsDetailPage/types/Payments'
 import type { PaymentRequest } from './StudentsDetailPage/types/Requests'
 import type { Topup } from './StudentsDetailPage/types/Topups'
@@ -167,21 +166,6 @@ function normalizeStudent(payload: unknown): Student | null {
   }
 }
 
-function normalizeTuitionRow(item: unknown, index: number): TuitionRow {
-  const raw = (item ?? {}) as Record<string, unknown>
-  const monthlyAmounts = (raw.monthlyAmounts ?? raw.months ?? {}) as Record<string, number>
-
-  return {
-    id: (raw.id as number) ?? index,
-    concept: (raw.concept ?? raw.description ?? raw.payment_type_name ?? `Concepto ${index + 1}`) as string,
-    monthlyAmounts,
-    total: Number(raw.total ?? raw.amount ?? 0),
-    status: (raw.status ?? raw.payment_status) as string | undefined,
-    dueDate: raw.due_date as string | undefined,
-    currency: (raw.currency as string | undefined) ?? 'MXN',
-  }
-}
-
 function normalizePayment(item: unknown, index: number): Payment {
   const raw = (item ?? {}) as Record<string, unknown>
   return {
@@ -264,16 +248,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
 
   const [activeTab, setActiveTab] = useState<TabKey>('tuition')
 
-  const [tuitionRows, setTuitionRows] = useState<TuitionRow[]>([])
-  const [isTuitionLoading, setIsTuitionLoading] = useState(false)
-  const [tuitionError, setTuitionError] = useState<string | null>(null)
-  const [tuitionPage, setTuitionPage] = useState(0)
-  const [tuitionPageSize, setTuitionPageSize] = useState(10)
-  const [tuitionTotalPages, setTuitionTotalPages] = useState(0)
-  const [tuitionTotalElements, setTuitionTotalElements] = useState(0)
-  const [tuitionSortBy, setTuitionSortBy] = useState<string | undefined>('concept')
-  const [tuitionSortDirection, setTuitionSortDirection] = useState<SortDirection>('ASC')
-
   const [payments, setPayments] = useState<Payment[]>([])
   const [isPaymentsLoading, setIsPaymentsLoading] = useState(false)
   const [paymentsError, setPaymentsError] = useState<string | null>(null)
@@ -307,7 +281,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   const [balanceModal, setBalanceModal] = useState<ModalState<StudentSummary>>({ isOpen: false })
   const [paymentModal, setPaymentModal] = useState<ModalState<Payment>>({ isOpen: false })
   const [requestModal, setRequestModal] = useState<ModalState<PaymentRequest>>({ isOpen: false })
-  const [tuitionModal, setTuitionModal] = useState<ModalState<TuitionRow>>({ isOpen: false })
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -326,21 +299,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
     locale === 'es' ? 'es-MX' : 'en-US',
     { style: 'currency', currency: 'MXN' }
   );
-
-  const tuitionPagination: DataTablePagination = useMemo(
-    () => ({
-      page: tuitionPage,
-      size: tuitionPageSize,
-      totalPages: tuitionTotalPages,
-      totalElements: tuitionTotalElements,
-      onPageChange: (nextPage) => setTuitionPage(Math.max(0, nextPage)),
-      onPageSizeChange: (nextSize) => {
-        setTuitionPageSize(nextSize)
-        setTuitionPage(0)
-      },
-    }),
-    [tuitionPage, tuitionPageSize, tuitionTotalElements, tuitionTotalPages],
-  )
 
   const paymentsPagination: DataTablePagination = useMemo(
     () => ({
@@ -436,54 +394,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
     loadStudent()
     return () => controller.abort()
   }, [locale, studentId, t, token])
-
-  useEffect(() => {
-    if (!token || activeTab !== 'tuition') return
-
-    const controller = new AbortController()
-    const fetchTuition = async () => {
-      setIsTuitionLoading(true)
-      setTuitionError(null)
-      try {
-        const params = new URLSearchParams({
-          student_id: String(studentId),
-          lang: locale,
-          offset: String(tuitionPage * tuitionPageSize),
-          limit: String(tuitionPageSize),
-        })
-        if (tuitionSortBy) {
-          params.set('orderBy', tuitionSortBy)
-          params.set('order', tuitionSortDirection)
-        }
-
-        const response = await fetch(`${API_BASE_URL}/reports/payments/report?${params.toString()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        })
-
-        if (!response.ok) {
-          throw new Error('failed_request')
-        }
-
-        const payload = (await response.json()) as PaginatedResponse<unknown>
-        const content = (payload.content ?? []) as unknown[]
-        setTuitionRows(content.map(normalizeTuitionRow))
-        setTuitionTotalElements(payload.totalElements ?? content.length)
-        setTuitionTotalPages(payload.totalPages ?? 1)
-        setTuitionPage(payload.page ?? tuitionPage)
-        setTuitionPageSize(payload.size ?? tuitionPageSize)
-      } catch (fetchError) {
-        if ((fetchError as Error).name !== 'AbortError') {
-          setTuitionError(t('defaultError'))
-        }
-      } finally {
-        setIsTuitionLoading(false)
-      }
-    }
-
-    fetchTuition()
-    return () => controller.abort()
-  }, [activeTab, locale, studentId, t, token, tuitionPage, tuitionPageSize, tuitionSortBy, tuitionSortDirection])
 
   useEffect(() => {
     if (!token || activeTab !== 'payments') return
@@ -792,26 +702,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
               key: 'tuition',
               label: 'Colegiaturas',
               content: (
-                <div className="d-flex flex-column gap-3">
-                  {tuitionError ? (
-                    <div className="alert alert-danger" role="alert">
-                      {tuitionError}
-                    </div>
-                  ) : null}
-                  <TuitionTable
-                    rows={tuitionRows}
-                    isLoading={isTuitionLoading || isStudentLoading}
-                    pagination={tuitionPagination}
-                    emptyMessage={t('tableNoData')}
-                    sortBy={tuitionSortBy}
-                    sortDirection={tuitionSortDirection}
-                    onSort={(columnKey) => {
-                      setTuitionSortBy(columnKey)
-                      setTuitionSortDirection((prev) => (prev === 'ASC' ? 'DESC' : 'ASC'))
-                    }}
-                    onViewDetail={(row) => setTuitionModal({ isOpen: true, payload: row })}
-                  />
-                </div>
+                <TuitionTable studentId={studentId} />
               ),
             },
             {
@@ -900,13 +791,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         open={balanceModal.isOpen}
         onClose={() => setBalanceModal({ isOpen: false })}
         content={balanceModal.payload}
-      />
-
-      <InlineModal
-        title="Detalle de colegiatura"
-        open={tuitionModal.isOpen}
-        onClose={() => setTuitionModal({ isOpen: false })}
-        content={tuitionModal.payload}
       />
 
       <InlineModal
