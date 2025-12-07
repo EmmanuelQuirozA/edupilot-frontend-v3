@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { DataTable, type DataTableColumn, type DataTablePagination } from '../../../components/DataTable'
 import type { Payment } from '../types/Payments'
+import { useLanguage } from '../../../context/LanguageContext'
+import { formatDate } from '../../../utils/formatDate'
 
 interface PaymentsTableProps {
   rows: Payment[]
@@ -10,7 +12,7 @@ interface PaymentsTableProps {
   sortBy?: string
   sortDirection?: 'ASC' | 'DESC'
   onSort?: (columnKey: string) => void
-  onViewDetail?: (payment: Payment) => void
+  onNavigate: (path: string) => void
 }
 
 export function PaymentsTable({
@@ -21,31 +23,52 @@ export function PaymentsTable({
   sortBy,
   sortDirection,
   onSort,
-  onViewDetail,
+  onNavigate,
 }: PaymentsTableProps) {
+  const { locale, t } = useLanguage()
   const columns: Array<DataTableColumn<Payment>> = useMemo(
     () => [
+      {
+        key: 'id',
+        label: 'id',
+        sortable: true,
+      },
       { key: 'concept', label: 'Concepto', sortable: true },
-      { key: 'status', label: 'Estatus', sortable: true },
-      { key: 'method', label: 'Método' },
-      { key: 'reference', label: 'Referencia' },
-      { key: 'paymentDate', label: 'Fecha', sortable: true },
-      { key: 'amount', label: 'Monto', currency: rows[0]?.currency ?? 'MXN', sortable: true },
+      {
+        key: 'status',
+        label: 'status',
+        sortable: true,
+        render: (row) => (
+          <small 
+            className={'cell-chip px-4 text-nowrap ' + (row.paymentStatusId === 3 ? 'bg-success' : row.paymentStatusId === 1 ? 'bg-warning' : 'bg-danger')}
+          > {row.status} </small>
+        ),
+      },
+      {
+        key: 'paymentDate',
+        label: 'paymentDate',
+        sortable: true,
+        render: (row) => (
+          formatDate(row?.paymentDate, locale, {year: 'numeric', month: 'short', day: '2-digit'})
+        )
+      },
+      { key: 'amount', label: 'Monto', currency: 'MXN', sortable: true },
       {
         key: 'actions',
-        label: 'Acciones',
-        render: (payment) => (
+        label: t('tableActions'),
+        sortable: false,
+        render: (row) => (
           <button
             type="button"
-            className="btn btn-link btn-sm"
-            onClick={() => onViewDetail?.(payment)}
+            className="btn btn-link p-0"
+            onClick={() => onNavigate(`/${locale}/finance/payments/${row.id}`)}
           >
-            Ver detalle
+            {t('viewDetails')}
           </button>
         ),
       },
     ],
-    [onViewDetail, rows],
+    [locale, onNavigate, t],
   )
 
   return (

@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../../../config'
 import { useAuth } from '../../../context/AuthContext'
 import { useLanguage } from '../../../context/LanguageContext'
 import { createCurrencyFormatter } from '../../../utils/currencyFormatter'
+import { TuitionPaymentModal } from '../../PaymentsFinancePage/components/TuitionPaymentModal'
 
 type OrderDirection = 'ASC' | 'DESC'
 
@@ -61,6 +62,11 @@ export function TuitionTable({ studentId }: TuitionTableProps) {
   const [orderBy, setOrderBy] = useState('')
   const [orderDir, setOrderDir] = useState<OrderDirection>('ASC')
   const [monthColumns, setMonthColumns] = useState<string[]>([])
+    const [selectedPayment, setSelectedPayment] = useState<{
+      row: ResultsColumns
+      monthKey: string
+      details: PaymentMonthData
+    } | null>(null)
 
   useEffect(() => {
     if (!token) return
@@ -176,12 +182,8 @@ export function TuitionTable({ studentId }: TuitionTableProps) {
   const groupColumns: Array<DataTableColumn<ResultsColumns>> = useMemo(() => {
     const baseColumns: Array<DataTableColumn<ResultsColumns>> = [
       {
-        key: 'payment_reference',
-        label: 'Referencia',
-      },
-      {
-        key: 'generation',
-        label: 'Generación',
+        key: 'student',
+        label: 'student',
       },
     ]
 
@@ -197,7 +199,21 @@ export function TuitionTable({ studentId }: TuitionTableProps) {
 
         const amountToShow = paymentDetails.total_amount ?? paymentDetails.payments?.[0]?.amount ?? 0
 
-        return <span>{currencyFormatter.format(amountToShow)}</span>
+        return (
+          <button
+            type="button"
+            className="btn btn-link p-0 fw-semibold text-decoration-none"
+            onClick={() =>
+              setSelectedPayment({
+                row,
+                monthKey,
+                details: paymentDetails,
+              })
+            }
+          >
+            {currencyFormatter.format(amountToShow)}
+          </button>
+        )
       },
     }))
 
@@ -255,6 +271,14 @@ export function TuitionTable({ studentId }: TuitionTableProps) {
         sortBy={orderBy}
         sortDirection={orderDir}
         onSort={(columnKey) => handleSort(columnKey)}
+      />
+      
+      <TuitionPaymentModal
+        isOpen={Boolean(selectedPayment)}
+        onClose={() => setSelectedPayment(null)}
+        paymentData={selectedPayment?.details}
+        monthLabel={selectedPayment?.monthKey ?? ''}
+        studentData={selectedPayment?.row}
       />
     </div>
   )

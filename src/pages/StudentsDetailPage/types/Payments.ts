@@ -1,11 +1,8 @@
 export interface Payment {
   id: number
   concept: string
-  amount: number
   status: string
-  method: string
-  reference: string
+  paymentStatusId?: number
+  amount: number
   paymentDate: string
-  currency?: string
-  receiptUrl?: string
 }

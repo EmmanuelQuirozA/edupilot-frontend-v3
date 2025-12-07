@@ -6,7 +6,6 @@ import { API_BASE_URL } from '../config'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { StudentHeader } from './StudentsDetailPage/components/StudentHeader'
-import { InfoCard } from './StudentsDetailPage/components/InfoCard'
 import { StudentInstitutionCard } from './StudentsDetailPage/components/StudentInstitutionCard'
 import { StudentContactCard } from './StudentsDetailPage/components/StudentContactCard'
 import { TuitionTable } from './StudentsDetailPage/components/TuitionTable'
@@ -169,28 +168,24 @@ function normalizeStudent(payload: unknown): Student | null {
 function normalizePayment(item: unknown, index: number): Payment {
   const raw = (item ?? {}) as Record<string, unknown>
   return {
-    id: (raw.id as number) ?? index,
-    concept: (raw.concept ?? raw.payment_type_name ?? `Pago ${index + 1}`) as string,
-    amount: Number(raw.amount ?? raw.total ?? 0),
-    status: (raw.status ?? raw.payment_status ?? 'Pendiente') as string,
-    method: (raw.payment_method ?? raw.method ?? raw.payment_through ?? 'N/D') as string,
-    reference: (raw.reference ?? raw.payment_reference ?? raw.reference_number ?? '-') as string,
-    paymentDate: (raw.payment_date ?? raw.created_at ?? '') as string,
-    currency: (raw.currency as string | undefined) ?? 'MXN',
-    receiptUrl: raw.receipt_path as string | undefined,
+    id: (raw.payment_id as number) ?? index,
+    concept: (raw.pt_name) as string,
+    status: (raw.payment_status_name) as string,
+    paymentStatusId: (raw.payment_status_id) as number,
+    amount: Number(raw.amount ?? 0),
+    paymentDate: (raw.payment_date ?? '') as string,
   }
 }
 
-function normalizeRequest(item: unknown, index: number): PaymentRequest {
+function normalizeRequest(item: unknown): PaymentRequest {
   const raw = (item ?? {}) as Record<string, unknown>
   return {
-    id: (raw.id as number) ?? index,
-    concept: (raw.concept ?? raw.payment_type_name ?? `Solicitud ${index + 1}`) as string,
-    requestedAmount: Number(raw.requested_amount ?? raw.amount ?? 0),
-    status: (raw.status ?? raw.payment_status ?? 'Pendiente') as string,
-    requestDate: (raw.request_date ?? raw.created_at ?? '') as string,
-    dueDate: raw.due_date as string | undefined,
-    currency: (raw.currency as string | undefined) ?? 'MXN',
+    id: (raw.payment_request_id as number),
+    concept: (raw.pt_name) as string,
+    status: (raw.ps_pr_name) as string,
+    paymentStatusId: (raw.payment_status_id) as number,
+    requestedAmount: Number(raw.pr_amount ?? 0),
+    requestDate: (raw.pr_pay_by ?? '') as string,
   }
 }
 
@@ -726,7 +721,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                       setRequestsSortBy(columnKey)
                       setRequestsSortDirection((prev) => (prev === 'ASC' ? 'DESC' : 'ASC'))
                     }}
-                    onViewDetail={(request) => setRequestModal({ isOpen: true, payload: request })}
+                    onNavigate={onNavigate}
                   />
                 </div>
               ),
@@ -752,7 +747,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                       setPaymentsSortBy(columnKey)
                       setPaymentsSortDirection((prev) => (prev === 'ASC' ? 'DESC' : 'ASC'))
                     }}
-                    onViewDetail={(payment) => setPaymentModal({ isOpen: true, payload: payment })}
+                    onNavigate={onNavigate}
                   />
                 </div>
               ),

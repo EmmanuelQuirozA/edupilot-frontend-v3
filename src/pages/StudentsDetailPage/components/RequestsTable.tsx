@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { DataTable, type DataTableColumn, type DataTablePagination } from '../../../components/DataTable'
 import type { PaymentRequest } from '../types/Requests'
+import { useLanguage } from '../../../context/LanguageContext'
+import { formatDate } from '../../../utils/formatDate'
 
 interface RequestsTableProps {
   rows: PaymentRequest[]
@@ -10,7 +12,7 @@ interface RequestsTableProps {
   sortBy?: string
   sortDirection?: 'ASC' | 'DESC'
   onSort?: (columnKey: string) => void
-  onViewDetail?: (request: PaymentRequest) => void
+  onNavigate: (path: string) => void
 }
 
 export function RequestsTable({
@@ -21,30 +23,61 @@ export function RequestsTable({
   sortBy,
   sortDirection,
   onSort,
-  onViewDetail,
+  onNavigate,
 }: RequestsTableProps) {
+  const { locale, t } = useLanguage()
   const columns: Array<DataTableColumn<PaymentRequest>> = useMemo(
     () => [
-      { key: 'concept', label: 'Concepto', sortable: true },
-      { key: 'status', label: 'Estatus', sortable: true },
-      { key: 'requestDate', label: 'Fecha de solicitud', sortable: true },
-      { key: 'dueDate', label: 'Fecha límite', sortable: true },
-      { key: 'requestedAmount', label: 'Monto solicitado', currency: rows[0]?.currency ?? 'MXN', sortable: true },
+      {
+        key: 'id',
+        label: 'id',
+        sortable: true,
+      },
+      {
+        key: 'concept',
+        label: 'concept',
+        sortable: true,
+      },
+      {
+        key: 'status',
+        label: 'status',
+        sortable: true,
+        render: (row) => (
+          <small 
+            className={'cell-chip px-4 text-nowrap ' + (row.paymentStatusId === 7 ? 'bg-success' : row.payment_status_id === 8 ? 'bg-danger' : 'bg-warning')}
+          > {row.status} </small>
+        ),
+      },
+      {
+        key: 'requestedAmount',
+        label: 'amount',
+        sortable: true,
+        currency: 'MXN'
+      },
+      {
+        key: 'requestDate',
+        label: 'due_date',
+        sortable: true,
+        render: (row) => (
+          formatDate(row?.requestDate, locale, {year: 'numeric', month: 'short', day: '2-digit'})
+        )
+      },
       {
         key: 'actions',
-        label: 'Acciones',
-        render: (request) => (
+        label: t('tableActions'),
+        sortable: false,
+        render: (row) => (
           <button
             type="button"
-            className="btn btn-link btn-sm"
-            onClick={() => onViewDetail?.(request)}
+            className="btn btn-link p-0"
+            onClick={() => onNavigate(`/${locale}/finance/request/${row.id}`)}
           >
-            Ver detalle
+            {t('viewDetails')}
           </button>
         ),
       },
     ],
-    [onViewDetail, rows],
+    [locale, onNavigate, t],
   )
 
   return (
