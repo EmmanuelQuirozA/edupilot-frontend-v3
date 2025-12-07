@@ -71,6 +71,10 @@ export interface StudentSummary {
 export interface CatalogOption {
   id: number | string
   label: string
+  group_id: number
+  grade_group: string
+  scholar_level_name: string
+  generation: string
 }
 
 export interface StudentCatalogs {

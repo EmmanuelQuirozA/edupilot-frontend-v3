@@ -544,3 +544,35 @@
     height: 56px;
   }
 }
+
+.ui-button {
+  --ui-button-bg: linear-gradient(135deg, #22d3ee, var(--ui-color-primary));
+  --ui-button-color: #ffffff;
+  --ui-button-border: none;
+  --ui-button-shadow: 0 18px 40px -30px rgba(37, 99, 235, 0.95);
+  --ui-button-hover-shadow: 0 20px 48px -32px rgba(37, 99, 235, 0.95);
+  --ui-button-disabled-opacity: 0.6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: var(--ui-radius-md);
+  border: var(--ui-button-border);
+  background: var(--ui-button-bg);
+  color: var(--ui-button-color);
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.1;
+  padding: 0.65rem 1.35rem;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease,
+    border-color 0.18s ease;
+  text-decoration: none;
+  box-shadow: var(--ui-button-shadow);
+  min-height: 2.75rem;
+}
+
+.ui-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 40px rgba(15, 23, 42, 0.12);
+}

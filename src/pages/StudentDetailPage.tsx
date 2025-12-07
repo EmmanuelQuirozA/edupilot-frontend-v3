@@ -321,6 +321,12 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
     [locale, onNavigate, t],
   )
 
+  const formatCurrency = (value: number | null | undefined) =>
+  (value ?? 0).toLocaleString(
+    locale === 'es' ? 'es-MX' : 'en-US',
+    { style: 'currency', currency: 'MXN' }
+  );
+
   const tuitionPagination: DataTablePagination = useMemo(
     () => ({
       page: tuitionPage,
@@ -696,14 +702,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
 
         <div className="row gy-3">
           <div className="col-12 col-lg-4">
-            <InfoCard
-              title="Resumen"
-              actions={
-                <button type="button" className="btn btn-outline-primary btn-sm" onClick={handleOpenBalanceModal}>
-                  Recargar saldo
-                </button>
-              }
-            >
               {studentSummary ? (
                   <section className="student-card h-100">
                     <div className="student-card__row">
@@ -743,8 +741,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                     <div className="student-card__info">
                       <div>
                         <p className="student-card__label">{t('balanceLabel')}</p>
-                        <h3>{formatCurrency(studentSummary.balance ?? student.balance)}</h3>
-                        <p className="student-card__hint">{t('lastPayment')}</p>
+                        <h3>{formatCurrency(studentSummary.balance)}</h3>
                       </div>
                     </div>
                     <button type="button" className="ui-button btn--ghost btn--full" onClick={handleOpenBalanceModal}>
@@ -754,18 +751,19 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
               ) : (
                 <span className="text-muted">Sin información</span>
               )}
-            </InfoCard>
           </div>
           <div className="col-12 col-lg-8">
             {student ? (
-              <StudentInstitutionCard
-                student={student}
-                formValues={formValues}
-                formErrors={formErrors}
-                isEditing={isEditing}
-                catalogs={catalogs}
-                onChange={handleFieldChange}
-              />
+              <section className="student-card h-100">
+                <StudentInstitutionCard
+                  student={student}
+                  formValues={formValues}
+                  formErrors={formErrors}
+                  isEditing={isEditing}
+                  catalogs={catalogs}
+                  onChange={handleFieldChange}
+                />
+              </section>
             ) : (
               <LoadingSkeleton variant="table" rowCount={4} />
             )}

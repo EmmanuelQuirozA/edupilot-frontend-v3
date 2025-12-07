@@ -13,10 +13,6 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.student-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
-}
 
 .student-card__header {
   display: flex;
