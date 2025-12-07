@@ -6,7 +6,6 @@ interface StudentHeaderProps {
   onEdit: () => void
   onSave: () => void
   onCancel: () => void
-  onToggleStatus: () => void
 }
 
 export function StudentHeader({
@@ -15,7 +14,6 @@ export function StudentHeader({
   onEdit,
   onSave,
   onCancel,
-  onToggleStatus,
 }: StudentHeaderProps) {
   const initials = student.fullName
     .split(' ')
@@ -37,14 +35,32 @@ export function StudentHeader({
         <div className="d-flex flex-column">
           <h4 className="mb-1 fw-semibold text-black">{student.fullName}</h4>
           <div className="d-flex align-items-center gap-2">
-            <span
-              className={`badge px-3 py-2 ${student.isActive ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}
-            >
-              {student.status}
-            </span>
-            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={onToggleStatus}>
-              {student.isActive ? 'Desactivar' : 'Activar'}
-            </button>
+            {isEditing ? (
+              <div className="student-detail-page__status-toggle">
+                <label
+                  className="table__switch"
+                  aria-label={'Desactivar acceso del alumno temporalmente'
+                  }
+                >
+                  <input
+                    type="checkbox"
+                  />
+                  <span className="table__switch-track">
+                    <span className="table__switch-thumb" />
+                  </span>
+                </label>
+                <span>
+                  {student.status}
+                </span>
+              </div>
+            ) : (
+              <span
+                className={`student-detail-page__chip ${student?.user_enabled ? 'chip--success' : 'chip--warning'}`}
+              >
+                {student.status}
+              </span>
+            )}
+            <span className="student-detail-page__chip">{student?.role_name}</span>
           </div>
         </div>
       </div>

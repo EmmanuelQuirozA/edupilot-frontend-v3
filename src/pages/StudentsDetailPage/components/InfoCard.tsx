@@ -8,7 +8,13 @@ interface InfoCardProps {
   className?: string
 }
 
-export function InfoCard({ title, subtitle, actions, children, className }: InfoCardProps) {
+export function InfoCard({ 
+  title,
+  subtitle,
+  actions,
+  children,
+  className 
+}: InfoCardProps) {
   return (
     <div className={`card shadow-sm border-0 ${className ?? ''}`.trim()}>
       {(title || subtitle || actions) ? (

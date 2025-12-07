@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { DataTable, type DataTableColumn, type DataTablePagination } from '../../components/DataTable'
+import { DataTable, type DataTableColumn, type DataTablePagination } from '../../../components/DataTable'
 import type { TuitionRow } from '../types/Tuition'
 
 interface TuitionTableProps {

@@ -5,22 +5,23 @@ import { useLanguage } from '../context/LanguageContext'
 import { API_BASE_URL } from '../config'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
-import { StudentHeader } from './components/StudentHeader'
-import { InfoCard } from './components/InfoCard'
-import { StudentInstitutionCard } from './components/StudentInstitutionCard'
-import { StudentContactCard } from './components/StudentContactCard'
-import { TuitionTable } from './components/TuitionTable'
-import { PaymentsTable } from './components/PaymentsTable'
-import { RequestsTable } from './components/RequestsTable'
-import { TopupsTable } from './components/TopupsTable'
-import { Tabs } from './components/Tabs'
-import type { Student, StudentCatalogs, StudentSummary } from './types/Student'
-import type { FormState } from './types/FormState'
-import type { TuitionRow } from './types/Tuition'
-import type { Payment } from './types/Payments'
-import type { PaymentRequest } from './types/Requests'
-import type { Topup } from './types/Topups'
+import { StudentHeader } from './StudentsDetailPage/components/StudentHeader'
+import { InfoCard } from './StudentsDetailPage/components/InfoCard'
+import { StudentInstitutionCard } from './StudentsDetailPage/components/StudentInstitutionCard'
+import { StudentContactCard } from './StudentsDetailPage/components/StudentContactCard'
+import { TuitionTable } from './StudentsDetailPage/components/TuitionTable'
+import { PaymentsTable } from './StudentsDetailPage/components/PaymentsTable'
+import { RequestsTable } from './StudentsDetailPage/components/RequestsTable'
+import { TopupsTable } from './StudentsDetailPage/components/TopupsTable'
+import { Tabs } from './StudentsDetailPage/components/Tabs'
+import type { Student, StudentCatalogs, StudentSummary } from './StudentsDetailPage/types/Student'
+import type { FormState } from './StudentsDetailPage/types/FormState'
+import type { TuitionRow } from './StudentsDetailPage/types/Tuition'
+import type { Payment } from './StudentsDetailPage/types/Payments'
+import type { PaymentRequest } from './StudentsDetailPage/types/Requests'
+import type { Topup } from './StudentsDetailPage/types/Topups'
 import type { DataTablePagination } from '../components/DataTable'
+import './StudentDetailPage.css';
 
 type TabKey = 'tuition' | 'requests' | 'payments' | 'topups'
 
@@ -59,14 +60,19 @@ function buildFormState(student: Student | null): FormState {
 
 function normalizeStudent(payload: unknown): Student | null {
   if (!payload || typeof payload !== 'object') return null
-  const raw = (payload as { content?: unknown; student?: unknown }).content ??
-    (payload as { student?: unknown }).student ?? payload
+  const raw =
+    (payload as { content?: unknown; student?: unknown; data?: unknown }).content ??
+    (payload as { student?: unknown; data?: unknown }).student ??
+    (payload as { data?: unknown }).data ??
+    payload
 
-  if (!raw || typeof raw !== 'object') return null
+  const rawStudent = Array.isArray(raw) ? raw[0] : raw
+  if (!rawStudent || typeof rawStudent !== 'object') return null
 
-  const data = raw as Record<string, unknown>
-  const id = (data.id ?? data.student_id) as number | undefined
-  if (!id) return null
+  const data = rawStudent as Record<string, unknown>
+  const rawId = data.id ?? data.student_id ?? data.studentId
+  const id = typeof rawId === 'string' ? Number(rawId) : (rawId as number | undefined)
+  if (!id || Number.isNaN(id)) return null
 
   const firstName = (data.firstName ?? data.first_name) as string | undefined
   const lastName =
@@ -95,6 +101,50 @@ function normalizeStudent(payload: unknown): Student | null {
     generation: (data.generation ?? data.generation_name) as string | undefined,
     avatarUrl: (data.avatarUrl ?? data.avatar_url) as string | undefined,
     isActive: Boolean(data.enabled ?? data.isActive ?? true),
+    
+    student_id: (data.student_id) as number,
+    group_id: (data.group_id) as number,
+    register_id: (data.register_id) as string,
+    payment_reference: (data.payment_reference) as string,
+    user_id: (data.user_id) as number,
+    school_id: (data.school_id) as number,
+    username: (data.username) as string,
+    role_name: (data.role_name) as string,
+    full_name: (data.full_name) as string,
+    address: (data.address) as string | undefined,
+    commercial_name: (data.commercial_name) as string,
+    business_name: (data.business_name) as string,
+    group_name: (data.group_name) as string | undefined,
+    grade_group: (data.grade_group) as string,
+    grade: (data.grade) as string,
+    group: (data.group) as string,
+    scholar_level_id: (data.scholar_level_id) as number,
+    scholar_level_name: (data.scholar_level_name) as string,
+    first_name: (data.first_name) as string,
+    last_name_father: (data.last_name_father) as string,
+    last_name_mother: (data.last_name_mother) as string,
+    birth_date: (data.birth_date) as string | undefined,
+    phone_number: (data.phone_number) as string | undefined,
+    tax_id: (data.tax_id) as string | undefined,
+    street: (data.street) as string | undefined,
+    ext_number: (data.ext_number) as string | undefined,
+    int_number: (data.int_number) as string | undefined,
+    suburb: (data.suburb) as string | undefined,
+    locality: (data.locality) as string | undefined,
+    municipality: (data.municipality) as string | undefined,
+    state: (data.state) as string | undefined,
+    personal_email: (data.personal_email) as string | undefined,
+    user_enabled: (data.user_enabled) as boolean,
+    role_enabled: (data.role_enabled) as boolean,
+    school_enabled: (data.school_enabled) as boolean,
+    group_enabled: (data.group_enabled) as boolean,
+    user_status: (data.user_status) as string,
+    role_status: (data.role_status) as string,
+    school_status: (data.school_status) as string,
+    group_status: (data.group_status) as string,
+    joining_date: (data.joining_date) as string,
+    tuition: (data.tuition) as string,
+    default_tuition: (data.default_tuition) as string,
   }
 }
 
@@ -341,6 +391,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           throw new Error('missing_student')
         }
 
+        console.log(detail)
         setStudent(detail)
         setStudentSummary({
           balance: detail.balance,
@@ -587,6 +638,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('students')} breadcrumbItems={breadcrumbItems}>
+      <section className="student-detail-page">
       <div className="d-flex flex-column gap-4">
         {studentError ? (
           <div className="alert alert-danger" role="alert">
@@ -621,20 +673,52 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
               }
             >
               {studentSummary ? (
-                <div className="d-flex flex-column gap-2">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span className="text-muted">Saldo</span>
-                    <span className="fw-bold text-black">${studentSummary.balance.toFixed(2)}</span>
-                  </div>
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span className="text-muted">ID de registro</span>
-                    <span className="fw-semibold text-black">{studentSummary.registerId ?? '-'}</span>
-                  </div>
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span className="text-muted">Referencia de pago</span>
-                    <span className="fw-semibold text-black">{studentSummary.paymentReference ?? '-'}</span>
-                  </div>
-                </div>
+                  <section className="student-card h-100">
+                    <div className="student-card__row">
+                      <div>
+                        <p className="student-card__label">{registerLabel}</p>
+                        {isEditing ? (
+                          <input
+                            name="register_id"
+                            value={studentSummary.registerId}
+                            onChange={handleChange}
+                            className={formErrors.register_id ? 'input input--error' : 'input'}
+                            placeholder={t('registerPlaceholder')}
+                          />
+                        ) : (
+                          <p className="field__value">{studentSummary.registerId || emptyValue}</p>
+                        )}
+                        {isEditing && formErrors.register_id ? (
+                          <span className="input__error">{formErrors.register_id}</span>
+                        ) : null}
+                      </div>
+                      <div>
+                        <p className="student-card__label">{t('paymentReference')}</p>
+                        {isEditing ? (
+                          <input
+                            name="payment_reference"
+                            value={formValues.payment_reference ?? ''}
+                            onChange={handleChange}
+                            className="input"
+                            placeholder={t('paymentReferencePlaceholder')}
+                          />
+                        ) : (
+                          <p className="field__value">{formValues.payment_reference || emptyValue}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="student-card__divider" />
+                    <div className="student-card__info">
+                      <div>
+                        <p className="student-card__label">{t('balanceLabel')}</p>
+                        <h3>{formatCurrency(student.balance)}</h3>
+                        <p className="student-card__hint">{t('lastPayment')}</p>
+                      </div>
+                    </div>
+                    <button type="button" className="ui-button btn--ghost btn--full" onClick={handleOpenBalanceModal}>
+                      {t('balance')}
+                    </button>
+                  </section>
               ) : (
                 <span className="text-muted">Sin información</span>
               )}
@@ -804,6 +888,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         onClose={() => setRequestModal({ isOpen: false })}
         content={requestModal.payload}
       />
+      </section>
     </Layout>
   )
 }
