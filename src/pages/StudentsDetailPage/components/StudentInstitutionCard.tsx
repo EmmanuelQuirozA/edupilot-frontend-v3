@@ -20,117 +20,130 @@ export function StudentInstitutionCard({
   catalogs,
   onChange,
 }: StudentInstitutionCardProps) {
+  const emptyValue = '—'
+
   const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = event.target
     onChange(name as keyof FormState, value || undefined)
   }
 
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target
+    onChange(name as keyof FormState, value)
+  }
+
+  const selectedSchoolId = formValues.school_id ?? student.school_id
+  const selectedGroupId = formValues.group_id ?? student.group_id
+
   return (
     <InfoCard title="Institución" subtitle="Datos académicos">
       {isEditing ? (
         <div className="row gy-3">
-          <section className="info-card h-100">
-            <div className="info-card__header">
-              <div>
-                <p className="info-card__label">{institutionStrings.label}</p>
-                <h3>{student.business_name || student.commercial_name || '—'}</h3>
-                <p className="info-card__meta">{institutionStrings.meta}</p>
-              </div>
-              <div className="info-card__status">
-                <span className="student-detail-page__chip chip--info">
-                  {student.grade_group || institutionStrings.generationLabel}
-                </span>
-                <span className={`student-detail-page__chip ${student.group_enabled ? 'chip--success' : 'chip--warning'}`}>
-                  {student.group_status || institutionStrings.groupStatus}
-                </span>
-              </div>
-            </div>
-            <div className="row">
-                {isEditing ? (
-                  <>
-                    <div className='col-md-4'>
-                      {renderSelectField(
-                        institutionStrings.fields.schoolId,
-                        'school_id',
-                        schoolOptions,
-                        {
-                          placeholder: institutionStrings.fields.schoolId,
-                          displayValueOverride:
-                            selectedSchool?.label ||
-                            student.school_name ||
-                            student.business_name ||
-                            student.commercial_name,
-                        },
-                      )}
-                    </div>
-                    <div className='col-md-4'>
-                      {renderSelectField(
-                        institutionStrings.fields.groupId,
-                        'group_id',
-                        groupOptions,
-                        {
-                          placeholder: institutionStrings.fields.groupId,
-                          displayValueOverride:
-                            selectedGroup?.label ||
-                            student.grade_group ||
-                            `${student.grade || ''} ${student.group || ''}`.trim(),
-                          helperContent: (
-                            <p className="form-text text-muted mb-0">
-                              Generación: {selectedGroup?.meta?.generation || student.generation || emptyValue} · Grupo: {selectedGroup?.meta?.gradeGroup || student.grade_group || emptyValue} · Nivel: {selectedGroup?.meta?.scholarLevel || student.scholar_level_name || emptyValue}
-                            </p>
-                          ),
-                        },
-                      )}
-                    </div>
-                    <div className='col-md-4'>
-                      {renderEditableField(institutionStrings.fields.curp, 'curp', {
-                        placeholder: institutionStrings.fields.curp,
-                        inputClassName: 'input',
-                      })}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className='col-md-4'>
-                      <div className="field">
-                        <span>{institutionStrings.fields.schoolId}</span>
-                        <div className='field__value'>{student.business_name}</div>
-                      </div>
-                    {/* {renderEditableField(institutionStrings.fields.schoolId, 'business_name', {
-                      placeholder: institutionStrings.fields.schoolId,
-                      inputClassName: 'input',
-                    })} */}
-                    </div>
-                    <div className='col-md-8'>
-                      <div className="field">
-                        <span>{institutionStrings.fields.scholarLevel}</span>
-                        <div className='field__value'>Generación: {selectedGroup?.meta?.generation || student.generation || emptyValue} · Grupo: {selectedGroup?.meta?.gradeGroup || student.grade_group || emptyValue} · Nivel: {selectedGroup?.meta?.scholarLevel || student.scholar_level_name || emptyValue}</div>
-                      </div>
-                    </div>
-                    <div className='col-md-4'>
-                    {renderEditableField(institutionStrings.fields.curp, 'curp', {
-                      placeholder: institutionStrings.fields.curp,
-                      inputClassName: 'input',
-                    })}
-                    </div>
-                  </>
-                )}
-            </div>
-          </section>
+          <div className="col-md-6">
+            <label className="form-label small text-muted" htmlFor="school_id">
+              Escuela
+            </label>
+            <select
+              id="school_id"
+              name="school_id"
+              className="form-select"
+              value={selectedSchoolId ?? ''}
+              onChange={handleSelectChange}
+            >
+              <option value="">Selecciona una escuela</option>
+              {catalogs.schools.map((school) => (
+                <option key={school.id} value={school.id}>
+                  {school.label}
+                </option>
+              ))}
+            </select>
+            {formErrors.school_id ? <small className="text-danger">{formErrors.school_id}</small> : null}
+          </div>
+          <div className="col-md-6">
+            <label className="form-label small text-muted" htmlFor="group_id">
+              Grupo
+            </label>
+            <select
+              id="group_id"
+              name="group_id"
+              className="form-select"
+              value={selectedGroupId ?? ''}
+              onChange={handleSelectChange}
+            >
+              <option value="">Selecciona un grupo</option>
+              {catalogs.groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.label}
+                </option>
+              ))}
+            </select>
+            {formErrors.group_id ? <small className="text-danger">{formErrors.group_id}</small> : null}
+          </div>
+          <div className="col-md-6">
+            <label className="form-label small text-muted" htmlFor="register_id">
+              Matrícula
+            </label>
+            <input
+              id="register_id"
+              name="register_id"
+              className="form-control"
+              value={formValues.register_id ?? student.register_id ?? ''}
+              onChange={handleInputChange}
+            />
+            {formErrors.register_id ? <small className="text-danger">{formErrors.register_id}</small> : null}
+          </div>
+          <div className="col-md-6">
+            <label className="form-label small text-muted" htmlFor="payment_reference">
+              Referencia de pago
+            </label>
+            <input
+              id="payment_reference"
+              name="payment_reference"
+              className="form-control"
+              value={formValues.payment_reference ?? student.payment_reference ?? ''}
+              onChange={handleInputChange}
+            />
+            {formErrors.payment_reference ? <small className="text-danger">{formErrors.payment_reference}</small> : null}
+          </div>
+          <div className="col-md-6">
+            <label className="form-label small text-muted" htmlFor="curp">
+              CURP
+            </label>
+            <input
+              id="curp"
+              name="curp"
+              className="form-control"
+              value={formValues.curp ?? ''}
+              onChange={handleInputChange}
+              placeholder="CURP"
+            />
+          </div>
         </div>
       ) : (
         <div className="d-flex flex-column gap-2">
           <div className="d-flex align-items-center justify-content-between">
             <span className="text-muted">Escuela</span>
-            <span className="fw-semibold text-black">{student.institutionName || 'Sin escuela'}</span>
+            <span className="fw-semibold text-black">{student.institutionName || student.business_name || emptyValue}</span>
           </div>
           <div className="d-flex align-items-center justify-content-between">
             <span className="text-muted">Grupo</span>
-            <span className="fw-semibold text-black">{student.groupName || 'Sin grupo'}</span>
+            <span className="fw-semibold text-black">{student.group_name || student.groupName || emptyValue}</span>
+          </div>
+          <div className="d-flex align-items-center justify-content-between">
+            <span className="text-muted">Nivel</span>
+            <span className="fw-semibold text-black">{student.scholar_level_name || student.level || emptyValue}</span>
+          </div>
+          <div className="d-flex align-items-center justify-content-between">
+            <span className="text-muted">Generación</span>
+            <span className="fw-semibold text-black">{student.generation || emptyValue}</span>
+          </div>
+          <div className="d-flex align-items-center justify-content-between">
+            <span className="text-muted">Matrícula</span>
+            <span className="fw-semibold text-black">{student.register_id || emptyValue}</span>
           </div>
           <div className="d-flex align-items-center justify-content-between">
             <span className="text-muted">Referencia de pago</span>
-            <span className="fw-semibold text-black">{student.paymentReference || 'No registrada'}</span>
+            <span className="fw-semibold text-black">{student.payment_reference || emptyValue}</span>
           </div>
         </div>
       )}
