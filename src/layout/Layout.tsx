@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Header } from '../components/Header'
 import { Sidebar } from '../components/Sidebar'
 import { Footer } from '../components/Footer'
@@ -13,20 +13,37 @@ interface LayoutProps {
 }
 
 export function Layout({ children, onNavigate, pageTitle, breadcrumbItems = [] }: LayoutProps) {
-  const [isSidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 992)
+  const [isMobileView, setIsMobileView] = useState(() => window.innerWidth < 992)
+  const [isSidebarOpen, setSidebarOpen] = useState(() => !isMobileView)
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 992) {
-        setSidebarOpen(false)
-      }
+      setIsMobileView(window.innerWidth < 992)
     }
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  useEffect(() => {
+    setSidebarOpen(!isMobileView)
+  }, [isMobileView])
+
+  useEffect(() => {
+    if (isMobileView && isSidebarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isMobileView, isSidebarOpen])
+
   const toggleSidebar = () => setSidebarOpen((open) => !open)
+
+  const shouldHideContent = useMemo(() => isMobileView && isSidebarOpen, [isMobileView, isSidebarOpen])
 
   return (
     <div className="app-shell d-flex flex-column" style={{ minHeight: '100vh' }}>
@@ -34,15 +51,16 @@ export function Layout({ children, onNavigate, pageTitle, breadcrumbItems = [] }
         <div className="sidebar_container">
           <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} onNavigate={onNavigate} />
         </div>
-        {isSidebarOpen && window.innerWidth < 992 ? <div className="sidebar-backdrop d-lg-none" onClick={() => setSidebarOpen(false)} /> : null}
-        <div className="d-flex flex-column">
-          <div className="layout-main  p-5">
-            <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} pageTitle={pageTitle} />
-            {breadcrumbItems.length ? <Breadcrumb items={breadcrumbItems} /> : null}
-            <main className="flex-grow-1">{children}</main>
+        {!shouldHideContent ? (
+          <div className="d-flex flex-column">
+            <div className="layout-main  p-5">
+              <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} pageTitle={pageTitle} />
+              {breadcrumbItems.length ? <Breadcrumb items={breadcrumbItems} /> : null}
+              <main className="flex-grow-1">{children}</main>
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
+        ) : null}
       </div>
     </div>
   )
