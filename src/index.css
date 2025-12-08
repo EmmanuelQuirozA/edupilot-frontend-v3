@@ -462,8 +462,8 @@ a:hover {
 }
 
 .btn-reject {
- border: 1.5px solid rgba(212, 212, 212, 0.685);
- border-radius: 10px 0 0 10px;
+ border: 1.5px solid rgba(212, 212, 212, 0.685) !important;
+ border-radius: 10px 0 0 10px !important;
 }
 
 .btn-reject:hover {
@@ -474,7 +474,7 @@ a:hover {
 
 .btn-approve {
  border: 1.5px solid rgba(0, 0, 0, 0.685);
- border-radius: 0 10px 10px 0;
+ border-radius: 0 10px 10px 0 !important;
  background-color: #212529;
  color: white !important;
 }
@@ -485,7 +485,7 @@ a:hover {
 
 .btn-closeRequest {
  border: 1.5px solid rgba(212, 212, 212, 0.685);
- border-radius: 10px 0 0 10px;
+ border-radius: 10px 0 0 10px !important;
 }
 
 .btn-closeRequest:hover {

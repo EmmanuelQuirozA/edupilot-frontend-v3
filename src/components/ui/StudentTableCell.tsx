@@ -87,7 +87,7 @@ const StudentTableCell = ({
   const computedInitials = getInitials(hasName ? name : "");
   const avatarContent = (avatarText ?? computedInitials) || avatarFallback;
 
-  const wrapperClassName = ["table__student-wrapper", className]
+  const wrapperClassName = ["table__student-wrapper text-start", className]
     .filter(Boolean)
     .join(" ");
 
@@ -133,16 +133,16 @@ const StudentTableCell = ({
 
   if (interactive) {
     return (
-      <div className={wrapperClassName}>
-        <span className="table__avatar" aria-hidden="true">
+      <div className={'d-flex gap-2'}>
+        <span className="avatar-circle" aria-hidden="true">
           {avatarContent}
         </span>
 
-        <div className="table__student-info">
+        <div className="d-flex flex-column justify-content-center">
           {linkHref ? (
             <a
               href={linkHref}
-              className={buttonClassName}
+              className={'btn d-flex text-start p-0 gap-3 text-uppercase'}
               aria-disabled={isButtonDisabled}
               onClick={handleLinkClick}
               {...restButtonProps}
@@ -152,7 +152,7 @@ const StudentTableCell = ({
           ) : (
             <button
               type={type ?? "button"}
-              className={buttonClassName}
+              className={'btn d-flex text-start p-0 gap-3 text-uppercase'}
               disabled={isButtonDisabled}
               onClick={
                 onClick as unknown as React.MouseEventHandler<HTMLButtonElement>

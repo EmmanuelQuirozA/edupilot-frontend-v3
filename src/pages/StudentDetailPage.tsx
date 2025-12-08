@@ -199,26 +199,6 @@ function normalizeTopup(item: unknown, index: number): Topup {
   }
 }
 
-async function readResponsePayload(response: Response): Promise<unknown> {
-  const contentType = response.headers.get('content-type') ?? ''
-  if (contentType.includes('application/json')) {
-    try {
-      return await response.json()
-    } catch (error) {
-      console.error('Error parsing JSON response', error)
-      return 'Respuesta JSON no válida'
-    }
-  }
-
-  try {
-    const text = await response.text()
-    return text || 'Sin contenido'
-  } catch (error) {
-    console.error('Error reading response body', error)
-    return 'Sin contenido'
-  }
-}
-
 function InlineModal<T>({ title, open, onClose, content }: { title: string; open: boolean; onClose: () => void; content?: T }) {
   if (!open) return null
   return (
@@ -675,30 +655,18 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
     setIsSaving(true)
     setStudentError(null)
 
+    const sanitizedPayload = Object.fromEntries(
+      Object.entries(formValues).map(([key, value]) => {
+        if (typeof value === 'string') {
+          const trimmedValue = value.trim();
+          return [key, trimmedValue === '' ? null : trimmedValue];
+        }
+        return [key, value];
+      }),
+    );
+
     try {
       if (studentDataChanged) {
-        const payload = {
-          school_id: String(formValues.school_id ?? student.school_id ?? ''),
-          group_id: String(formValues.group_id ?? student.group_id ?? ''),
-          register_id: formValues.register_id ?? student.register_id ?? '',
-          payment_reference: formValues.payment_reference ?? student.payment_reference ?? null,
-          first_name: formValues.first_name ?? student.first_name ?? '',
-          last_name_father: formValues.last_name_father ?? student.last_name_father ?? '',
-          last_name_mother: formValues.last_name_mother ?? student.last_name_mother ?? '',
-          birth_date: formValues.birth_date ?? student.birth_date ?? '',
-          phone_number: formValues.phone_number ?? student.phone_number ?? '',
-          tax_id: formValues.tax_id ?? student.tax_id ?? '',
-          curp: formValues.curp ?? student.curp ?? '',
-          street: formValues.street ?? student.street ?? '',
-          ext_number: formValues.ext_number ?? student.ext_number ?? '',
-          int_number: formValues.int_number ?? student.int_number ?? '',
-          suburb: formValues.suburb ?? student.suburb ?? '',
-          locality: formValues.locality ?? student.locality ?? '',
-          municipality: formValues.municipality ?? student.municipality ?? '',
-          state: formValues.state ?? student.state ?? '',
-          personal_email: formValues.personal_email ?? student.personal_email ?? '',
-          email: formValues.email ?? student.email ?? '',
-        }
 
         const response = await fetch(
           `${API_BASE_URL}/students/update/${encodeURIComponent(student.student_id)}?lang=${locale}`,
@@ -708,7 +676,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(payload),
+            body: JSON.stringify(sanitizedPayload),
           },
         )
 
@@ -728,42 +696,40 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           prev
             ? {
                 ...prev,
-                register_id: payload.register_id,
-                registerId: payload.register_id,
-                payment_reference: payload.payment_reference ?? undefined,
-                paymentReference: payload.payment_reference ?? undefined,
-                first_name: payload.first_name,
-                firstName: payload.first_name,
-                last_name_father: payload.last_name_father,
-                last_name_mother: payload.last_name_mother,
-                lastName: `${payload.last_name_father} ${payload.last_name_mother}`.trim(),
-                birth_date: payload.birth_date,
-                phone_number: payload.phone_number,
-                phone: payload.phone_number,
-                tax_id: payload.tax_id,
-                curp: payload.curp,
-                street: payload.street,
-                ext_number: payload.ext_number,
-                int_number: payload.int_number,
-                suburb: payload.suburb,
-                locality: payload.locality,
-                municipality: payload.municipality,
-                state: payload.state,
-                personal_email: payload.personal_email,
-                email: payload.email,
-                group_id: Number(payload.group_id),
-                school_id: Number(payload.school_id),
+                register_id: sanitizedPayload.register_id,
+                registerId: sanitizedPayload.register_id,
+                payment_reference: sanitizedPayload.payment_reference ?? undefined,
+                first_name: sanitizedPayload.first_name,
+                last_name_father: sanitizedPayload.last_name_father,
+                last_name_mother: sanitizedPayload.last_name_mother,
+                lastName: `${sanitizedPayload.last_name_father} ${sanitizedPayload.last_name_mother}`.trim(),
+                birth_date: sanitizedPayload.birth_date,
+                phone_number: sanitizedPayload.phone_number,
+                phone: sanitizedPayload.phone_number,
+                tax_id: sanitizedPayload.tax_id,
+                curp: sanitizedPayload.curp,
+                street: sanitizedPayload.street,
+                ext_number: sanitizedPayload.ext_number,
+                int_number: sanitizedPayload.int_number,
+                suburb: sanitizedPayload.suburb,
+                locality: sanitizedPayload.locality,
+                municipality: sanitizedPayload.municipality,
+                state: sanitizedPayload.state,
+                personal_email: sanitizedPayload.personal_email,
+                email: sanitizedPayload.email,
+                group_id: Number(sanitizedPayload.group_id),
+                school_id: Number(sanitizedPayload.school_id),
                 group_name:
-                  catalogs.groups.find((item) => String(item.group_id) === String(payload.group_id))?.grade_group ??
+                  catalogs.groups.find((item) => String(item.group_id) === String(sanitizedPayload.group_id))?.grade_group ??
                   prev.group_name,
                 scholar_level_name:
-                  catalogs.groups.find((item) => String(item.group_id) === String(payload.group_id))?.scholar_level_name ??
+                  catalogs.groups.find((item) => String(item.group_id) === String(sanitizedPayload.group_id))?.scholar_level_name ??
                   prev.scholar_level_name,
                 grade_group:
-                  catalogs.groups.find((item) => String(item.group_id) === String(payload.group_id))?.grade_group ??
+                  catalogs.groups.find((item) => String(item.group_id) === String(sanitizedPayload.group_id))?.grade_group ??
                   prev.grade_group,
                 generation:
-                  catalogs.groups.find((item) => String(item.group_id) === String(payload.group_id))?.generation ??
+                  catalogs.groups.find((item) => String(item.group_id) === String(sanitizedPayload.group_id))?.generation ??
                   prev.generation,
               }
             : prev,
@@ -773,8 +739,8 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           prev
             ? {
                 ...prev,
-                registerId: payload.register_id,
-                paymentReference: payload.payment_reference ?? undefined,
+                registerId: sanitizedPayload.register_id,
+                paymentReference: sanitizedPayload.payment_reference ?? undefined,
               }
             : prev,
         )
