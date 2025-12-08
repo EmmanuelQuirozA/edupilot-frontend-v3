@@ -101,7 +101,7 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
         })
 
         if (appliedSearch) {
-          params.set('student', appliedSearch)
+          params.set('student_full_name', appliedSearch)
         }
 
         const response = await fetch(`${API_BASE_URL}/reports/payments?${params.toString()}`, {

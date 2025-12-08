@@ -467,13 +467,13 @@ a:hover {
 }
 
 .btn-reject:hover {
-  border: 1.5px solid rgba(185, 28, 28, 0.603);
+  border: 1.5px solid rgba(185, 28, 28, 0.603) !important;
   background-color: rgb(254 242 242);
   color: rgba(185, 28, 28, 0.829) !important;
 }
 
 .btn-approve {
- border: 1.5px solid rgba(0, 0, 0, 0.685);
+ border: 1.5px solid rgba(0, 0, 0, 0.685) !important;
  border-radius: 0 10px 10px 0 !important;
  background-color: #212529;
  color: white !important;
@@ -484,14 +484,14 @@ a:hover {
 }
 
 .btn-closeRequest {
- border: 1.5px solid rgba(212, 212, 212, 0.685);
+ border: 1.5px solid rgba(212, 212, 212, 0.685) !important;
  border-radius: 10px 0 0 10px !important;
 }
 
 .btn-closeRequest:hover {
-  border: 1.5px solid rgba(28, 109, 185, 0.603);
+  border: 1.5px solid rgba(28, 109, 185, 0.603) !important;
   background-color: rgb(242, 254, 254);
-  color: rgba(28, 31, 185, 0.829) !important;
+  color: rgba(28, 31, 185, 0.829) ;
 }
 
 .table-striped {

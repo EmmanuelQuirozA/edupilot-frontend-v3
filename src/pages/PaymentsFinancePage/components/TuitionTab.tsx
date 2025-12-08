@@ -109,7 +109,7 @@ export function TuitionTab({ onNavigate }: TuitionTabProps) {
         }
 
         if (appliedSearch) {
-          params.set('student', appliedSearch)
+          params.set('student_full_name', appliedSearch)
         }
 
         const response = await fetch(`${API_BASE_URL}/reports/payments/report?${params.toString()}`, {

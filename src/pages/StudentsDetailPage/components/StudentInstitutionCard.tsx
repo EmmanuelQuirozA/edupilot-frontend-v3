@@ -171,7 +171,7 @@ export function StudentInstitutionCard({
                 emptyValue,
               helperContent: (
                 <p className="form-text text-muted mb-0">
-                  Generación: {selectedGroup?.meta?.generation || student.generation || emptyValue} · Grupo: {selectedGroup?.meta?.gradeGroup || student.grade_group || emptyValue} · Nivel: {selectedGroup?.meta?.scholarLevel || student.scholar_level_name || emptyValue}
+                  {t('generation')}: {selectedGroup?.meta?.generation || student.generation || emptyValue} · {t('class')}: {selectedGroup?.meta?.gradeGroup || student.grade_group || emptyValue} · {t('level')}: {selectedGroup?.meta?.scholarLevel || student.scholar_level_name || emptyValue}
                 </p>
               ),
             })}
@@ -195,7 +195,7 @@ export function StudentInstitutionCard({
             <div className="field">
               <span>{institutionStrings.fields.scholarLevel}</span>
               <div className="field__value">
-                Generación: {selectedGroup?.meta?.generation || student.generation || emptyValue} · Grupo: {selectedGroup?.meta?.gradeGroup || student.grade_group || emptyValue} · Nivel: {selectedGroup?.meta?.scholarLevel || student.scholar_level_name || emptyValue}
+                {t('generation')}: {selectedGroup?.meta?.generation || student.generation || emptyValue} · {t('class')}: {selectedGroup?.meta?.gradeGroup || student.grade_group || emptyValue} · {t('level')}: {selectedGroup?.meta?.scholarLevel || student.scholar_level_name || emptyValue}
               </div>
             </div>
           </div>

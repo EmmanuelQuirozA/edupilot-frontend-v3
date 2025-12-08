@@ -29,27 +29,27 @@ export function PaymentsTable({
   const columns: Array<DataTableColumn<Payment>> = useMemo(
     () => [
       {
-        key: 'id',
+        key: 'payment_id',
         label: 'id',
         sortable: true,
       },
-      { key: 'concept', label: 'Concepto', sortable: true },
+      { key: 'pt_name', label: 'Concepto', sortable: true },
       {
-        key: 'status',
+        key: 'payment_status_id',
         label: 'status',
         sortable: true,
         render: (row) => (
           <small 
-            className={'cell-chip px-4 text-nowrap ' + (row.paymentStatusId === 3 ? 'bg-success' : row.paymentStatusId === 1 ? 'bg-warning' : 'bg-danger')}
-          > {row.status} </small>
+            className={'cell-chip px-4 text-nowrap ' + (row.payment_status_id === 3 ? 'bg-success' : row.payment_status_id === 1 ? 'bg-warning' : 'bg-danger')}
+          > {row.payment_status_name} </small>
         ),
       },
       {
-        key: 'paymentDate',
+        key: 'payment_date',
         label: 'paymentDate',
         sortable: true,
         render: (row) => (
-          formatDate(row?.paymentDate, locale, {year: 'numeric', month: 'short', day: '2-digit'})
+          formatDate(row?.payment_date, locale, {year: 'numeric', month: 'short', day: '2-digit'})
         )
       },
       { key: 'amount', label: 'Monto', currency: 'MXN', sortable: true },
@@ -61,7 +61,7 @@ export function PaymentsTable({
           <button
             type="button"
             className="btn btn-link p-0"
-            onClick={() => onNavigate(`/${locale}/finance/payments/${row.id}`)}
+            onClick={() => onNavigate(`/${locale}/finance/payments/${row.payment_id}`)}
           >
             {t('viewDetails')}
           </button>

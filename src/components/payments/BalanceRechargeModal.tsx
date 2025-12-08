@@ -144,8 +144,14 @@ export function BalanceRechargeModal({
 
   return (
     <>
-      <div className="modal-backdrop fade show" onClick={handleClose} />
-      <div className="modal fade show d-block" role="dialog" aria-modal="true">
+      <div className="modal-backdrop fade show"/>
+      <div
+        className={`modal fade ${isOpen ? 'show d-block' : ''}`}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        onClick={onClose}
+      >
         <div className="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
           <div className="modal-content balance-modal">
             <div className="modal-header">

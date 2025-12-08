@@ -1,8 +1,8 @@
 export interface Payment {
-  id: number
-  concept: string
-  status: string
-  paymentStatusId?: number
+  payment_id: number
+  pt_name: string
+  payment_status_name: string
+  payment_status_id?: number
   amount: number
-  paymentDate: string
+  payment_date: string
 }

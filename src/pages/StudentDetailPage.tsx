@@ -169,12 +169,12 @@ function normalizeStudent(payload: unknown): Student | null {
 function normalizePayment(item: unknown, index: number): Payment {
   const raw = (item ?? {}) as Record<string, unknown>
   return {
-    id: (raw.payment_id as number) ?? index,
-    concept: (raw.pt_name) as string,
-    status: (raw.payment_status_name) as string,
-    paymentStatusId: (raw.payment_status_id) as number,
+    payment_id: (raw.payment_id as number) ?? index,
+    pt_name: (raw.pt_name) as string,
+    payment_status_name: (raw.payment_status_name) as string,
+    payment_status_id: (raw.payment_status_id) as number,
     amount: Number(raw.amount ?? 0),
-    paymentDate: (raw.payment_date ?? '') as string,
+    payment_date: (raw.payment_date ?? '') as string,
   }
 }
 
@@ -293,7 +293,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   (value ?? 0).toLocaleString(
     locale === 'es' ? 'es-MX' : 'en-US',
     { style: 'currency', currency: 'MXN' }
-  );
+  )
 
   const paymentsPagination: DataTablePagination = useMemo(
     () => ({
@@ -407,8 +407,8 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           limit: String(paymentsPageSize),
         })
         if (paymentsSortBy) {
-          params.set('orderBy', paymentsSortBy)
-          params.set('order', paymentsSortDirection)
+          params.set('order_by', paymentsSortBy)
+          params.set('order_dir', paymentsSortDirection)
         }
 
         const response = await fetch(`${API_BASE_URL}/reports/payments?${params.toString()}`, {
@@ -455,8 +455,8 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           limit: String(requestsPageSize),
         })
         if (requestsSortBy) {
-          params.set('orderBy', requestsSortBy)
-          params.set('order', requestsSortDirection)
+          params.set('order_by', requestsSortBy)
+          params.set('order_dir', requestsSortDirection)
         }
 
         const response = await fetch(`${API_BASE_URL}/reports/paymentrequests?${params.toString()}`, {
@@ -503,8 +503,8 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           limit: String(topupsPageSize),
         })
         if (topupsSortBy) {
-          params.set('orderBy', topupsSortBy)
-          params.set('order', topupsSortDirection)
+          params.set('order_by', topupsSortBy)
+          params.set('order_dir', topupsSortDirection)
         }
 
         const response = await fetch(`${API_BASE_URL}/reports/balance-recharges?${params.toString()}`, {
@@ -655,26 +655,36 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
     setIsSaving(true)
     setStudentError(null)
 
+    const numericKeys = new Set<keyof FormState>(['school_id', 'group_id'])
     const sanitizedPayload = Object.fromEntries(
-      Object.entries(formValues).map(([key, value]) => {
-        if (typeof value === 'string') {
-          const trimmedValue = value.trim();
-          return [key, trimmedValue === '' ? null : trimmedValue];
+      formKeys.map((key) => {
+        const value = formValues[key]
+
+        if (numericKeys.has(key)) {
+          const numericValue = value === undefined || value === null ? null : Number(value)
+          return [key, Number.isNaN(numericValue) ? null : numericValue]
         }
-        return [key, value];
+
+        if (typeof value === 'string') {
+          const trimmedValue = value.trim()
+          return [key, trimmedValue === '' ? null : trimmedValue]
+        }
+
+        return [key, value ?? null]
       }),
-    );
+    )
 
     try {
       if (studentDataChanged) {
 
         const response = await fetch(
-          `${API_BASE_URL}/students/update/${encodeURIComponent(student.student_id)}?lang=${locale}`,
+          `${API_BASE_URL}/students/update/${encodeURIComponent(student.user_id)}?lang=${locale}`,
           {
             method: 'PUT',
             headers: {
-              Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
+              Accept: 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
             body: JSON.stringify(sanitizedPayload),
           },

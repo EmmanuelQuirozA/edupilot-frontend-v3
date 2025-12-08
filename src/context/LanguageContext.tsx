@@ -211,7 +211,10 @@ const translations: TranslationMap = {
     date: 'Fecha',
     mainData: 'Datos principales',
     address: 'Dirección',
-    addressHelper: 'Dirección del alumno.'
+    addressHelper: 'Dirección del alumno.',
+    generation: 'Generación',
+    class: 'Grupo',
+    level: 'Nivel',
 
   },
   en: {
@@ -419,7 +422,10 @@ const translations: TranslationMap = {
     date: 'Date',
     mainData: 'Main data',
     address: 'Address',
-    addressHelper: 'Student address.'
+    addressHelper: 'Student address.',
+    generation: 'Generation',
+    class: 'Class',
+    level: 'Level',
 
   },
 }
