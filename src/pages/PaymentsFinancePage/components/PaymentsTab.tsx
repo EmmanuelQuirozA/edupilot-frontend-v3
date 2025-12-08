@@ -161,13 +161,14 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
         key: 'student',
         label: 'student',
         sortable: true,
-        render: (content) => (
+        render: (row) => (
           <StudentTableCell
-            name={content.student_full_name}
+            name={row.student_full_name}
             fallbackName={'tableStrings.studentFallback'}
-            gradeGroup={content.grade_group}
-            scholarLevel={content.scholar_level_name}
-            nameButtonProps={{ 'aria-label': content.student_full_name }}
+            gradeGroup={row.grade_group}
+            scholarLevel={row.scholar_level_name}
+            onClick={() => onNavigate(`/${locale}/students/${row.student_id}`)}
+            nameButtonProps={{ 'aria-label': row.student_full_name }}
           />
         ),
       },
