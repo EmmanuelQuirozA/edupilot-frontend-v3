@@ -29,6 +29,12 @@ export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: 
 
   const handleLanguageChange = (nextLocale: Locale) => {
     if (nextLocale !== locale) {
+      const currentPath = window.location.pathname
+      const nextPath = /^\/(es|en)/.test(currentPath)
+        ? currentPath.replace(/^\/(es|en)/, `/${nextLocale}`)
+        : `/${nextLocale}${currentPath.startsWith('/') ? currentPath : `/${currentPath}`}`
+
+      onNavigate(nextPath)
       setLocale(nextLocale)
     }
   }
