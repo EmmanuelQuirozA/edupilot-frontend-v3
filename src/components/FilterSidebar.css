@@ -84,6 +84,37 @@
   padding-right: 0.25rem;
 }
 
+.filter-sidebar__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.filter-sidebar__checkbox {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 0.25rem;
+}
+
+.filter-sidebar__checkbox input {
+  margin-top: 0.25rem;
+}
+
+.filter-sidebar__checkbox-label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.filter-sidebar__hint {
+  margin: 0.2rem 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
 .filter-sidebar__content label {
   font-weight: 600;
   color: #0f172a;
