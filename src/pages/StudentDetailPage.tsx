@@ -14,7 +14,6 @@ import { PaymentsTable } from './StudentsDetailPage/components/PaymentsTable'
 import { RequestsTable } from './StudentsDetailPage/components/RequestsTable'
 import { TopupsTable } from './StudentsDetailPage/components/TopupsTable'
 import { Tabs } from './StudentsDetailPage/components/Tabs'
-import { showSweetAlert } from '../utils/sweetAlert'
 import type { Student, StudentCatalogs, StudentSummary } from './StudentsDetailPage/types/Student'
 import type { FormState } from './StudentsDetailPage/types/FormState'
 import type { Payment } from './StudentsDetailPage/types/Payments'
@@ -390,7 +389,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           throw new Error('missing_student')
         }
 
-        console.log(detail)
         setStudent(detail)
         setStudentSummary({
           balance: detail.balance,
@@ -644,7 +642,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
 
     setIsSaving(true)
     setStudentError(null)
-    const alerts: { title: string; payload: unknown }[] = []
+    const alerts: { payload: unknown }[] = []
 
     try {
       if (studentDataChanged) {
@@ -688,7 +686,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         }
 
         const updateResponse = await readResponsePayload(response)
-        alerts.push({ title: 'Actualización de estudiante', payload: updateResponse })
+        alerts.push({ payload: updateResponse })
 
         setStudent((prev) =>
           prev
@@ -751,7 +749,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         const response = await fetch(
           `${API_BASE_URL}/users/update/${encodeURIComponent(student.user_id)}/status?lang=${locale}`,
           {
-            method: 'PUT',
+            method: 'POST',
             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: nextStatus ? 'Activo' : 'Inactivo' }),
           },
@@ -762,18 +760,19 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         }
 
         const statusResponse = await readResponsePayload(response)
-        alerts.push({ title: 'Actualización de estado', payload: statusResponse })
+        console.log(statusResponse)
+
+        Swal.fire({
+          icon: 'error',
+          title: statusResponse?.title,
+          text: statusResponse?.message,
+        })
 
         setStudent((prev) =>
           prev ? { ...prev, user_enabled: nextStatus, isActive: nextStatus, status: nextStatus ? 'Activo' : 'Inactivo' } : prev,
         )
         setStatusDraft(nextStatus)
       }
-
-      alerts.forEach(({ title, payload }) => {
-        const text = JSON.stringify(payload, null, 2) ?? 'Sin contenido'
-        showSweetAlert({ title, text, icon: 'success' })
-      })
 
       setIsEditing(false)
     } catch {
