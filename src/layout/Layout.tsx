@@ -48,9 +48,7 @@ export function Layout({ children, onNavigate, pageTitle, breadcrumbItems = [] }
   return (
     <div className="app-shell d-flex flex-column" style={{ minHeight: '100vh' }}>
       <div className="layout-grid flex-grow-1 position-relative">
-        <div className="sidebar_container">
-          <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} onNavigate={onNavigate} />
-        </div>
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} onNavigate={onNavigate} />
         {!shouldHideContent ? (
           <div className="d-flex flex-column">
             <div className="layout-main  p-5">

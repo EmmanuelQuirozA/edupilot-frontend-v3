@@ -247,7 +247,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
   }
 
   return (
-    <aside className={`sidebar d-flex flex-column ${isOpen ? 'is-open' : ''}`}>
+    <aside className={`sidebar d-flex flex-column sidebar_container ${isOpen ? 'is-open' : 'd-none'}`}>
       <div className="d-flex align-items-center gap-3 mb-3">
         <div className="sidebar-avatar">{initial}</div>
         <div>
