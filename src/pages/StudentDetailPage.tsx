@@ -595,7 +595,39 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
       }
     }
 
+    const fetchSchools = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/schools/list?lang=${locale}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const data = (await response.json()) as unknown[]
+
+        setCatalogs((prev) => ({
+          ...prev,
+          schools: data.map((item) => {
+            const school = item as StudentCatalogs['schools'][number]
+            return {
+              ...school,
+              id: (school as { school_id?: number | string }).school_id ?? school.id,
+              label: `${(school as { commercial_name?: string }).commercial_name ?? ''}`.trim(),
+            }
+          }),
+        }))
+      } catch (fetchError) {
+        if ((fetchError as Error).name !== 'AbortError') {
+          // swallow catalog errors silently
+        }
+      }
+    }
+
     fetchGroups()
+    fetchSchools()
     return () => controller.abort()
   }, [locale, token])
 
@@ -642,7 +674,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
 
     setIsSaving(true)
     setStudentError(null)
-    const alerts: { payload: unknown }[] = []
 
     try {
       if (studentDataChanged) {
@@ -685,8 +716,13 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           throw new Error('failed_request')
         }
 
-        const updateResponse = await readResponsePayload(response)
-        alerts.push({ payload: updateResponse })
+        const updateResponse = await response.json()
+
+        Swal.fire({
+          icon: (updateResponse as { type?: "success" | "error" })?.type,
+          title: (updateResponse as { title?: string })?.title,
+          text: (updateResponse as { message?: string })?.message,
+        })
 
         setStudent((prev) =>
           prev
@@ -759,13 +795,12 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           throw new Error('failed_request')
         }
 
-        const statusResponse = await readResponsePayload(response)
-        console.log(statusResponse)
+        const statusResponse = await response.json()
 
         Swal.fire({
-          icon: 'error',
-          title: statusResponse?.title,
-          text: statusResponse?.message,
+          icon: (statusResponse as { type?: "success" | "error" })?.type,
+          title: (statusResponse as { title?: string })?.title,
+          text: (statusResponse as { message?: string })?.message,
         })
 
         setStudent((prev) =>

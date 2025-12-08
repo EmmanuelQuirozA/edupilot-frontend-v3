@@ -126,7 +126,7 @@ export function StudentInstitutionCard({
               name={name}
               value={value as string | number}
               onChange={handleSelectChange}
-              className={error ? 'select select--error' : 'select'}
+              className={ error ? 'input select select--error' : 'input select'}
             >
               <option value="">{placeholder}</option>
               {options.map((option) => (

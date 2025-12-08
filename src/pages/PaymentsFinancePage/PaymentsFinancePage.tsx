@@ -7,8 +7,6 @@ import { useLanguage } from '../../context/LanguageContext'
 import { TuitionTab } from './components/TuitionTab'
 import { PaymentsTab } from './components/PaymentsTab'
 import { PaymentRequestsTab } from './components/PaymentRequestsTab'
-// import { PaymentRecurrencesTable } from './components/PaymentRecurrencesTable'
-// import { createUrlSearchParams, handleExpiredToken } from './utils'
 
 import './PaymentsFinancePage.css'
 import { LoadingSkeleton } from '../../components/LoadingSkeleton'
@@ -45,13 +43,16 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
   )
 
   useEffect(() => {
-    if (currentPath.includes('/finance/payments')) {
-      setActiveTab('payments')
-    } else if (currentPath.includes('/finance/request')) {
-      setActiveTab('paymentRequests')
-    } else {
-      setActiveTab('tuitions')
+    const setTabs = async () => {
+      if (currentPath.includes('/finance/payments')) {
+        setActiveTab('payments')
+      } else if (currentPath.includes('/finance/request')) {
+        setActiveTab('paymentRequests')
+      } else {
+        setActiveTab('tuitions')
+      }
     }
+    setTabs()
   }, [currentPath])
 
   const handleTabChange = (key: string) => {

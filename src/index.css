@@ -27,6 +27,16 @@
   font-family: 'Inter', sans-serif;
 }
 
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 14px;
+  color: #0f172a;
+}
+
 .card.shadow-none {
   box-shadow: none !important;
 }
