@@ -8,6 +8,7 @@ import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { DataTable, type DataTableColumn } from '../components/DataTable'
 import SearchInput from '../components/ui/SearchInput';
 import Tabs from '../components/ui/Tabs';
+import StudentTableCell from '../components/ui/StudentTableCell';
 import './StudentsPage.css'
 
 interface Student {
@@ -181,17 +182,15 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
         label: 'Alumno',
         sortable: true,
         render: (student) => (
-          <button
-            type="button"
-            className="students-name-button d-flex align-items-center gap-3"
+          <StudentTableCell
+            name={student.full_name}
+            fallbackName={t('tableStrings.studentFallback')}
+            gradeGroup={student.grade_group}
+            scholarLevel={student.scholar_level_name}
+            enrollment={student.register_id}
             onClick={() => onNavigate(`/${locale}/students/${student.student_id}`)}
-          >
-            <div className="avatar-circle">{student.full_name[0]}</div>
-            <div className="d-flex flex-column align-items-start">
-              <span className="fw-semibold text-black">{student.full_name}</span>
-              <small className="text-muted">Matrícula: {student.register_id}</small>
-            </div>
-          </button>
+            nameButtonProps={{ 'aria-label': student.full_name }}
+          />
         ),
       },
       {
@@ -222,7 +221,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
         ),
       },
     ],
-    [locale, onNavigate],
+    [locale, onNavigate, t],
   )
   
   // Groups

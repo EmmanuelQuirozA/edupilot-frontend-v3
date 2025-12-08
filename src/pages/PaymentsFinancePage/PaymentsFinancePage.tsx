@@ -96,7 +96,7 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
         </div>
         {activeTab === 'tuitions' && (
           <>
-            <TuitionTab/>
+            <TuitionTab onNavigate={onNavigate} />
           </>
         )}
         {activeTab === 'paymentRequests' && (

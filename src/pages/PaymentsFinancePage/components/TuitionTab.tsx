@@ -48,7 +48,11 @@ interface DataResponse {
   totalPages: number
 }
 
-export function TuitionTab() {
+interface TuitionTabProps {
+  onNavigate: (path: string) => void
+}
+
+export function TuitionTab({ onNavigate }: TuitionTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
 
@@ -208,13 +212,14 @@ export function TuitionTab() {
         key: 'student',
         label: 'student',
         sortable: true,
-        render: (content) => (
+        render: (row) => (
           <StudentTableCell
-            name={content.student}
+            name={row.student}
             fallbackName={'tableStrings.studentFallback'}
-            gradeGroup={content.class}
-            scholarLevel={content.scholar_level_name}
-            nameButtonProps={{ 'aria-label': content.student }}
+            gradeGroup={row.class}
+            scholarLevel={row.scholar_level_name}
+            onClick={() => onNavigate(`/${locale}/students/${row.student_id}`)}
+            nameButtonProps={{ 'aria-label': row.student }}
           />
         ),
       },
@@ -257,7 +262,7 @@ export function TuitionTab() {
     }))
 
     return [...baseColumns, ...dynamicMonthColumns]
-  }, [currencyFormatter, monthColumns])
+  }, [currencyFormatter, locale, monthColumns, onNavigate])
 
   return (
     <>
