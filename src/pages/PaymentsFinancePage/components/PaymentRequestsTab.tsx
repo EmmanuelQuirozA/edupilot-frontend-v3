@@ -1,20 +1,22 @@
 import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import PaymentConceptSelect from '../../../components/catalog/PaymentConceptSelect'
-import StudentSearchDropdown from '../../../components/StudentSearchDropdown'
 import { type FilterField } from '../../../components/FilterSidebar'
 import Tabs from '../../../components/ui/Tabs'
 import { useAuth } from '../../../context/AuthContext'
 import { useLanguage } from '../../../context/LanguageContext'
 import { API_BASE_URL } from '../../../config'
+import {
+  CreatePaymentRequestModal,
+  type ApplyScope,
+  type SelectedStudent,
+} from './CreatePaymentRequestModal'
+import { initialPaymentRequestFormState } from './paymentRequestsFormState'
 import { PaymentRequestsHistory } from './PaymentRequestsHistory'
 import { PaymentRequestsScheduled } from './PaymentRequestsScheduled'
 
 interface PaymentRequestsTabProps {
   onNavigate: (path: string) => void
 }
-
-type ApplyScope = 'school' | 'group' | 'student'
 
 interface CreationResponse {
   type?: 'success' | 'error'
@@ -33,21 +35,6 @@ interface CreationResponse {
   }
 }
 
-const initialPaymentRequestFormState = {
-  payment_concept_id: '' as number | '',
-  amount: '' as number | '',
-  pay_by: '',
-  comments: '',
-  late_fee: '' as number | '',
-  fee_type: '$' as '$' | '%',
-  late_fee_frequency: '' as number | '',
-  payment_month: '',
-  partial_payment: false,
-  school_id: '',
-  group_id: '',
-  student_id: '',
-}
-
 export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
@@ -59,14 +46,7 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [applyScope, setApplyScope] = useState<ApplyScope>('school')
-  const [selectedStudent, setSelectedStudent] = useState<{ 
-    id: string; 
-    name: string;
-    register_id: string;
-    grade_group: string;
-    generation: string;
-    scholar_level_name: string;
-   } | null>(null)
+  const [selectedStudent, setSelectedStudent] = useState<SelectedStudent | null>(null)
   const [isSavingRequest, setIsSavingRequest] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [paymentRequestForm, setPaymentRequestForm] = useState({ ...initialPaymentRequestFormState })
@@ -341,41 +321,38 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
                       />
                     </svg>
                   </span>
-                  <div className="d-flex flex-column text-start">
-                    <span className="fw-semibold">{t('singleRequest')}</span>
-                    <small className="text-muted">{t('singleRequestDescription')}</small>
-                  </div>
+                  <span className="d-flex flex-column align-items-start">
+                    <span className="fw-semibold">{t('createSingleRequest')}</span>
+                    <small className="text-muted">{t('createSingleRequestDescription')}</small>
+                  </span>
                 </button>
               </li>
-
               <li>
-                <button type="button" className="dropdown-item payment-requests__create-option">
+                <button
+                  type="button"
+                  className="dropdown-item payment-requests__create-option"
+                  onClick={() => onNavigate(`/${locale}/finance/request-upload`)}
+                >
                   <span
-                    className="payment-requests__option-icon payment-requests__option-icon--scheduled"
+                    className="payment-requests__option-icon payment-requests__option-icon--mass"
                     aria-hidden="true"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" />
+                      <rect x="3" y="3" width="11" height="11" rx="3" fill="currentColor" />
+                      <rect x="10" y="10" width="11" height="11" rx="3" fill="currentColor" fillOpacity="0.7" />
                       <path
-                        d="M9 10h6M9 14h3"
+                        d="M9 8.5h6m-3 3V5.5"
                         stroke="white"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M15 4v2m-6-2v2M8 8h8"
-                        stroke="white"
-                        strokeWidth="1.6"
+                        strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
                   </span>
-                  <div className="d-flex flex-column text-start">
-                    <span className="fw-semibold">{t('scheduledRequest')}</span>
-                    <small className="text-muted">{t('scheduledRequestDescription')}</small>
-                  </div>
+                  <span className="d-flex flex-column align-items-start">
+                    <span className="fw-semibold">{t('massUpload')}</span>
+                    <small className="text-muted">{t('massUploadDescription')}</small>
+                  </span>
                 </button>
               </li>
             </ul>
@@ -383,17 +360,9 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
         </div>
 
         {activeTab === 'history' ? (
-          <PaymentRequestsHistory
-            onNavigate={onNavigate}
-            schoolOptions={schoolOptions}
-            active={activeTab === 'history'}
-            tabs={paymentRequestTabs}
-            onTabChange={setActiveTab}
-          />
+          <PaymentRequestsHistory active={activeTab === 'history'} tabs={paymentRequestTabs} onTabChange={setActiveTab} />
         ) : (
           <PaymentRequestsScheduled
-            schoolOptions={schoolOptions}
-            groupOptions={groupOptions}
             active={activeTab === 'scheduled'}
             tabs={paymentRequestTabs}
             onTabChange={setActiveTab}
@@ -401,279 +370,33 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
         )}
       </div>
 
-      {isCreateModalOpen ? (
-        <>
-          <div className="modal fade show d-block" tabIndex={-1} role="dialog" onClick={handleCloseCreateModal}>
-            <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
-              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header border-0 pb-0">
-                  <div>
-                    <p className="text-muted mb-1">Agrega solicitudes de pago para tus estudiantes.</p>
-                    <h5 className="modal-title">Agregar solicitud de pago</h5>
-                  </div>
-                  <button type="button" className="btn-close" aria-label={t('close')} onClick={handleCloseCreateModal}></button>
-                </div>
-
-                <div className="modal-body">
-                  {createError ? (
-                    <div className="alert alert-danger" role="alert">
-                      {createError}
-                    </div>
-                  ) : null}
-
-                  <form className="d-flex flex-column gap-3" onSubmit={handleCreatePaymentRequest}>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label fw-semibold" htmlFor="apply_scope">
-                          Aplicar a
-                        </label>
-                        <select
-                          id="apply_scope"
-                          className="form-select"
-                          value={applyScope}
-                          onChange={(event) => handleApplyScopeChange(event.target.value as ApplyScope)}
-                        >
-                          <option value="school">Toda la escuela</option>
-                          <option value="group">Grupo</option>
-                          <option value="student">Estudiante</option>
-                        </select>
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label fw-semibold" htmlFor="payment_concept_id">
-                          Concepto de pago
-                        </label>
-                        <PaymentConceptSelect
-                          id="payment_concept_id"
-                          lang={locale}
-                          value={paymentRequestForm.payment_concept_id}
-                          onChange={(value) => handleFormChange('payment_concept_id', value)}
-                          className="form-select"
-                        />
-                      </div>
-                    </div>
-
-
-                    {applyScope === 'school' ? (
-                      <div className="row g-3">
-                        <div className="col-md-12">
-                          <label className="form-label fw-semibold" htmlFor="school_id">
-                            Escuela
-                          </label>
-                          <select
-                            id="school_id"
-                            className="form-select"
-                            value={paymentRequestForm.school_id}
-                            onChange={(event) => handleFormChange('school_id', event.target.value)}
-                          >
-                            <option value="">Selecciona una escuela</option>
-                            {schoolOptions?.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {applyScope === 'group' ? (
-                      <div className="row g-3">
-                        <div className="col-md-12">
-                          <label className="form-label fw-semibold" htmlFor="group_id">
-                            Grupo
-                          </label>
-                          <select
-                            id="group_id"
-                            className="form-select"
-                            value={paymentRequestForm.group_id}
-                            onChange={(event) => handleFormChange('group_id', event.target.value)}
-                          >
-                            <option value="">Selecciona un grupo</option>
-                            {groupOptions?.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {applyScope === 'student' ? (
-                      <div className="row g-3">
-                        <div className="col-md-12">
-                          <StudentSearchDropdown
-                            label="Estudiante"
-                            placeholder="Buscar alumno por nombre"
-                            lang={locale}
-                            onSelect={(student) => {
-                              handleFormChange('student_id', String(student.student_id))
-                              setSelectedStudent({ 
-                                id: String(student.student_id), 
-                                name: student.full_name,
-                                register_id: String(student.register_id),
-                                grade_group: String(student.grade_group),
-                                generation: String(student.generation),
-                                scholar_level_name: String(student.scholar_level_name),
-                              })
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ) : null}
-
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label fw-semibold" htmlFor="amount">
-                          Monto solicitado
-                        </label>
-                        <input
-                          id="amount"
-                          className="form-control"
-                          type="number"
-                          inputMode="decimal"
-                          placeholder="Ej. 1200.00"
-                          value={paymentRequestForm.amount}
-                          onChange={(event) =>
-                            handleFormChange(
-                              'amount',
-                              event.target.value === '' ? '' : Number(event.target.value),
-                            )
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label fw-semibold" htmlFor="pay_by">
-                          Fecha límite de pago
-                        </label>
-                        <input
-                          id="pay_by"
-                          className="form-control"
-                          type="date"
-                          value={paymentRequestForm.pay_by}
-                          onChange={(event) => handleFormChange('pay_by', event.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label fw-semibold" htmlFor="late_fee">
-                          Recargo
-                        </label>
-                        <input
-                          id="late_fee"
-                          className="form-control"
-                          type="number"
-                          inputMode="decimal"
-                          placeholder="Ej. 1.00"
-                          value={paymentRequestForm.late_fee}
-                          onChange={(event) =>
-                            handleFormChange(
-                              'late_fee',
-                              event.target.value === '' ? '' : Number(event.target.value),
-                            )
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label fw-semibold" htmlFor="fee_type">
-                          Tipo de recargo
-                        </label>
-                        <select
-                          id="fee_type"
-                          className="form-select"
-                          value={paymentRequestForm.fee_type}
-                          onChange={(event) => handleFormChange('fee_type', event.target.value as '$' | '%')}
-                        >
-                          <option value="$">$</option>
-                          <option value="%">%</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label fw-semibold" htmlFor="late_fee_frequency">
-                          Frecuencia de recargo (días)
-                        </label>
-                        <input
-                          id="late_fee_frequency"
-                          className="form-control"
-                          type="number"
-                          inputMode="numeric"
-                          placeholder="Ej. 1"
-                          value={paymentRequestForm.late_fee_frequency}
-                          onChange={(event) =>
-                            handleFormChange(
-                              'late_fee_frequency',
-                              event.target.value === '' ? '' : Number(event.target.value),
-                            )
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label fw-semibold" htmlFor="payment_month">
-                          Mes de pago
-                        </label>
-                        <input
-                          id="payment_month"
-                          className="form-control"
-                          type="month"
-                          value={paymentRequestForm.payment_month}
-                          onChange={(event) => handleFormChange('payment_month', event.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="d-flex align-items-center gap-2">
-                      <input
-                        id="partial_payment"
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={paymentRequestForm.partial_payment}
-                        onChange={(event) => handleFormChange('partial_payment', event.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="partial_payment">
-                        Permitir pago parcial
-                      </label>
-                    </div>
-
-                    <div>
-                      <label className="form-label fw-semibold" htmlFor="comments">
-                        Comentarios
-                      </label>
-                      <textarea
-                        id="comments"
-                        className="form-control"
-                        rows={3}
-                        placeholder="Ej. Colegiatura junio nuevo"
-                        value={paymentRequestForm.comments}
-                        onChange={(event) => handleFormChange('comments', event.target.value)}
-                      />
-                    </div>
-
-                    <div className="d-flex align-items-center justify-content-end gap-2">
-                      <button type="button" className="btn btn-link" onClick={handleCloseCreateModal}>
-                        Cancelar
-                      </button>
-                      <button type="submit" className="btn btn-primary" disabled={isSavingRequest}>
-                        {isSavingRequest ? t('saving') : 'Crear solicitudes'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="modal-backdrop fade show"></div>
-        </>
-      ) : null}
+      <CreatePaymentRequestModal
+        applyScope={applyScope}
+        createError={createError}
+        groupOptions={groupOptions}
+        isOpen={isCreateModalOpen}
+        isSavingRequest={isSavingRequest}
+        locale={locale}
+        onApplyScopeChange={handleApplyScopeChange}
+        onClose={handleCloseCreateModal}
+        onFormChange={handleFormChange}
+        onStudentSelect={(student) => {
+          handleFormChange('student_id', String(student.student_id))
+          setSelectedStudent({
+            id: String(student.student_id),
+            name: student.full_name,
+            register_id: String(student.register_id),
+            grade_group: String(student.grade_group),
+            generation: String(student.generation),
+            scholar_level_name: String(student.scholar_level_name),
+          })
+        }}
+        onSubmit={handleCreatePaymentRequest}
+        paymentRequestForm={paymentRequestForm}
+        schoolOptions={schoolOptions}
+        selectedStudent={selectedStudent}
+        t={t}
+      />
     </>
   )
 }
