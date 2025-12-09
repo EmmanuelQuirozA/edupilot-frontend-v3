@@ -29,3 +29,77 @@
   background-color: #0d6efd;
   border-color: #0d6efd;
 }
+
+.payment-requests__create-dropdown .dropdown-toggle::after {
+  display: none;
+}
+
+.payment-requests__create-dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border-radius: 0.9rem;
+  border: none;
+  background: linear-gradient(135deg, #1fb6ff, #1976d2);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(25, 118, 210, 0.35);
+}
+
+.payment-requests__create-dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.25);
+}
+
+.payment-requests__create-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+.payment-requests__create-dropdown .dropdown-menu {
+  min-width: 320px;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  border: none;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+}
+
+.payment-requests__create-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0.75rem;
+  border-radius: 0.9rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  white-space: normal;
+}
+
+.payment-requests__create-option + .payment-requests__create-option {
+  margin-top: 0.35rem;
+}
+
+.payment-requests__create-option:hover,
+.payment-requests__create-option:focus {
+  background-color: #f5f8ff;
+  box-shadow: inset 0 0 0 1px rgba(25, 118, 210, 0.12);
+}
+
+.payment-requests__option-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.9rem;
+  color: #4b7bec;
+  background: rgba(75, 123, 236, 0.12);
+}
+
+.payment-requests__option-icon--scheduled {
+  color: #06b7a2;
+  background: rgba(6, 183, 162, 0.12);
+}
