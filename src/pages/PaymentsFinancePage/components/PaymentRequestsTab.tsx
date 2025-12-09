@@ -59,7 +59,14 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [applyScope, setApplyScope] = useState<ApplyScope>('school')
-  const [selectedStudent, setSelectedStudent] = useState<{ id: string; name: string } | null>(null)
+  const [selectedStudent, setSelectedStudent] = useState<{ 
+    id: string; 
+    name: string;
+    register_id: string;
+    grade_group: string;
+    generation: string;
+    scholar_level_name: string;
+   } | null>(null)
   const [isSavingRequest, setIsSavingRequest] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [paymentRequestForm, setPaymentRequestForm] = useState({ ...initialPaymentRequestFormState })
@@ -232,14 +239,13 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
       late_fee_frequency: paymentRequestForm.late_fee_frequency === '' ? undefined : Number(paymentRequestForm.late_fee_frequency),
       payment_month: paymentRequestForm.payment_month || undefined,
       partial_payment: paymentRequestForm.partial_payment,
-      [targetKey]: paymentRequestForm[targetKey] ? Number(paymentRequestForm[targetKey]) : undefined,
     }
 
     setIsSavingRequest(true)
     setCreateError(null)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/payment-requests/create?lang=${locale}`, {
+      const response = await fetch(`${API_BASE_URL}/payment-requests/create?lang=${locale}&${[targetKey]}=${paymentRequestForm[targetKey] ? Number(paymentRequestForm[targetKey]) : undefined}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -397,9 +403,9 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
 
       {isCreateModalOpen ? (
         <>
-          <div className="modal fade show d-block" tabIndex={-1} role="dialog">
+          <div className="modal fade show d-block" tabIndex={-1} role="dialog" onClick={handleCloseCreateModal}>
             <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
-              <div className="modal-content">
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header border-0 pb-0">
                   <div>
                     <p className="text-muted mb-1">Agrega solicitudes de pago para tus estudiantes.</p>
@@ -503,24 +509,16 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
                             lang={locale}
                             onSelect={(student) => {
                               handleFormChange('student_id', String(student.student_id))
-                              setSelectedStudent({ id: String(student.student_id), name: student.full_name })
+                              setSelectedStudent({ 
+                                id: String(student.student_id), 
+                                name: student.full_name,
+                                register_id: String(student.register_id),
+                                grade_group: String(student.grade_group),
+                                generation: String(student.generation),
+                                scholar_level_name: String(student.scholar_level_name),
+                              })
                             }}
                           />
-                          {selectedStudent ? (
-                            <div className="d-flex align-items-center justify-content-between mt-2">
-                              <span className="small text-muted">Seleccionado: {selectedStudent.name}</span>
-                              <button
-                                type="button"
-                                className="btn btn-link btn-sm text-decoration-none"
-                                onClick={() => {
-                                  setSelectedStudent(null)
-                                  handleFormChange('student_id', '')
-                                }}
-                              >
-                                Limpiar
-                              </button>
-                            </div>
-                          ) : null}
                         </div>
                       </div>
                     ) : null}

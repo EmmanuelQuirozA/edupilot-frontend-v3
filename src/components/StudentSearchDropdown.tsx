@@ -50,7 +50,6 @@ export function StudentSearchDropdown({
 }: StudentSearchDropdownProps) {
   const { token } = useAuth()
   const [query, setQuery] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [results, setResults] = useState<StudentSearchItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -58,17 +57,13 @@ export function StudentSearchDropdown({
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
-  const [selectedStudent, setSelectedStudent] = useState<StudentSearchItem | null>(null)
+  const [selectedName, setSelectedName] = useState('')
+  const [stuendtDetail, setStuendtDetail] = useState('')
 
   const fetchUrl = useMemo(
-    () => buildStudentsUrl(debouncedQuery, lang, pageSize),
-    [lang, pageSize, debouncedQuery],
+    () => buildStudentsUrl(query, lang, pageSize),
+    [lang, pageSize, query],
   )
-
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedQuery(query), 500)
-    return () => clearTimeout(handler)
-  }, [query])
 
   useEffect(() => {
     if (!isOpen || !token) return
@@ -126,14 +121,8 @@ export function StudentSearchDropdown({
     setDebounceTimer(
       setTimeout(() => {
         setIsOpen(true)
-      }, 500),
+      }, 300),
     )
-  }
-
-  const getStudentLabel = (student: StudentSearchItem | null) => {
-    if (!student) return placeholder
-
-    return `Matrícula: ${student.register_id} • ${student.grade_group} • ${student.generation} • ${student.scholar_level_name}`
   }
 
   const renderResult = (student: StudentSearchItem) => (
@@ -143,14 +132,15 @@ export function StudentSearchDropdown({
       className="student-search__option"
       onClick={() => {
         onSelect(student)
-        setSelectedStudent(student)
+        setSelectedName(student.full_name)
+        setStuendtDetail('Matrícula: '+ student.register_id + ' • ' + student.grade_group + ' • ' + student.generation + ' • ' + student.scholar_level_name)
         setIsOpen(false)
         setQuery('')
       }}
     >
       <div className="student-search__name">{student.full_name}</div>
       <div className="student-search__meta">
-        <span>Matrícula: {student.register_id}</span>
+        <span>Matrícula: {student.payment_reference}</span>
         <span>
           {student.generation} • {student.grade_group} • {student.scholar_level_name}
         </span>
@@ -177,12 +167,13 @@ export function StudentSearchDropdown({
             })
           }
         >
-          <span
-            className={`student-search__trigger-text ${!selectedStudent ? 'text-muted' : ''}`}
-          >
-            {getStudentLabel(selectedStudent)}
+          <span className={`student-search__trigger-text ${!selectedName ? 'text-muted' : ''}`}>
+            {selectedName || placeholder}
           </span>
         </button>
+        <div className="d-flex align-items-center justify-content-between mt-2">
+          <span className="small text-muted">{stuendtDetail}</span>
+        </div>
       </label>
 
       {isOpen && (
