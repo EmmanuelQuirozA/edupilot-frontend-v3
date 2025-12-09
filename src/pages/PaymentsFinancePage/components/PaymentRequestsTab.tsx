@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../../../config'
 import { DataTable, type DataTableColumn } from '../../../components/DataTable'
 import SearchInput from '../../../components/ui/SearchInput';
 import StudentTableCell from '../../../components/ui/StudentTableCell';
+import Tabs from '../../../components/ui/Tabs'
 import { formatDate } from '../../../utils/formatDate';
 import { FilterSidebar, type FilterField, type FilterValues } from '../../../components/FilterSidebar'
 
@@ -49,6 +50,8 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
 
+  const [activeTab, setActiveTab] = useState<'history' | 'scheduled'>('history')
+
   // 
   const [rows, setRows] = useState<ResultsColumns[]>([])
   const [Page, setPage] = useState(0)
@@ -64,6 +67,14 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [schoolOptions, setSchoolOptions] = useState<FilterField['options']>([])
   const [appliedFilters, setAppliedFilters] = useState<FilterValues>({})
+
+  const paymentRequestTabs = useMemo(
+    () => [
+      { key: 'history', label: t('historyTab') },
+      { key: 'scheduled', label: t('scheduledTab') },
+    ],
+    [t],
+  )
 
   const activeFiltersCount = useMemo(
     () =>
@@ -128,7 +139,7 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
   )
 
   useEffect(() => {
-    if (!token) return
+    if (!token || activeTab !== 'history') return
 
     const controller = new AbortController()
 
@@ -160,11 +171,11 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     fetchSchools()
 
     return () => controller.abort()
-  }, [locale, token])
+  }, [activeTab, locale, token])
 
   // fetch data
   useEffect(() => {
-    if (!token) return
+    if (!token || activeTab !== 'history') return
 
     const controller = new AbortController()
 
@@ -241,7 +252,7 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     fetchData()
 
     return () => controller.abort()
-  }, [appliedFilters, appliedSearch, OrderBy, OrderDir, Page, PageSize, locale, t, token])
+  }, [appliedFilters, appliedSearch, OrderBy, OrderDir, Page, PageSize, activeTab, locale, t, token])
 
   const handleSearchSubmit = () => {
     setAppliedSearch(searchTerm)
@@ -337,79 +348,97 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
             {error}
           </div>
         ) : null}
-      
-        <>
-          <div className="card shadow-sm border-0">
-            <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
-              <SearchInput
-                value={searchTerm}
-                onChange={(val) => setSearchTerm(val)}
-                onSubmit={handleSearchSubmit}
-                onClear={handleClearSearch}
-                placeholder={t("searchByStudent")}
-                className="flex-grow-1"
-                inputClassName="w-100"
-              />
-              <button
-                type="button"
-                className="students-filter-button"
-                onClick={() => setFiltersOpen(true)}
-              >
-                <svg
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                  className="students-filter-button__icon"
-                  focusable="false"
+
+        <div className="card shadow-sm border-0">
+          <div className="card-body d-flex flex-column gap-3">
+            <Tabs
+              tabs={paymentRequestTabs}
+              activeKey={activeTab}
+              onSelect={(key) => setActiveTab(key as 'history' | 'scheduled')}
+            />
+          </div>
+        </div>
+
+        {activeTab === 'history' ? (
+          <>
+            <div className="card shadow-sm border-0">
+              <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
+                <SearchInput
+                  value={searchTerm}
+                  onChange={(val) => setSearchTerm(val)}
+                  onSubmit={handleSearchSubmit}
+                  onClear={handleClearSearch}
+                  placeholder={t("searchByStudent")}
+                  className="flex-grow-1"
+                  inputClassName="w-100"
+                />
+                <button
+                  type="button"
+                  className="students-filter-button"
+                  onClick={() => setFiltersOpen(true)}
                 >
-                  <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
-                </svg>
-                <span className="fw-semibold">Filtros</span>
-                {activeFiltersCount > 0 ? (
-                  <span className="badge bg-primary rounded-pill ms-2">
-                    {activeFiltersCount}
-                  </span>
-                ) : null}
-              </button>
+                  <svg
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                    className="students-filter-button__icon"
+                    focusable="false"
+                  >
+                    <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
+                  </svg>
+                  <span className="fw-semibold">Filtros</span>
+                  {activeFiltersCount > 0 ? (
+                    <span className="badge bg-primary rounded-pill ms-2">
+                      {activeFiltersCount}
+                    </span>
+                  ) : null}
+                </button>
+              </div>
+            </div>
+
+            <DataTable
+              columns={groupColumns}
+              data={rows}
+              isLoading={isLoading}
+              emptyMessage={t('tableNoData')}
+              pagination={{
+                page: Page,
+                size: PageSize,
+                totalPages: TotalPages,
+                totalElements: TotalElements,
+                onPageChange: (nextPage) =>
+                  setPage(Math.max(0, Math.min(TotalPages - 1, nextPage))),
+              }}
+              sortBy={OrderBy}
+              sortDirection={OrderDir}
+              onSort={(columnKey) => handleSort(columnKey as keyof ResultsColumns)}
+            />
+
+            <FilterSidebar
+              title="Filtrar reportes"
+              subtitle="Aplica filtros para refinar la búsqueda"
+              isOpen={filtersOpen}
+              onClose={() => setFiltersOpen(false)}
+              onClear={() => {
+                setAppliedFilters({})
+                setPage(0)
+                setFiltersOpen(false)
+              }}
+              onApply={(values) => {
+                setAppliedFilters(values ?? {})
+                setPage(0)
+                setFiltersOpen(false)
+              }}
+              fields={filterFields}
+              initialValues={appliedFilters}
+            />
+          </>
+        ) : (
+          <div className="card shadow-sm border-0">
+            <div className="card-body">
+              <p className="mb-0">{t('scheduledRequestsPlaceholder')}</p>
             </div>
           </div>
-
-          <DataTable
-            columns={groupColumns}
-            data={rows}
-            isLoading={isLoading}
-            emptyMessage={t('tableNoData')}
-            pagination={{
-              page: Page,
-              size: PageSize,
-              totalPages: TotalPages,
-              totalElements: TotalElements,
-              onPageChange: (nextPage) =>
-                setPage(Math.max(0, Math.min(TotalPages - 1, nextPage))),
-            }}
-            sortBy={OrderBy}
-            sortDirection={OrderDir}
-            onSort={(columnKey) => handleSort(columnKey as keyof ResultsColumns)}
-          />
-
-          <FilterSidebar
-            title="Filtrar reportes"
-            subtitle="Aplica filtros para refinar la búsqueda"
-            isOpen={filtersOpen}
-            onClose={() => setFiltersOpen(false)}
-            onClear={() => {
-              setAppliedFilters({})
-              setPage(0)
-              setFiltersOpen(false)
-            }}
-            onApply={(values) => {
-              setAppliedFilters(values ?? {})
-              setPage(0)
-              setFiltersOpen(false)
-            }}
-            fields={filterFields}
-            initialValues={appliedFilters}
-          />
-        </>
+        )}
       </div>
     </>
   )
