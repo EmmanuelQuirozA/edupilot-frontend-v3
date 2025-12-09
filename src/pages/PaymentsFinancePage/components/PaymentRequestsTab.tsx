@@ -1,6 +1,5 @@
 import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import Swal from 'sweetalert2'
 import PaymentConceptSelect from '../../../components/catalog/PaymentConceptSelect'
 import StudentSearchDropdown from '../../../components/StudentSearchDropdown'
 import { type FilterField } from '../../../components/FilterSidebar'
@@ -285,104 +284,95 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
   return (
     <>
       <div className="students-page d-flex flex-column gap-3">
-        {error ? (
-          <div className="alert alert-danger" role="alert">
-            {error}
-          </div>
-        ) : null}
 
-        <div className="card shadow-sm border-0">
-          <div className="card-body">
-            <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-              <Tabs
-                tabs={paymentRequestTabs}
-                activeKey={activeTab}
-                onSelect={(key) => setActiveTab(key as 'history' | 'scheduled')}
-              />
+        <div className='d-flex justify-content-between'>
+          <Tabs
+            tabs={paymentRequestTabs}
+            activeKey={activeTab}
+            onSelect={(key) => setActiveTab(key as 'history' | 'scheduled')}
+          />
 
-              <div className="dropdown payment-requests__create-dropdown">
+          <div className="dropdown payment-requests__create-dropdown">
+            <button
+              className="btn payment-requests__create-dropdown-toggle dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <span className="payment-requests__create-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 5v14M5 12h14"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <span className="fw-semibold">{t('createPaymentRequest')}</span>
+            </button>
+
+            <ul className="dropdown-menu dropdown-menu-end shadow-sm">
+              <li>
                 <button
-                  className="btn payment-requests__create-dropdown-toggle dropdown-toggle"
                   type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
+                  className="dropdown-item payment-requests__create-option"
+                  onClick={handleOpenCreateModal}
                 >
-                  <span className="payment-requests__create-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <span
+                    className="payment-requests__option-icon payment-requests__option-icon--single"
+                    aria-hidden="true"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" />
                       <path
-                        d="M12 5v14M5 12h14"
-                        stroke="currentColor"
+                        d="M12 8v8M8 12h8"
+                        stroke="white"
                         strokeWidth="1.6"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
                   </span>
-                  <span className="fw-semibold">{t('createPaymentRequest')}</span>
+                  <div className="d-flex flex-column text-start">
+                    <span className="fw-semibold">{t('singleRequest')}</span>
+                    <small className="text-muted">{t('singleRequestDescription')}</small>
+                  </div>
                 </button>
+              </li>
 
-                <ul className="dropdown-menu dropdown-menu-end shadow-sm">
-                  <li>
-                    <button
-                      type="button"
-                      className="dropdown-item payment-requests__create-option"
-                      onClick={handleOpenCreateModal}
-                    >
-                      <span
-                        className="payment-requests__option-icon payment-requests__option-icon--single"
-                        aria-hidden="true"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
-                          <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" />
-                          <path
-                            d="M12 8v8M8 12h8"
-                            stroke="white"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </span>
-                      <div className="d-flex flex-column text-start">
-                        <span className="fw-semibold">{t('singleRequest')}</span>
-                        <small className="text-muted">{t('singleRequestDescription')}</small>
-                      </div>
-                    </button>
-                  </li>
-
-                  <li>
-                    <button type="button" className="dropdown-item payment-requests__create-option">
-                      <span
-                        className="payment-requests__option-icon payment-requests__option-icon--scheduled"
-                        aria-hidden="true"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
-                          <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" />
-                          <path
-                            d="M9 10h6M9 14h3"
-                            stroke="white"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                          <path
-                            d="M15 4v2m-6-2v2M8 8h8"
-                            stroke="white"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </span>
-                      <div className="d-flex flex-column text-start">
-                        <span className="fw-semibold">{t('scheduledRequest')}</span>
-                        <small className="text-muted">{t('scheduledRequestDescription')}</small>
-                      </div>
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </div>
+              <li>
+                <button type="button" className="dropdown-item payment-requests__create-option">
+                  <span
+                    className="payment-requests__option-icon payment-requests__option-icon--scheduled"
+                    aria-hidden="true"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" />
+                      <path
+                        d="M9 10h6M9 14h3"
+                        stroke="white"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M15 4v2m-6-2v2M8 8h8"
+                        stroke="white"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                  <div className="d-flex flex-column text-start">
+                    <span className="fw-semibold">{t('scheduledRequest')}</span>
+                    <small className="text-muted">{t('scheduledRequestDescription')}</small>
+                  </div>
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -457,6 +447,84 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
                       </div>
                     </div>
 
+
+                    {applyScope === 'school' ? (
+                      <div className="row g-3">
+                        <div className="col-md-12">
+                          <label className="form-label fw-semibold" htmlFor="school_id">
+                            Escuela
+                          </label>
+                          <select
+                            id="school_id"
+                            className="form-select"
+                            value={paymentRequestForm.school_id}
+                            onChange={(event) => handleFormChange('school_id', event.target.value)}
+                          >
+                            <option value="">Selecciona una escuela</option>
+                            {schoolOptions?.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {applyScope === 'group' ? (
+                      <div className="row g-3">
+                        <div className="col-md-12">
+                          <label className="form-label fw-semibold" htmlFor="group_id">
+                            Grupo
+                          </label>
+                          <select
+                            id="group_id"
+                            className="form-select"
+                            value={paymentRequestForm.group_id}
+                            onChange={(event) => handleFormChange('group_id', event.target.value)}
+                          >
+                            <option value="">Selecciona un grupo</option>
+                            {groupOptions?.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {applyScope === 'student' ? (
+                      <div className="row g-3">
+                        <div className="col-md-12">
+                          <StudentSearchDropdown
+                            label="Estudiante"
+                            placeholder="Buscar alumno por nombre"
+                            lang={locale}
+                            onSelect={(student) => {
+                              handleFormChange('student_id', String(student.student_id))
+                              setSelectedStudent({ id: String(student.student_id), name: student.full_name })
+                            }}
+                          />
+                          {selectedStudent ? (
+                            <div className="d-flex align-items-center justify-content-between mt-2">
+                              <span className="small text-muted">Seleccionado: {selectedStudent.name}</span>
+                              <button
+                                type="button"
+                                className="btn btn-link btn-sm text-decoration-none"
+                                onClick={() => {
+                                  setSelectedStudent(null)
+                                  handleFormChange('student_id', '')
+                                }}
+                              >
+                                Limpiar
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ) : null}
+
                     <div className="row g-3">
                       <div className="col-md-6">
                         <label className="form-label fw-semibold" htmlFor="amount">
@@ -491,83 +559,6 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
                         />
                       </div>
                     </div>
-
-                    {applyScope === 'school' ? (
-                      <div className="row g-3">
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold" htmlFor="school_id">
-                            Escuela
-                          </label>
-                          <select
-                            id="school_id"
-                            className="form-select"
-                            value={paymentRequestForm.school_id}
-                            onChange={(event) => handleFormChange('school_id', event.target.value)}
-                          >
-                            <option value="">Selecciona una escuela</option>
-                            {schoolOptions?.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {applyScope === 'group' ? (
-                      <div className="row g-3">
-                        <div className="col-md-6">
-                          <label className="form-label fw-semibold" htmlFor="group_id">
-                            Grupo
-                          </label>
-                          <select
-                            id="group_id"
-                            className="form-select"
-                            value={paymentRequestForm.group_id}
-                            onChange={(event) => handleFormChange('group_id', event.target.value)}
-                          >
-                            <option value="">Selecciona un grupo</option>
-                            {groupOptions?.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {applyScope === 'student' ? (
-                      <div className="row g-3">
-                        <div className="col-md-8">
-                          <StudentSearchDropdown
-                            label="Estudiante"
-                            placeholder="Buscar alumno por nombre"
-                            lang={locale}
-                            onSelect={(student) => {
-                              handleFormChange('student_id', String(student.student_id))
-                              setSelectedStudent({ id: String(student.student_id), name: student.full_name })
-                            }}
-                          />
-                          {selectedStudent ? (
-                            <div className="d-flex align-items-center justify-content-between mt-2">
-                              <span className="small text-muted">Seleccionado: {selectedStudent.name}</span>
-                              <button
-                                type="button"
-                                className="btn btn-link btn-sm text-decoration-none"
-                                onClick={() => {
-                                  setSelectedStudent(null)
-                                  handleFormChange('student_id', '')
-                                }}
-                              >
-                                Limpiar
-                              </button>
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-                    ) : null}
 
                     <div className="row g-3">
                       <div className="col-md-6">

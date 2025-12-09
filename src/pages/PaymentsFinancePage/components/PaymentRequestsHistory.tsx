@@ -4,7 +4,6 @@ import { DataTable, type DataTableColumn } from '../../../components/DataTable'
 import { FilterSidebar, type FilterField, type FilterValues } from '../../../components/FilterSidebar'
 import SearchInput from '../../../components/ui/SearchInput'
 import StudentTableCell from '../../../components/ui/StudentTableCell'
-import Tabs from '../../../components/ui/Tabs'
 import { useAuth } from '../../../context/AuthContext'
 import { useLanguage } from '../../../context/LanguageContext'
 import { formatDate } from '../../../utils/formatDate'
@@ -56,8 +55,6 @@ export function PaymentRequestsHistory({
   onNavigate,
   schoolOptions,
   active,
-  tabs,
-  onTabChange,
 }: PaymentRequestsHistoryProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
@@ -240,23 +237,20 @@ export function PaymentRequestsHistory({
   const groupColumns: Array<DataTableColumn<ResultsColumns>> = useMemo(
     () => [
       { key: 'payment_request_id', label: 'ID', sortable: true },
-      { key: 'payment_reference', label: 'Referencia de pago', sortable: true },
       {
         key: 'student_full_name',
         label: 'student',
         sortable: true,
-        render: (content) => <StudentTableCell studentId={content.student_id} name={content.student_full_name} />,
-      },
-      { key: 'generation', label: 'generation', sortable: true },
-      {
-        key: 'scholar_level_name',
-        label: 'scholar_level_name',
-        sortable: true,
-      },
-      {
-        key: 'grade_group',
-        label: 'grade',
-        sortable: true,
+        render: (row) => (
+          <StudentTableCell
+            name={row.student_full_name}
+            fallbackName={'tableStrings.studentFallback'}
+            gradeGroup={row.grade_group}
+            scholarLevel={row.scholar_level_name}
+            onClick={() => onNavigate(`/${locale}/students/${row.student_id}`)}
+            nameButtonProps={{ 'aria-label': row.student_full_name }}
+          />
+        ),
       },
       {
         key: 'ps_pr_name',
@@ -308,7 +302,6 @@ export function PaymentRequestsHistory({
 
       <div className="card shadow-sm border-0">
         <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
-          <Tabs tabs={tabs} activeKey="history" onSelect={(key) => onTabChange(key as 'history' | 'scheduled')} />
 
           <SearchInput
             value={searchTerm}

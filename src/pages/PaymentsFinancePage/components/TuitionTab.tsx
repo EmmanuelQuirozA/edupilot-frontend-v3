@@ -392,7 +392,7 @@ export function TuitionTab({ onNavigate }: TuitionTabProps) {
 
   return (
     <>
-      <div className="students-page d-flex flex-column gap-3">
+      <>
         {error ? (
           <div className="alert alert-danger" role="alert">
             {error}
@@ -491,7 +491,7 @@ export function TuitionTab({ onNavigate }: TuitionTabProps) {
             initialValues={appliedFilters}
           />
         </>
-      </div>
+      </>
     </>
   )
 }

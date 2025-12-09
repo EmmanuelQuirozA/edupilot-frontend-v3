@@ -139,7 +139,7 @@ export function StudentSearchDropdown({
   return (
     <div className="student-search" ref={dropdownRef}>
       <label className="form-label d-flex flex-column gap-1 w-100">
-        <span className="text-muted small">{label}</span>
+        <span>{label}</span>
         <input
           type="text"
           value={query}

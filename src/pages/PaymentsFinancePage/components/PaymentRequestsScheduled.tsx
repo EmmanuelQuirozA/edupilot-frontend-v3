@@ -4,7 +4,6 @@ import { DataTable, type DataTableColumn } from '../../../components/DataTable'
 import { FilterSidebar, type FilterField, type FilterValues } from '../../../components/FilterSidebar'
 import SearchInput from '../../../components/ui/SearchInput'
 import StudentSearchDropdown from '../../../components/StudentSearchDropdown'
-import Tabs from '../../../components/ui/Tabs'
 import { useAuth } from '../../../context/AuthContext'
 import { useLanguage } from '../../../context/LanguageContext'
 import { formatDate } from '../../../utils/formatDate'
@@ -42,8 +41,6 @@ export function PaymentRequestsScheduled({
   schoolOptions,
   groupOptions,
   active,
-  tabs,
-  onTabChange,
 }: PaymentRequestsScheduledProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
@@ -313,7 +310,6 @@ export function PaymentRequestsScheduled({
       <div className="card shadow-sm border-0">
         <div className="card-body d-flex flex-column gap-3">
           <div className="d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
-            <Tabs tabs={tabs} activeKey="scheduled" onSelect={(key) => onTabChange(key as 'history' | 'scheduled')} />
 
             <div className="d-flex flex-column flex-md-row gap-3 flex-grow-1">
               <SearchInput
@@ -354,156 +350,155 @@ export function PaymentRequestsScheduled({
               {scheduledExporting ? 'Exportando...' : 'Exportar CSV'}
             </button>
           </div>
-
-          <DataTable
-            columns={scheduledColumns}
-            data={scheduledRows}
-            isLoading={scheduledIsLoading}
-            emptyMessage={t('tableNoData')}
-            pagination={{
-              page: scheduledPage,
-              size: DEFAULT_PAGE_SIZE,
-              totalPages: scheduledTotalPages,
-              totalElements: scheduledTotalElements,
-              onPageChange: (nextPage) =>
-                setScheduledPage(Math.max(0, Math.min(scheduledTotalPages - 1, nextPage))),
-            }}
-            sortBy={''}
-            sortDirection={'ASC'}
-          />
-
-          <FilterSidebar
-            title="Filtrar programadas"
-            subtitle="Aplica filtros para refinar reportes programados"
-            isOpen={scheduledFiltersOpen}
-            onClose={() => setScheduledFiltersOpen(false)}
-            onClear={() => {
-              setScheduledFilters({})
-              setAppliedScheduledFilters({})
-              setScheduledFilterStudent(null)
-              setAppliedScheduledStudent(null)
-              setScheduledPage(0)
-              setScheduledFiltersOpen(false)
-            }}
-            onApply={() => {
-              setAppliedScheduledFilters(scheduledFilters)
-              setAppliedScheduledStudent(scheduledFilterStudent)
-              setScheduledPage(0)
-              setScheduledFiltersOpen(false)
-            }}
-          >
-            <div className="d-flex flex-column gap-3">
-              <div className="filter-sidebar__field">
-                <label htmlFor="rule_name">Regla</label>
-                <input
-                  id="rule_name"
-                  className="form-control"
-                  placeholder="Ej. Colegiatura"
-                  type="text"
-                  value={(scheduledFilters.rule_name as string) ?? ''}
-                  onChange={(event) => setScheduledFilters((prev) => ({ ...prev, rule_name: event.target.value }))}
-                />
-              </div>
-
-              <div className="filter-sidebar__field">
-                <label htmlFor="school_id">Escuela</label>
-                <select
-                  id="school_id"
-                  className="form-select"
-                  value={(scheduledFilters.school_id as string) ?? ''}
-                  onChange={(event) => setScheduledFilters((prev) => ({ ...prev, school_id: event.target.value }))}
-                >
-                  <option value="">Selecciona una escuela</option>
-                  {schoolOptions?.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="filter-sidebar__field">
-                <label htmlFor="group_id">Grupo</label>
-                <select
-                  id="group_id"
-                  className="form-select"
-                  value={(scheduledFilters.group_id as string) ?? ''}
-                  onChange={(event) => setScheduledFilters((prev) => ({ ...prev, group_id: event.target.value }))}
-                >
-                  <option value="">Selecciona un grupo</option>
-                  {groupOptions?.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="filter-sidebar__field">
-                <StudentSearchDropdown
-                  label="Alumno"
-                  placeholder="Buscar alumno por nombre"
-                  lang={locale}
-                  onSelect={(student) => {
-                    setScheduledFilters((prev) => ({ ...prev, student_id: String(student.student_id) }))
-                    setScheduledFilterStudent({ id: String(student.student_id), name: student.full_name })
-                  }}
-                />
-                {scheduledFilterStudent ? (
-                  <div className="d-flex align-items-center justify-content-between mt-2">
-                    <span className="small text-muted">Seleccionado: {scheduledFilterStudent.name}</span>
-                    <button
-                      type="button"
-                      className="btn btn-link btn-sm text-decoration-none"
-                      onClick={() => {
-                        setScheduledFilterStudent(null)
-                        setScheduledFilters((prev) => ({ ...prev, student_id: '' }))
-                      }}
-                    >
-                      Quitar
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="filter-sidebar__field">
-                <label htmlFor="due_start">Fecha inicio</label>
-                <input
-                  id="due_start"
-                  className="form-control"
-                  placeholder="YYYY-MM-DD"
-                  type="date"
-                  value={(scheduledFilters.due_start as string) ?? ''}
-                  onChange={(event) => setScheduledFilters((prev) => ({ ...prev, due_start: event.target.value }))}
-                />
-              </div>
-
-              <div className="filter-sidebar__field">
-                <label htmlFor="due_end">Fecha fin</label>
-                <input
-                  id="due_end"
-                  className="form-control"
-                  placeholder="YYYY-MM-DD"
-                  type="date"
-                  value={(scheduledFilters.due_end as string) ?? ''}
-                  onChange={(event) => setScheduledFilters((prev) => ({ ...prev, due_end: event.target.value }))}
-                />
-              </div>
-
-              <label className="filter-sidebar__checkbox">
-                <input
-                  type="checkbox"
-                  checked={Boolean(scheduledFilters.active)}
-                  onChange={(event) => setScheduledFilters((prev) => ({ ...prev, active: event.target.checked }))}
-                />
-                <div>
-                  <span className="filter-sidebar__checkbox-label">Solo activas</span>
-                </div>
-              </label>
-            </div>
-          </FilterSidebar>
         </div>
       </div>
+      <DataTable
+        columns={scheduledColumns}
+        data={scheduledRows}
+        isLoading={scheduledIsLoading}
+        emptyMessage={t('tableNoData')}
+        pagination={{
+          page: scheduledPage,
+          size: DEFAULT_PAGE_SIZE,
+          totalPages: scheduledTotalPages,
+          totalElements: scheduledTotalElements,
+          onPageChange: (nextPage) =>
+            setScheduledPage(Math.max(0, Math.min(scheduledTotalPages - 1, nextPage))),
+        }}
+        sortBy={''}
+        sortDirection={'ASC'}
+      />
+
+      <FilterSidebar
+        title="Filtrar programadas"
+        subtitle="Aplica filtros para refinar reportes programados"
+        isOpen={scheduledFiltersOpen}
+        onClose={() => setScheduledFiltersOpen(false)}
+        onClear={() => {
+          setScheduledFilters({})
+          setAppliedScheduledFilters({})
+          setScheduledFilterStudent(null)
+          setAppliedScheduledStudent(null)
+          setScheduledPage(0)
+          setScheduledFiltersOpen(false)
+        }}
+        onApply={() => {
+          setAppliedScheduledFilters(scheduledFilters)
+          setAppliedScheduledStudent(scheduledFilterStudent)
+          setScheduledPage(0)
+          setScheduledFiltersOpen(false)
+        }}
+      >
+        <div className="d-flex flex-column gap-3">
+          <div className="filter-sidebar__field">
+            <label htmlFor="rule_name">Regla</label>
+            <input
+              id="rule_name"
+              className="form-control"
+              placeholder="Ej. Colegiatura"
+              type="text"
+              value={(scheduledFilters.rule_name as string) ?? ''}
+              onChange={(event) => setScheduledFilters((prev) => ({ ...prev, rule_name: event.target.value }))}
+            />
+          </div>
+
+          <div className="filter-sidebar__field">
+            <label htmlFor="school_id">Escuela</label>
+            <select
+              id="school_id"
+              className="form-select"
+              value={(scheduledFilters.school_id as string) ?? ''}
+              onChange={(event) => setScheduledFilters((prev) => ({ ...prev, school_id: event.target.value }))}
+            >
+              <option value="">Selecciona una escuela</option>
+              {schoolOptions?.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-sidebar__field">
+            <label htmlFor="group_id">Grupo</label>
+            <select
+              id="group_id"
+              className="form-select"
+              value={(scheduledFilters.group_id as string) ?? ''}
+              onChange={(event) => setScheduledFilters((prev) => ({ ...prev, group_id: event.target.value }))}
+            >
+              <option value="">Selecciona un grupo</option>
+              {groupOptions?.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-sidebar__field">
+            <StudentSearchDropdown
+              label="Alumno"
+              placeholder="Buscar alumno por nombre"
+              lang={locale}
+              onSelect={(student) => {
+                setScheduledFilters((prev) => ({ ...prev, student_id: String(student.student_id) }))
+                setScheduledFilterStudent({ id: String(student.student_id), name: student.full_name })
+              }}
+            />
+            {scheduledFilterStudent ? (
+              <div className="d-flex align-items-center justify-content-between mt-2">
+                <span className="small text-muted">Seleccionado: {scheduledFilterStudent.name}</span>
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm text-decoration-none"
+                  onClick={() => {
+                    setScheduledFilterStudent(null)
+                    setScheduledFilters((prev) => ({ ...prev, student_id: '' }))
+                  }}
+                >
+                  Quitar
+                </button>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="filter-sidebar__field">
+            <label htmlFor="due_start">Fecha inicio</label>
+            <input
+              id="due_start"
+              className="form-control"
+              placeholder="YYYY-MM-DD"
+              type="date"
+              value={(scheduledFilters.due_start as string) ?? ''}
+              onChange={(event) => setScheduledFilters((prev) => ({ ...prev, due_start: event.target.value }))}
+            />
+          </div>
+
+          <div className="filter-sidebar__field">
+            <label htmlFor="due_end">Fecha fin</label>
+            <input
+              id="due_end"
+              className="form-control"
+              placeholder="YYYY-MM-DD"
+              type="date"
+              value={(scheduledFilters.due_end as string) ?? ''}
+              onChange={(event) => setScheduledFilters((prev) => ({ ...prev, due_end: event.target.value }))}
+            />
+          </div>
+
+          <label className="filter-sidebar__checkbox">
+            <input
+              type="checkbox"
+              checked={Boolean(scheduledFilters.active)}
+              onChange={(event) => setScheduledFilters((prev) => ({ ...prev, active: event.target.checked }))}
+            />
+            <div>
+              <span className="filter-sidebar__checkbox-label">Solo activas</span>
+            </div>
+          </label>
+        </div>
+      </FilterSidebar>
     </>
   )
 }

@@ -77,7 +77,7 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
   }
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('paymentsFinance')} breadcrumbItems={breadcrumbItems}>
-      <div className="d-flex flex-column gap-3">
+      <div className="students-page d-flex flex-column gap-3">
         {error ? (
           <div className="alert alert-danger" role="alert">
             {error}
@@ -85,8 +85,7 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
         ) : null}
 
         <div className="students-page__header  border-0">
-          <div className="card-body d-flex flex-column gap-3 flex-lg-row align-items-lg-center justify-content-lg-between">
-            
+          <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
             <Tabs
               tabs={tabs}
               activeKey={activeTab}
