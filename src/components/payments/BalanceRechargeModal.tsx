@@ -152,7 +152,10 @@ export function BalanceRechargeModal({
         aria-modal="true"
         onClick={onClose}
       >
-        <div className="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
+        <div 
+          className="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="modal-content balance-modal">
             <div className="modal-header">
               <h5 className="modal-title">Añadir saldo a favor</h5>
