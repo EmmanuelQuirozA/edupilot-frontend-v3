@@ -50,6 +50,7 @@ export function StudentSearchDropdown({
 }: StudentSearchDropdownProps) {
   const { token } = useAuth()
   const [query, setQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [results, setResults] = useState<StudentSearchItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -57,12 +58,17 @@ export function StudentSearchDropdown({
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
-  const [selectedName, setSelectedName] = useState('')
+  const [selectedStudent, setSelectedStudent] = useState<StudentSearchItem | null>(null)
 
   const fetchUrl = useMemo(
-    () => buildStudentsUrl(query, lang, pageSize),
-    [lang, pageSize, query],
+    () => buildStudentsUrl(debouncedQuery, lang, pageSize),
+    [lang, pageSize, debouncedQuery],
   )
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedQuery(query), 500)
+    return () => clearTimeout(handler)
+  }, [query])
 
   useEffect(() => {
     if (!isOpen || !token) return
@@ -120,8 +126,14 @@ export function StudentSearchDropdown({
     setDebounceTimer(
       setTimeout(() => {
         setIsOpen(true)
-      }, 300),
+      }, 500),
     )
+  }
+
+  const getStudentLabel = (student: StudentSearchItem | null) => {
+    if (!student) return placeholder
+
+    return `Matrícula: ${student.register_id} • ${student.grade_group} • ${student.generation} • ${student.scholar_level_name}`
   }
 
   const renderResult = (student: StudentSearchItem) => (
@@ -131,14 +143,14 @@ export function StudentSearchDropdown({
       className="student-search__option"
       onClick={() => {
         onSelect(student)
-        setSelectedName(student.full_name)
+        setSelectedStudent(student)
         setIsOpen(false)
         setQuery('')
       }}
     >
       <div className="student-search__name">{student.full_name}</div>
       <div className="student-search__meta">
-        <span>Matrícula: {student.payment_reference}</span>
+        <span>Matrícula: {student.register_id}</span>
         <span>
           {student.generation} • {student.grade_group} • {student.scholar_level_name}
         </span>
@@ -165,8 +177,10 @@ export function StudentSearchDropdown({
             })
           }
         >
-          <span className={`student-search__trigger-text ${!selectedName ? 'text-muted' : ''}`}>
-            {selectedName || placeholder}
+          <span
+            className={`student-search__trigger-text ${!selectedStudent ? 'text-muted' : ''}`}
+          >
+            {getStudentLabel(selectedStudent)}
           </span>
         </button>
       </label>
