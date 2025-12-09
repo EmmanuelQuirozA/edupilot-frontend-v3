@@ -84,6 +84,24 @@ export function TuitionTab({ onNavigate }: TuitionTabProps) {
   const [schoolOptions, setSchoolOptions] = useState<FilterField['options']>([])
   const [appliedFilters, setAppliedFilters] = useState<FilterValues>({})
 
+  const activeFiltersCount = useMemo(
+    () =>
+      Object.values(appliedFilters).reduce((count, value) => {
+        if (value === undefined || value === null) return count
+
+        if (typeof value === 'string') {
+          return value.trim() ? count + 1 : count
+        }
+
+        if (typeof value === 'boolean') {
+          return value ? count + 1 : count
+        }
+
+        return count
+      }, 0),
+    [appliedFilters],
+  )
+
   const filterFields: FilterField[] = useMemo(
     () => [
       {
@@ -418,6 +436,11 @@ export function TuitionTab({ onNavigate }: TuitionTabProps) {
                     <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
                   </svg>
                   <span className="fw-semibold">Filtros</span>
+                  {activeFiltersCount > 0 ? (
+                    <span className="badge bg-primary rounded-pill ms-2">
+                      {activeFiltersCount}
+                    </span>
+                  ) : null}
                 </button>
               </div>
             </div>
