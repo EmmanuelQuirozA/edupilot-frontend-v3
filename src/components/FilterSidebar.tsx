@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import './FilterSidebar.css'
 
-type FilterFieldType = 'text' | 'select' | 'checkbox'
+type FilterFieldType = 'text' | 'select' | 'checkbox' | 'month'
 
 interface FilterOption {
   label: string
@@ -132,6 +132,7 @@ export function FilterSidebar({
             id={field.key}
             className="form-control"
             placeholder={field.placeholder}
+            type={field.type === 'month' ? 'month' : 'text'}
             value={(values[field.key] as string) ?? ''}
             onChange={(event) => handleFieldChange(field.key, event.target.value)}
           />

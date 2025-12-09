@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../../../config'
 import { DataTable, type DataTableColumn } from '../../../components/DataTable'
 import SearchInput from '../../../components/ui/SearchInput';
 import StudentTableCell from '../../../components/ui/StudentTableCell';
+import { FilterSidebar, type FilterField, type FilterValues } from '../../../components/FilterSidebar'
 
 type OrderDirection = 'ASC' | 'DESC'
 
@@ -76,9 +77,72 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
-  
+
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [appliedFilters, setAppliedFilters] = useState<FilterValues>({})
+
   const [OrderBy, setOrderBy] = useState('')
   const [OrderDir, setOrderDir] = useState<OrderDirection>('ASC')
+
+  const filterFields: FilterField[] = useMemo(
+    () => [
+      {
+        key: 'payment_id',
+        label: 'ID de pago',
+        placeholder: 'Ej. 123',
+        type: 'text',
+      },
+      {
+        key: 'payment_request_id',
+        label: 'ID de solicitud de pago',
+        placeholder: 'Ej. 456',
+        type: 'text',
+      },
+      {
+        key: 'student_full_name',
+        label: 'Nombre del estudiante',
+        placeholder: 'Ej. Emma',
+        type: 'text',
+      },
+      {
+        key: 'payment_reference',
+        label: 'Referencia de pago',
+        placeholder: 'Ej. 1376',
+        type: 'text',
+      },
+      {
+        key: 'generation',
+        label: 'Generación',
+        placeholder: 'Ej. 2023',
+        type: 'text',
+      },
+      {
+        key: 'grade_group',
+        label: 'Grupo',
+        placeholder: 'Ej. 4A',
+        type: 'text',
+      },
+      {
+        key: 'pt_name',
+        label: 'Método de pago',
+        placeholder: 'Ej. cole',
+        type: 'text',
+      },
+      {
+        key: 'scholar_level_name',
+        label: 'Nivel escolar',
+        placeholder: 'Ej. Primaria',
+        type: 'text',
+      },
+      {
+        key: 'payment_month',
+        label: 'Mes de pago',
+        placeholder: 'Selecciona un mes',
+        type: 'month',
+      },
+    ],
+    [],
+  )
 
   // fetch data
   useEffect(() => {
@@ -100,8 +164,51 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
           order_dir: OrderDir,
         })
 
+        const paymentId = String(appliedFilters.payment_id ?? '').trim()
+        if (paymentId) {
+          params.set('payment_id', paymentId)
+        }
+
+        const paymentRequestId = String(appliedFilters.payment_request_id ?? '').trim()
+        if (paymentRequestId) {
+          params.set('payment_request_id', paymentRequestId)
+        }
+
+        const filterStudentName = String(appliedFilters.student_full_name ?? '').trim()
         if (appliedSearch) {
           params.set('student_full_name', appliedSearch)
+        } else if (filterStudentName) {
+          params.set('student_full_name', filterStudentName)
+        }
+
+        const paymentReference = String(appliedFilters.payment_reference ?? '').trim()
+        if (paymentReference) {
+          params.set('payment_reference', paymentReference)
+        }
+
+        const generation = String(appliedFilters.generation ?? '').trim()
+        if (generation) {
+          params.set('generation', generation)
+        }
+
+        const gradeGroup = String(appliedFilters.grade_group ?? '').trim()
+        if (gradeGroup) {
+          params.set('grade_group', gradeGroup)
+        }
+
+        const paymentType = String(appliedFilters.pt_name ?? '').trim()
+        if (paymentType) {
+          params.set('pt_name', paymentType)
+        }
+
+        const scholarLevel = String(appliedFilters.scholar_level_name ?? '').trim()
+        if (scholarLevel) {
+          params.set('scholar_level_name', scholarLevel)
+        }
+
+        const paymentMonth = String(appliedFilters.payment_month ?? '').trim()
+        if (paymentMonth) {
+          params.set('payment_month', `${paymentMonth}-01`)
         }
 
         const response = await fetch(`${API_BASE_URL}/reports/payments?${params.toString()}`, {
@@ -131,7 +238,7 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
     fetchData()
 
     return () => controller.abort()
-  }, [appliedSearch, OrderBy, OrderDir, Page, PageSize, locale, t, token])
+  }, [appliedFilters, appliedSearch, OrderBy, OrderDir, Page, PageSize, locale, t, token])
 
   const handleSearchSubmit = () => {
     setAppliedSearch(searchTerm)
@@ -232,7 +339,11 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
                 className="flex-grow-1"
                 inputClassName="w-100"
               />
-              <button type="button" className="students-filter-button">
+              <button
+                type="button"
+                className="students-filter-button"
+                onClick={() => setFiltersOpen(true)}
+              >
                 <svg
                   viewBox="0 0 20 20"
                   aria-hidden="true"
@@ -262,6 +373,25 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
             sortBy={OrderBy}
             sortDirection={OrderDir}
             onSort={(columnKey) => handleSort(columnKey as keyof ResultsColumns)}
+          />
+
+          <FilterSidebar
+            title="Filtrar reportes"
+            subtitle="Aplica filtros para refinar la búsqueda"
+            isOpen={filtersOpen}
+            onClose={() => setFiltersOpen(false)}
+            onClear={() => {
+              setAppliedFilters({})
+              setPage(0)
+              setFiltersOpen(false)
+            }}
+            onApply={(values) => {
+              setAppliedFilters(values ?? {})
+              setPage(0)
+              setFiltersOpen(false)
+            }}
+            fields={filterFields}
+            initialValues={appliedFilters}
           />
         </>
       </div>

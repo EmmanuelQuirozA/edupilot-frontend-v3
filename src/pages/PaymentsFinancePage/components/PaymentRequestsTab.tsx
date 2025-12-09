@@ -6,6 +6,7 @@ import { DataTable, type DataTableColumn } from '../../../components/DataTable'
 import SearchInput from '../../../components/ui/SearchInput';
 import StudentTableCell from '../../../components/ui/StudentTableCell';
 import { formatDate } from '../../../utils/formatDate';
+import { FilterSidebar, type FilterField, type FilterValues } from '../../../components/FilterSidebar'
 
 type OrderDirection = 'ASC' | 'DESC'
 
@@ -59,9 +60,89 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
+
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [schoolOptions, setSchoolOptions] = useState<FilterField['options']>([])
+  const [appliedFilters, setAppliedFilters] = useState<FilterValues>({})
   
   const [OrderBy, setOrderBy] = useState('')
   const [OrderDir, setOrderDir] = useState<OrderDirection>('ASC')
+
+  const filterFields: FilterField[] = useMemo(
+    () => [
+      {
+        key: 'payment_reference',
+        label: 'Referencia de pago',
+        placeholder: 'Ej. 123',
+        type: 'text',
+      },
+      {
+        key: 'generation',
+        label: 'Generación',
+        placeholder: 'Ej. 2024',
+        type: 'text',
+      },
+      {
+        key: 'grade_group',
+        label: 'Grupo',
+        placeholder: 'Ej. 6-A',
+        type: 'text',
+      },
+      {
+        key: 'school_id',
+        label: 'Escuela',
+        placeholder: 'Selecciona una escuela',
+        type: 'select',
+        options: schoolOptions,
+      },
+      {
+        key: 'group_status',
+        label: 'Grupo activo',
+        type: 'checkbox',
+      },
+      {
+        key: 'user_status',
+        label: 'Usuario activo',
+        type: 'checkbox',
+      },
+    ],
+    [schoolOptions],
+  )
+
+  useEffect(() => {
+    if (!token) return
+
+    const controller = new AbortController()
+
+    const fetchSchools = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/schools/list?lang=${locale}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const data = (await response.json()) as Array<{ school_id?: number | string; commercial_name?: string }>
+        setSchoolOptions(
+          data.map((item) => ({
+            value: String(item.school_id ?? ''),
+            label: item.commercial_name ?? '',
+          })),
+        )
+      } catch (fetchError) {
+        if ((fetchError as Error).name !== 'AbortError') {
+          console.error('Unable to fetch schools list', fetchError)
+        }
+      }
+    }
+
+    fetchSchools()
+
+    return () => controller.abort()
+  }, [locale, token])
 
   // fetch data
   useEffect(() => {
@@ -85,6 +166,34 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
 
         if (appliedSearch) {
           params.set('student_full_name', appliedSearch)
+        }
+
+        const paymentReference = String(appliedFilters.payment_reference ?? '').trim()
+        if (paymentReference) {
+          params.set('payment_reference', paymentReference)
+        }
+
+        const gradeGroup = String(appliedFilters.grade_group ?? '').trim()
+        if (gradeGroup) {
+          params.set('grade_group', gradeGroup)
+        }
+
+        const generation = String(appliedFilters.generation ?? '').trim()
+        if (generation) {
+          params.set('generation', generation)
+        }
+
+        const schoolId = String(appliedFilters.school_id ?? '').trim()
+        if (schoolId) {
+          params.set('school_id', schoolId)
+        }
+
+        if (appliedFilters.group_status === true) {
+          params.set('group_status', 'true')
+        }
+
+        if (appliedFilters.user_status === true) {
+          params.set('user_status', 'true')
         }
 
         const response = await fetch(`${API_BASE_URL}/reports/paymentrequests?${params.toString()}`, {
@@ -114,7 +223,7 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     fetchData()
 
     return () => controller.abort()
-  }, [appliedSearch, OrderBy, OrderDir, Page, PageSize, locale, t, token])
+  }, [appliedFilters, appliedSearch, OrderBy, OrderDir, Page, PageSize, locale, t, token])
 
   const handleSearchSubmit = () => {
     setAppliedSearch(searchTerm)
@@ -223,7 +332,11 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
                 className="flex-grow-1"
                 inputClassName="w-100"
               />
-              <button type="button" className="students-filter-button">
+              <button
+                type="button"
+                className="students-filter-button"
+                onClick={() => setFiltersOpen(true)}
+              >
                 <svg
                   viewBox="0 0 20 20"
                   aria-hidden="true"
@@ -253,6 +366,25 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
             sortBy={OrderBy}
             sortDirection={OrderDir}
             onSort={(columnKey) => handleSort(columnKey as keyof ResultsColumns)}
+          />
+
+          <FilterSidebar
+            title="Filtrar reportes"
+            subtitle="Aplica filtros para refinar la búsqueda"
+            isOpen={filtersOpen}
+            onClose={() => setFiltersOpen(false)}
+            onClear={() => {
+              setAppliedFilters({})
+              setPage(0)
+              setFiltersOpen(false)
+            }}
+            onApply={(values) => {
+              setAppliedFilters(values ?? {})
+              setPage(0)
+              setFiltersOpen(false)
+            }}
+            fields={filterFields}
+            initialValues={appliedFilters}
           />
         </>
       </div>
