@@ -29,12 +29,15 @@ interface StudentSearchResponse {
 
 const buildStudentsUrl = (query: string, lang: string, size: number) => {
   const params = new URLSearchParams()
-  params.set('page', '0')
-  params.set('size', String(size))
   params.set('lang', lang)
+  params.set('offset', '0')
+  params.set('limit', String(size))
+  params.set('export_all', 'false')
+
   if (query.trim()) {
-    params.set('search', query.trim())
+    params.set('full_name', query.trim())
   }
+
   return `${API_BASE_URL}/students?${params.toString()}`
 }
 
