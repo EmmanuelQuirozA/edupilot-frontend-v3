@@ -24,6 +24,7 @@ import { StudentDetailPage } from "./pages/StudentDetailPage";
 import { PaymentsFinancePage } from "./pages/PaymentsFinancePage/PaymentsFinancePage";
 import { PaymentDetailPage } from "./pages/PaymentsFinancePage/PaymentDetailPage";
 import { PaymentRequestDetailPage } from "./pages/PaymentsFinancePage/PaymentRequestDetailPage";
+import { PaymentRequestUploadResultPage } from "./pages/PaymentsFinancePage/PaymentRequestUploadResultPage";
 
 import { LoadingSkeleton } from "./components/LoadingSkeleton";
 import { Layout } from "./layout/Layout";
@@ -114,7 +115,7 @@ function Router() {
   const isStudentsPath = /^\/(es|en)\/students$/.test(path);
   const studentDetailMatch = path.match(/^\/(es|en)\/students\/(\d+)$/);
   const isStudentDetailPath = Boolean(studentDetailMatch);
-  const financeMatch = path.match(/^\/(es|en)\/finance(?:\/(payments|request)(?:\/(\d+))?)?$/);
+  const financeMatch = path.match(/^\/(es|en)\/finance(?:\/(payments|request|request-upload)(?:\/(\d+))?)?$/);
   const isFinancePath = Boolean(financeMatch);
   const financeSection = financeMatch?.[2];
   const financeEntityId = financeMatch?.[3];
@@ -173,6 +174,15 @@ function Router() {
         <PaymentRequestDetailPage
           onNavigate={navigate}
           paymentRequestId={Number(financeEntityId)}
+        />
+      );
+    }
+
+    if (isFinancePath && financeSection === 'request-upload' && financeEntityId) {
+      return (
+        <PaymentRequestUploadResultPage
+          onNavigate={navigate}
+          massUploadId={Number(financeEntityId)}
         />
       );
     }
