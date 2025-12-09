@@ -43,7 +43,7 @@ const buildStudentsUrl = (query: string, lang: string, size: number) => {
 
 export function StudentSearchDropdown({
   onSelect,
-  placeholder = 'Buscar por nombre',
+  placeholder = 'Buscar alumno por nombre',
   label = 'Buscar alumno',
   lang = 'es',
   pageSize = 10,
@@ -56,6 +56,8 @@ export function StudentSearchDropdown({
   const [error, setError] = useState<string | null>(null)
   const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
+  const [selectedName, setSelectedName] = useState('')
 
   const fetchUrl = useMemo(
     () => buildStudentsUrl(query, lang, pageSize),
@@ -104,6 +106,12 @@ export function StudentSearchDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    if (isOpen) {
+      searchInputRef.current?.focus()
+    }
+  }, [isOpen])
+
   const handleInputChange = (value: string) => {
     setQuery(value)
     if (debounceTimer) {
@@ -123,7 +131,9 @@ export function StudentSearchDropdown({
       className="student-search__option"
       onClick={() => {
         onSelect(student)
+        setSelectedName(student.full_name)
         setIsOpen(false)
+        setQuery('')
       }}
     >
       <div className="student-search__name">{student.full_name}</div>
@@ -140,18 +150,39 @@ export function StudentSearchDropdown({
     <div className="student-search" ref={dropdownRef}>
       <label className="form-label d-flex flex-column gap-1 w-100">
         <span className="text-muted small">{label}</span>
-        <input
-          type="text"
-          value={query}
-          className="form-control"
-          placeholder={placeholder}
-          onFocus={() => setIsOpen(true)}
-          onChange={(e) => handleInputChange(e.target.value)}
-        />
+        <button
+          type="button"
+          className={`student-search__trigger form-control text-start ${
+            isOpen ? 'student-search__trigger--open' : ''
+          }`}
+          onClick={() =>
+            setIsOpen((prev) => {
+              const next = !prev
+              if (next) {
+                setQuery('')
+              }
+              return next
+            })
+          }
+        >
+          <span className={`student-search__trigger-text ${!selectedName ? 'text-muted' : ''}`}>
+            {selectedName || placeholder}
+          </span>
+        </button>
       </label>
 
       {isOpen && (
         <div className="student-search__dropdown">
+          <div className="student-search__search-bar">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={query}
+              className="form-control"
+              placeholder={placeholder}
+              onChange={(e) => handleInputChange(e.target.value)}
+            />
+          </div>
           {loading && <div className="student-search__message">Buscando...</div>}
           {error && <div className="student-search__message text-danger">{error}</div>}
           {!loading && !error && results.length === 0 && (
