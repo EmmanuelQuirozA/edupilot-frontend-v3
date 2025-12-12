@@ -232,6 +232,16 @@ const translations: TranslationMap = {
     generation: 'Generación',
     class: 'Grupo',
     level: 'Nivel',
+    'status-1': 'Sin validar',
+    'status-2': 'Validación pendiente',
+    'status-3': 'Validado',
+    'status-4': 'Rechazado',
+    'status-5': 'Pagado',
+    'status-6': 'Sin pagar',
+    'status-7': 'Cerrado',
+    'status-8': 'Cancelado',
+    'partialPayment-0': 'No',
+    'partialPayment-1': 'Sí',
 
   },
   en: {
@@ -460,6 +470,17 @@ const translations: TranslationMap = {
     generation: 'Generation',
     class: 'Class',
     level: 'Level',
+    'status-1': 'Not validated',
+    'status-2': 'Pending validation',
+    'status-3': 'Validated',
+    'status-4': 'Rejected',
+    'status-5': 'Paid',
+    'status-6': 'Unpaid',
+    'status-7': 'Closed',
+    'status-8': 'Canceled',
+    'partialPayment-0': 'No',
+    'partialPayment-1': 'Yes',
+
 
   },
 }

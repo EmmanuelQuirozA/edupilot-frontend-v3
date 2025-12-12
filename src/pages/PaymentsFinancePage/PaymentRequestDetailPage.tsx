@@ -279,6 +279,8 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
 
   const isDateField = (field: string | null) => (field ? ['pay_by'].includes(field) : false)
   const isMonthField = (field: string | null) => (field ? ['payment_month'].includes(field) : false)
+  const isStatusField = (field: string | null) => (field ? ['payment_status_id'].includes(field) : false)
+  const isPartialPayment = (field: string | null) => (field ? ['partial_payment'].includes(field) : false)
 
 
   const toDateInputValue = (value: string | null) => {
@@ -1020,7 +1022,11 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
                                           ? formatDate(change.from, locale, { dateStyle: 'medium', timeStyle: 'short' })
                                           : isMonthField(change.field) 
                                             ? formatDate(change.from, locale, {year: 'numeric', month: 'long'})
-                                            : change.from ?? '—'
+                                            : isStatusField(change.field)  ?
+                                            t("status-"+change.from) 
+                                            : isPartialPayment(change.field)  ?
+                                            t("partialPayment-"+change.from) :
+                                            change.from ?? '—'
                                       }
                                       {" → "}
                                       {
@@ -1028,7 +1034,11 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
                                           ? formatDate(change.to, locale, { dateStyle: 'medium', timeStyle: 'short' })
                                           : isMonthField(change.field) 
                                             ? formatDate(change.to, locale, {year: 'numeric', month: 'long'})
-                                            : change.to ?? '—'
+                                            : isStatusField(change.field)  ?
+                                            t("status-"+change.to)
+                                            : isPartialPayment(change.field)  ?
+                                            t("partialPayment-"+change.to) :
+                                            change.from ?? '—'
                                       }
                                   </li>
                                 ))}

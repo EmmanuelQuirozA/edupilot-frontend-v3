@@ -28,6 +28,7 @@ interface ScheduledDataResponse {
 }
 
 interface PaymentRequestsScheduledProps {
+  onNavigate: (path: string) => void
   schoolOptions: FilterField['options']
   groupOptions: FilterField['options']
   active: boolean
@@ -38,6 +39,7 @@ interface PaymentRequestsScheduledProps {
 const DEFAULT_PAGE_SIZE = 10
 
 export function PaymentRequestsScheduled({
+  onNavigate,
   schoolOptions,
   groupOptions,
   active,
@@ -207,8 +209,22 @@ export function PaymentRequestsScheduled({
         sortable: true,
         render: (row) => (row.active ? 'Sí' : 'No'),
       },
+      {
+        key: 'actions',
+        label: t('tableActions'),
+        sortable: false,
+        render: (row) => (
+          <button
+            type="button"
+            className="btn btn-link p-0"
+            onClick={() => onNavigate(`/${locale}/finance/scheduled/${row.payment_request_scheduled_id}`)}
+          >
+            {t('viewDetails')}
+          </button>
+        ),
+      },
     ],
-    [locale],
+    [locale, onNavigate, t],
   )
 
   const handleScheduledExport = async () => {

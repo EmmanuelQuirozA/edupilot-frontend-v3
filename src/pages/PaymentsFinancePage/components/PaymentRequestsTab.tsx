@@ -360,9 +360,18 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
         </div>
 
         {activeTab === 'history' ? (
-          <PaymentRequestsHistory active={activeTab === 'history'} tabs={paymentRequestTabs} onTabChange={setActiveTab} />
+          <PaymentRequestsHistory
+            onNavigate={onNavigate}
+            schoolOptions={schoolOptions}
+            active={activeTab === 'history'}
+            tabs={paymentRequestTabs}
+            onTabChange={setActiveTab}
+          />
         ) : (
           <PaymentRequestsScheduled
+            onNavigate={onNavigate}
+            schoolOptions={schoolOptions}
+            groupOptions={groupOptions}
             active={activeTab === 'scheduled'}
             tabs={paymentRequestTabs}
             onTabChange={setActiveTab}

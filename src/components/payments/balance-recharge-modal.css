@@ -52,6 +52,7 @@
   width: 100%;
   font-size: 18px;
   font-weight: 700;
+  background-color: transparent;
 }
 
 .balance-recharge-modal__input input:disabled {

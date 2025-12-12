@@ -59,8 +59,8 @@ interface PaymentDetail {
 
 interface PaymentLogChange {
   field: string | null
-  from: string | null
-  to: string | null
+  from: string
+  to: string
   comments: string | null
 }
 
@@ -420,6 +420,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
 
   const isDateField = (field: string | null) => (field ? ['payment_date', 'created_at'].includes(field) : false)
   const isMonthField = (field: string | null) => (field ? ['payment_month'].includes(field) : false)
+  const isStatusField = (field: string | null) => (field ? ['payment_status_id'].includes(field) : false)
 
   const toDateTimeLocalValue = (value: string) => {
     if (!value) return ''
@@ -1036,7 +1037,9 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                                     ? formatDate(change.from, locale, { dateStyle: 'medium', timeStyle: 'short' })
                                     : isMonthField(change.field) 
                                       ? formatDate(change.from, locale, {year: 'numeric', month: 'long'})
-                                      : change.from ?? '—'
+                                      : isStatusField(change.field)  ?
+                                      t("status-"+change.from) :
+                                      change.from ?? '—'
                                 }
                                 {" → "}
                                 {
@@ -1044,7 +1047,9 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                                     ? formatDate(change.to, locale, { dateStyle: 'medium', timeStyle: 'short' })
                                     : isMonthField(change.field) 
                                       ? formatDate(change.to, locale, {year: 'numeric', month: 'long'})
-                                      : change.to ?? '—'
+                                      : isStatusField(change.field)  ?
+                                      t("status-"+change.to) : 
+                                      change.to ?? '—'
                                 }
                             </li>
                           ))}
