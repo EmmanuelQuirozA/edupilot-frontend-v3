@@ -217,7 +217,7 @@ export function PaymentRequestsScheduled({
           <button
             type="button"
             className="btn btn-link p-0"
-            onClick={() => onNavigate(`/${locale}/finance/scheduled/${row.payment_request_scheduled_id}`)}
+            onClick={() => onNavigate(`/${locale}/finance/request/scheduled/${row.payment_request_scheduled_id}`)}
           >
             {t('viewDetails')}
           </button>

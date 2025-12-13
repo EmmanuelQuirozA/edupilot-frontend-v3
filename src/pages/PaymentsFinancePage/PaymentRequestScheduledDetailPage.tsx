@@ -117,9 +117,9 @@ interface ScheduledLogEntry {
 
 function DetailRow({ label, value }: { label: string; value: string | number | null }) {
   return (
-    <div className="d-flex flex-column">
-      <span className="text-muted small text-uppercase fw-semibold">{label}</span>
-      <span className="fw-semibold">{value ?? '-'}</span>
+    <div className="col-md-3">
+      <div className="text-muted small mb-1">{label}</div>
+      <div className="fw-semibold">{value ?? '-'}</div>
     </div>
   )
 }
@@ -448,52 +448,54 @@ export function PaymentRequestScheduledDetailPage({
         </div>
       ) : requestDetail ? (
         <div className="d-flex flex-column gap-4">
-          <div className="card shadow-sm border-0">
-            <div className="card-body d-flex flex-column gap-3">
+          <div className="card">
+            <div className="card-body">
               <div className="d-flex flex-wrap gap-3 align-items-center justify-content-between">
                 <div className="d-flex flex-column">
                   <span className="text-muted text-uppercase small fw-semibold">{t('scheduledTab')}</span>
-                  <h2 className="h5 mb-0">{requestDetail.rule_name}</h2>
+                  <h5> #{requestDetail.payment_request_scheduled_id} - {requestDetail.rule_name}</h5>
                 </div>
                 <Badge label={requestDetail.active ? 'Activa' : 'Inactiva'} variant={requestDetail.active ? 'success' : 'secondary'} />
               </div>
+            </div>
+          </div>
 
-              <div className="row g-3">
-                <div className="col-12 col-lg-7">
-                  <div className="card shadow-sm border-0 h-100">
-                    <div className="card-body d-flex flex-column gap-3">
-                      <span className="text-muted small text-uppercase fw-semibold">Programación</span>
-                      <div className="d-flex flex-wrap gap-4">
-                        <DetailRow label={t('concept')} value={requestDetail.payment_concept} />
-                        <DetailRow label={t('amount')} value={currencyFormatter.format(requestDetail.amount)} />
-                        <DetailRow
-                          label="Inicio"
-                          value={formatDate(requestDetail.start_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
-                        />
-                        <DetailRow
-                          label="Próxima ejecución"
-                          value={formatDate(requestDetail.next_execution_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
-                        />
-                        <DetailRow label="Periodicidad" value={`${requestDetail.period_name} (${requestDetail.interval_count})`} />
-                        <DetailRow label="Ventana de pago (días)" value={requestDetail.payment_window} />
-                        <DetailRow label={t('late_fee')} value={`${currencyFormatter.format(requestDetail.late_fee)} (${requestDetail.fee_type})`} />
-                        <DetailRow label={t('comments')} value={requestDetail.comments || t('noInformation')} />
-                      </div>
-                    </div>
+          <div className="row g-3">
+            <div className="col-12 col-lg-7">
+              <div className="card shadow-sm border-0 h-100">
+                <div className='d-flex align-items-center justify-content-between card-header border-bottom-0 bg-white'>
+                  <h5>Programación</h5>
+                </div>
+                <div className="card-body d-flex flex-column gap-3">
+                  <div className="d-flex flex-wrap gap-4">
+                    <DetailRow label={t('concept')} value={requestDetail.payment_concept} />
+                    <DetailRow
+                      label="Inicio"
+                      value={formatDate(requestDetail.start_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
+                    />
+                    <DetailRow
+                      label="Próxima ejecución"
+                      value={formatDate(requestDetail.next_execution_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
+                    />
+                    <DetailRow label="Periodicidad" value={`${requestDetail.period_name} (${requestDetail.interval_count})`} />
+                    <DetailRow label="Ventana de pago (días)" value={requestDetail.payment_window} />
+                    <DetailRow label={t('amount')} value={currencyFormatter.format(requestDetail.amount)} />
+                    <DetailRow label={t('late_fee')} value={`${currencyFormatter.format(requestDetail.late_fee)} (${requestDetail.fee_type})`} />
+                    <DetailRow label={t('comments')} value={requestDetail.comments || t('noInformation')} />
                   </div>
                 </div>
-                <div className="col-12 col-lg-5 d-flex flex-column gap-3">
-                  {renderTarget()}
-                  <div className="card shadow-sm border-0">
-                    <div className="card-body d-flex flex-wrap gap-4">
-                      <DetailRow
-                        label="Última ejecución"
-                        value={requestDetail.last_executed_at ? formatDate(requestDetail.last_executed_at, locale, { year: 'numeric', month: 'short', day: '2-digit' }) : t('noInformation')}
-                      />
-                      <DetailRow label={t('created_at')} value={formatDate(requestDetail.created_at, locale, { year: 'numeric', month: 'short', day: '2-digit' })} />
-                      <DetailRow label={t('updated_at')} value={formatDate(requestDetail.updated_at, locale, { year: 'numeric', month: 'short', day: '2-digit' })} />
-                    </div>
-                  </div>
+              </div>
+            </div>
+            <div className="col-12 col-lg-5 d-flex flex-column gap-3">
+              {renderTarget()}
+              <div className="card shadow-sm border-0">
+                <div className="card-body d-flex flex-wrap gap-4">
+                  <DetailRow
+                    label="Última ejecución"
+                    value={requestDetail.last_executed_at ? formatDate(requestDetail.last_executed_at, locale, { year: 'numeric', month: 'short', day: '2-digit' }) : t('noInformation')}
+                  />
+                  <DetailRow label={t('created_at')} value={formatDate(requestDetail.created_at, locale, { year: 'numeric', month: 'short', day: '2-digit' })} />
+                  <DetailRow label={t('updated_at')} value={formatDate(requestDetail.updated_at, locale, { year: 'numeric', month: 'short', day: '2-digit' })} />
                 </div>
               </div>
             </div>
