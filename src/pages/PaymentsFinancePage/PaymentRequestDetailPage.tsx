@@ -318,7 +318,8 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
       lateFee: paymentRequest.late_fee ? String(paymentRequest.late_fee) : '',
       feeType: paymentRequest.fee_type ?? '$',
       lateFeeFrequency: paymentRequest.late_fee_frequency ? String(paymentRequest.late_fee_frequency) : '',
-      paymentMonth: toMonthInputValue(paymentRequest.payment_month),
+      paymentMonth:
+        paymentRequest.payment_concept_id === 1 ? toMonthInputValue(paymentRequest.payment_month) : '',
       partialPayment: paymentRequest.partial_payment,
     })
     setIsEditingRequest(true)
@@ -363,6 +364,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
 
     try {
       const url = `${API_BASE_URL}/reports/payment-request/update/${paymentRequestDetail.paymentRequest.payment_request_id}`
+      const isPaymentMonthRequired = paymentRequestDetail.paymentRequest.payment_concept_id === 1
       const formData = isEditingRequest
         ? requestForm
         : {
@@ -376,9 +378,21 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
             lateFeeFrequency: paymentRequestDetail.paymentRequest.late_fee_frequency
               ? String(paymentRequestDetail.paymentRequest.late_fee_frequency)
               : '',
-            paymentMonth: toMonthInputValue(paymentRequestDetail.paymentRequest.payment_month),
+            paymentMonth:
+              isPaymentMonthRequired && paymentRequestDetail.paymentRequest.payment_month
+                ? toMonthInputValue(paymentRequestDetail.paymentRequest.payment_month)
+                : '',
             partialPayment: paymentRequestDetail.paymentRequest.partial_payment,
           }
+
+      if (isPaymentMonthRequired && !formData.paymentMonth) {
+        setUpdateError(t('paymentMonthRequired') ?? 'El mes de pago es obligatorio')
+        setIsUpdatingRequest(false)
+        return
+      }
+
+      const paymentMonthValue =
+        isPaymentMonthRequired && formData.paymentMonth ? `${formData.paymentMonth}-01` : null
       const payload = {
         data: {
           amount: formData.amount ? Number(formData.amount) : 0,
@@ -387,7 +401,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
           late_fee: formData.lateFee ? Number(formData.lateFee) : 0,
           fee_type: formData.feeType,
           late_fee_frequency: formData.lateFeeFrequency ? Number(formData.lateFeeFrequency) : 0,
-          payment_month: formData.paymentMonth ? `${formData.paymentMonth}-01` : '',
+          payment_month: paymentMonthValue,
           partial_payment: formData.partialPayment,
           ...(statusId ? { payment_status_id: statusId } : {}),
         },
@@ -490,11 +504,13 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
   const isFinalStatus = paymentRequest.payment_status_id === 7 || paymentRequest.payment_status_id === 8
 
 
-  const defaultPaymentMonth = paymentRequest.payment_month
-    ? toMonthInputValue(paymentRequest.payment_month)
-    : undefined
+  const defaultPaymentMonth =
+    paymentRequest.payment_concept_id === 1 && paymentRequest.payment_month
+      ? toMonthInputValue(paymentRequest.payment_month)
+      : undefined
 
   const defaultPaymentConceptId = paymentRequest.payment_concept_id ?? undefined
+  const isPaymentMonthRequired = paymentRequest.payment_concept_id === 1
 
   const formatCurrency = (value: number | null | undefined) =>
     (value ?? 0).toLocaleString(
@@ -748,6 +764,8 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
                     className="form-control"
                     value={requestForm.paymentMonth}
                     onChange={(event) => handleRequestFormChange('paymentMonth', event.target.value)}
+                    disabled={!isPaymentMonthRequired}
+                    required={isPaymentMonthRequired}
                   />
                 </div>
                 <div className="col-md-12">
