@@ -314,7 +314,6 @@ const translations: TranslationMap = {
     scheduleRequestDescription: 'Crea reglas programadas de pago',
     createSingleRequest: 'Crea una Solicitud',
     createSingleRequestDescription: 'Crea una solicitud de pago',
-    createPayment: 'Crear un pago',
 
   },
   en: {
@@ -625,7 +624,6 @@ const translations: TranslationMap = {
     scheduleRequestDescription: 'Create scheduled payment request rules',
     createSingleRequest: 'Create a Request',
     createSingleRequestDescription: 'Create a payment request',
-    createPayment: 'Create a payment',
 
 
   },

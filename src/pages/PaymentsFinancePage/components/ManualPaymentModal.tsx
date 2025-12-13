@@ -43,6 +43,7 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const shouldShowPaymentMonth = form.paymentConceptId === 1
 
   useEffect(() => {
     if (!isOpen) return
@@ -62,6 +63,14 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
 
   const handleChange = <K extends keyof ManualPaymentFormState>(field: K, value: ManualPaymentFormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handlePaymentConceptChange = (value: number | '') => {
+    setForm((prev) => ({
+      ...prev,
+      paymentConceptId: value,
+      paymentMonth: value === 1 ? prev.paymentMonth : '',
+    }))
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -90,23 +99,21 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
       return
     }
 
-    if (!form.paymentMonth) {
-      setError(t('paymentMonthRequired'))
-      return
-    }
-
     if (!token) {
       setError(t('noActiveSession'))
       return
     }
 
-    const payload = {
+    const payload: Record<string, string | number> = {
       student_id: form.student.student_id,
       payment_concept_id: form.paymentConceptId,
-      payment_month: form.paymentMonth,
       amount: amountValue.toString(),
       comments: form.comments,
       payment_through_id: form.paymentThroughId,
+    }
+
+    if (shouldShowPaymentMonth && form.paymentMonth) {
+      payload.payment_month = form.paymentMonth
     }
 
     const formData = new FormData()
@@ -201,24 +208,6 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">{t('paymentMonth')}</label>
-                    <input
-                      type="month"
-                      value={form.paymentMonth}
-                      onChange={(e) => handleChange('paymentMonth', e.target.value)}
-                      className="form-control"
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">{t('paymentType')}</label>
-                    <PaymentConceptSelect
-                      value={form.paymentConceptId}
-                      onChange={(value) => handleChange('paymentConceptId', value)}
-                      className="form-select"
-                    />
-                  </div>
-                  <div className="col-md-6">
                     <label className="form-label">{t('paymentThrough')}</label>
                     <PaymentThroughSelect
                       value={form.paymentThroughId}
@@ -226,6 +215,25 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
                       required
                     />
                   </div>
+                  <div className="col-md-6">
+                    <label className="form-label">{t('paymentType')}</label>
+                    <PaymentConceptSelect
+                      value={form.paymentConceptId}
+                      onChange={handlePaymentConceptChange}
+                      className="form-select"
+                    />
+                  </div>
+                  {shouldShowPaymentMonth && (
+                    <div className="col-md-6">
+                      <label className="form-label">{t('paymentMonth')}</label>
+                      <input
+                        type="month"
+                        value={form.paymentMonth}
+                        onChange={(e) => handleChange('paymentMonth', e.target.value)}
+                        className="form-control"
+                      />
+                    </div>
+                  )}
                   <div className="col-12">
                     <label className="form-label">{t('comments')}</label>
                     <textarea
