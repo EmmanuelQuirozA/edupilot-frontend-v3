@@ -10,6 +10,11 @@ import {
   type ApplyScope,
   type SelectedStudent,
 } from './CreatePaymentRequestModal'
+import { CreatePaymentScheduleModal } from './CreatePaymentScheduleModal'
+import {
+  createInitialPaymentRequestScheduleFormState,
+  type PaymentRequestScheduleFormState,
+} from './paymentRequestsScheduleFormState'
 import { initialPaymentRequestFormState } from './paymentRequestsFormState'
 import { PaymentRequestsHistory } from './PaymentRequestsHistory'
 import { PaymentRequestsScheduled } from './PaymentRequestsScheduled'
@@ -35,6 +40,16 @@ interface CreationResponse {
   }
 }
 
+interface ScheduleCreationResponse {
+  type?: 'success' | 'error'
+  title?: string
+  message?: string
+  success?: boolean
+  data?: {
+    payment_request_scheduled_id?: number
+  }
+}
+
 export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
@@ -50,6 +65,21 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
   const [isSavingRequest, setIsSavingRequest] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [paymentRequestForm, setPaymentRequestForm] = useState({ ...initialPaymentRequestFormState })
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
+  const [scheduleApplyScope, setScheduleApplyScope] = useState<ApplyScope>('school')
+  const [scheduleSelectedStudent, setScheduleSelectedStudent] = useState<SelectedStudent | null>(null)
+  const [isSavingSchedule, setIsSavingSchedule] = useState(false)
+  const [scheduleError, setScheduleError] = useState<string | null>(null)
+  const [paymentRequestScheduleForm, setPaymentRequestScheduleForm] = useState<PaymentRequestScheduleFormState>(
+    createInitialPaymentRequestScheduleFormState(),
+  )
+  const [periodOptions, setPeriodOptions] = useState<FilterField['options']>([
+    { label: 'Anual', value: 4 },
+    { label: 'Mensual', value: 3 },
+    { label: 'Semanal', value: 2 },
+    { label: 'Diario', value: 1 },
+  ])
+  const today = useMemo(() => new Date().toISOString().split('T')[0], [isScheduleModalOpen])
 
   const paymentRequestTabs = useMemo(
     () => [
@@ -129,6 +159,40 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     return () => controller.abort()
   }, [locale, token])
 
+  useEffect(() => {
+    const controller = new AbortController()
+
+    const fetchPeriods = async () => {
+      try {
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
+        const response = await fetch(`${API_BASE_URL}/catalog/period-of-time?lang=es`, {
+          headers,
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const data = (await response.json()) as Array<{ id?: number | string; name?: string }>
+        setPeriodOptions(
+          data.map((item) => ({
+            value: item.id ?? '',
+            label: item.name ?? '',
+          })),
+        )
+      } catch (fetchError) {
+        if ((fetchError as Error).name !== 'AbortError') {
+          console.error('Unable to fetch period of time catalog', fetchError)
+        }
+      }
+    }
+
+    fetchPeriods()
+
+    return () => controller.abort()
+  }, [token])
+
   const handleOpenCreateModal = () => {
     setCreateError(null)
     setPaymentRequestForm({ ...initialPaymentRequestFormState })
@@ -142,6 +206,21 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     setCreateError(null)
     setSelectedStudent(null)
     setPaymentRequestForm({ ...initialPaymentRequestFormState })
+  }
+
+  const handleOpenScheduleModal = () => {
+    setScheduleError(null)
+    setPaymentRequestScheduleForm(createInitialPaymentRequestScheduleFormState())
+    setScheduleApplyScope('school')
+    setScheduleSelectedStudent(null)
+    setIsScheduleModalOpen(true)
+  }
+
+  const handleCloseScheduleModal = () => {
+    setIsScheduleModalOpen(false)
+    setScheduleError(null)
+    setScheduleSelectedStudent(null)
+    setPaymentRequestScheduleForm(createInitialPaymentRequestScheduleFormState())
   }
 
   const handleApplyScopeChange = (scope: ApplyScope) => {
@@ -164,6 +243,31 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     value: (typeof paymentRequestForm)[Key],
   ) => {
     setPaymentRequestForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  const handleScheduleApplyScopeChange = (scope: ApplyScope) => {
+    setScheduleApplyScope(scope)
+
+    setPaymentRequestScheduleForm((prev) => ({
+      ...prev,
+      school_id: scope === 'school' ? prev.school_id : '',
+      group_id: scope === 'group' ? prev.group_id : '',
+      student_id: scope === 'student' ? prev.student_id : '',
+    }))
+
+    if (scope !== 'student') {
+      setScheduleSelectedStudent(null)
+    }
+  }
+
+  const handleScheduleFormChange = <Key extends keyof PaymentRequestScheduleFormState>(
+    key: Key,
+    value: PaymentRequestScheduleFormState[Key],
+  ) => {
+    setPaymentRequestScheduleForm((prev) => ({
       ...prev,
       [key]: value,
     }))
@@ -267,6 +371,114 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     }
   }
 
+  const handleCreatePaymentSchedule = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!token) return
+
+    const targetKey: keyof PaymentRequestScheduleFormState =
+      scheduleApplyScope === 'school'
+        ? 'school_id'
+        : scheduleApplyScope === 'group'
+          ? 'group_id'
+          : 'student_id'
+
+    if (!paymentRequestScheduleForm[targetKey]) {
+      setScheduleError(t('applyScopeRequired') ?? 'Selecciona a quién aplica la regla')
+      return
+    }
+
+    if (paymentRequestScheduleForm.next_execution_date < today) {
+      setScheduleError('La fecha de próxima ejecución no puede ser anterior al día actual')
+      return
+    }
+
+    const payload = {
+      rule_name_es: paymentRequestScheduleForm.rule_name_es || undefined,
+      rule_name_en: paymentRequestScheduleForm.rule_name_en || undefined,
+      payment_concept_id:
+        paymentRequestScheduleForm.payment_concept_id === ''
+          ? undefined
+          : Number(paymentRequestScheduleForm.payment_concept_id),
+      amount:
+        paymentRequestScheduleForm.amount === '' ? undefined : Number(paymentRequestScheduleForm.amount),
+      fee_type: paymentRequestScheduleForm.fee_type,
+      late_fee:
+        paymentRequestScheduleForm.late_fee === '' ? undefined : Number(paymentRequestScheduleForm.late_fee),
+      late_fee_frequency:
+        paymentRequestScheduleForm.late_fee_frequency === ''
+          ? undefined
+          : Number(paymentRequestScheduleForm.late_fee_frequency),
+      period_of_time_id:
+        paymentRequestScheduleForm.period_of_time_id === ''
+          ? undefined
+          : Number(paymentRequestScheduleForm.period_of_time_id),
+      interval_count:
+        paymentRequestScheduleForm.interval_count === ''
+          ? undefined
+          : Number(paymentRequestScheduleForm.interval_count),
+      start_date: paymentRequestScheduleForm.start_date || undefined,
+      end_date: paymentRequestScheduleForm.end_date || undefined,
+      comments: paymentRequestScheduleForm.comments || undefined,
+      next_execution_date: paymentRequestScheduleForm.next_execution_date || today,
+    }
+
+    const params = new URLSearchParams({ lang: 'en' })
+    params.set(targetKey, String(paymentRequestScheduleForm[targetKey]))
+
+    setIsSavingSchedule(true)
+    setScheduleError(null)
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/payment-requests/create-schedule?${params.toString()}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error('failed_request')
+      }
+
+      const statusResponse = (await response.json()) as ScheduleCreationResponse
+      const swalResult = await Swal.fire({
+        icon: statusResponse?.type ?? (statusResponse?.success ? 'success' : 'error'),
+        title: statusResponse?.title ?? 'Schedule created!',
+        text: statusResponse?.message ?? 'The schedule was created successfully.',
+        showCancelButton: true,
+        confirmButtonText: 'Ir al detalle',
+        cancelButtonText: t('close'),
+      })
+
+      if (statusResponse?.data?.payment_request_scheduled_id) {
+        if (swalResult.isConfirmed) {
+          onNavigate(`/${locale}/finance/request/scheduled/${statusResponse.data.payment_request_scheduled_id}`)
+        }
+        setActiveTab('scheduled')
+        handleCloseScheduleModal()
+      }
+    } catch (requestError) {
+      console.error('Unable to create payment schedule', requestError)
+      setScheduleError(t('defaultError'))
+    } finally {
+      setIsSavingSchedule(false)
+    }
+  }
+
+  const handleScheduleStudentSelect = (student: SelectedStudent) => {
+    handleScheduleFormChange('student_id', String(student.student_id))
+    setScheduleSelectedStudent({
+      id: String(student.student_id),
+      name: student.full_name,
+      register_id: String(student.register_id),
+      grade_group: String(student.grade_group),
+      generation: String(student.generation),
+      scholar_level_name: String(student.scholar_level_name),
+    })
+  }
+
   return (
     <>
       <div className="students-page d-flex flex-column gap-3">
@@ -331,6 +543,30 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
                 <button
                   type="button"
                   className="dropdown-item payment-requests__create-option"
+                  onClick={handleOpenScheduleModal}
+                >
+                  <span className="payment-requests__option-icon payment-requests__option-icon--single" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" />
+                      <path
+                        d="M12 7.5v5l3.5 2.5"
+                        stroke="white"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                  <span className="d-flex flex-column align-items-start">
+                    <span className="fw-semibold">Agendar solicitud</span>
+                    <small className="text-muted">Crea reglas programadas de cobro</small>
+                  </span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  className="dropdown-item payment-requests__create-option"
                   onClick={() => onNavigate(`/${locale}/finance/request-upload`)}
                 >
                   <span
@@ -378,6 +614,26 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
           />
         )}
       </div>
+
+      <CreatePaymentScheduleModal
+        applyScope={scheduleApplyScope}
+        createError={scheduleError}
+        groupOptions={groupOptions}
+        isOpen={isScheduleModalOpen}
+        isSavingRequest={isSavingSchedule}
+        locale={locale}
+        minExecutionDate={today}
+        onApplyScopeChange={handleScheduleApplyScopeChange}
+        onClose={handleCloseScheduleModal}
+        onFormChange={handleScheduleFormChange}
+        onStudentSelect={handleScheduleStudentSelect}
+        onSubmit={handleCreatePaymentSchedule}
+        paymentRequestForm={paymentRequestScheduleForm}
+        schoolOptions={schoolOptions}
+        selectedStudent={scheduleSelectedStudent}
+        t={t}
+        periodOptions={periodOptions}
+      />
 
       <CreatePaymentRequestModal
         applyScope={applyScope}
