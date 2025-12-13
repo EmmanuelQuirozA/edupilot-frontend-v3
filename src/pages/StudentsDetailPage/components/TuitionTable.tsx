@@ -42,9 +42,10 @@ interface DataResponse {
 
 interface TuitionTableProps {
   studentId: number
+  onNavigate: (path: string) => void
 }
 
-export function TuitionTable({ studentId }: TuitionTableProps) {
+export function TuitionTable({ studentId, onNavigate }: TuitionTableProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
 
@@ -260,6 +261,7 @@ export function TuitionTable({ studentId }: TuitionTableProps) {
         onClose={() => setSelectedPayment(null)}
         paymentData={selectedPayment?.details}
         monthLabel={selectedPayment?.monthKey ?? ''}
+        onNavigate={onNavigate}
         studentData={selectedPayment?.row}
       />
     </div>
