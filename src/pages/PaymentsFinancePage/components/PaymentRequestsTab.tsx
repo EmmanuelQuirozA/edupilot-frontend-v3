@@ -558,36 +558,8 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
                     </svg>
                   </span>
                   <span className="d-flex flex-column align-items-start">
-                    <span className="fw-semibold">Agendar solicitud</span>
-                    <small className="text-muted">Crea reglas programadas de cobro</small>
-                  </span>
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  className="dropdown-item payment-requests__create-option"
-                  onClick={() => onNavigate(`/${locale}/finance/request-upload`)}
-                >
-                  <span
-                    className="payment-requests__option-icon payment-requests__option-icon--mass"
-                    aria-hidden="true"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
-                      <rect x="3" y="3" width="11" height="11" rx="3" fill="currentColor" />
-                      <rect x="10" y="10" width="11" height="11" rx="3" fill="currentColor" fillOpacity="0.7" />
-                      <path
-                        d="M9 8.5h6m-3 3V5.5"
-                        stroke="white"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                  <span className="d-flex flex-column align-items-start">
-                    <span className="fw-semibold">{t('massUpload')}</span>
-                    <small className="text-muted">{t('massUploadDescription')}</small>
+                    <span className="fw-semibold">{t('scheduleRequest')}</span>
+                    <small className="text-muted">{t('scheduleRequestDescription')}</small>
                   </span>
                 </button>
               </li>

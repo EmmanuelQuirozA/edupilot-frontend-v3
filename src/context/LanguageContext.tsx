@@ -286,6 +286,11 @@ const translations: TranslationMap = {
     warning: 'Advertencia',
     neutral: 'Sin estado',
     logsTitle: 'Historial de ejecuciones',
+    scheduleRequest: 'Agendar Solicitud',
+    scheduleRequestDescription: 'Crea reglas programadas de pago',
+    createSingleRequest: 'Crea una Solicitud',
+    createSingleRequestDescription: 'Crea una solicitud de pago',
+    createPayment: 'Crear un pago',
 
   },
   en: {
@@ -568,6 +573,11 @@ const translations: TranslationMap = {
     warning: 'Warning',
     neutral: 'No status',
     logsTitle: 'Execution history',
+    scheduleRequest: 'Schedule a Request',
+    scheduleRequestDescription: 'Create scheduled payment request rules',
+    createSingleRequest: 'Create a Request',
+    createSingleRequestDescription: 'Create a payment request',
+    createPayment: 'Create a payment',
 
 
   },
