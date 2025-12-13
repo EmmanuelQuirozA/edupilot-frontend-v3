@@ -260,7 +260,6 @@ const translations: TranslationMap = {
     state: 'Estado',
     reference: 'Referencia',
     enrollment: 'Matrícula',
-    date: 'Fecha',
     mainData: 'Datos principales',
     address: 'Dirección',
     addressHelper: 'Dirección del alumno.',
@@ -277,6 +276,10 @@ const translations: TranslationMap = {
     'status-8': 'Cancelado',
     'partialPayment-0': 'No',
     'partialPayment-1': 'Sí',
+    success: 'Éxito',
+    warning: 'Advertencia',
+    neutral: 'Sin estado',
+    logsTitle: 'Historial de ejecuciones',
 
   },
   en: {
@@ -533,7 +536,6 @@ const translations: TranslationMap = {
     state: 'State',
     reference: 'Reference',
     enrollment: 'Enrollment',
-    date: 'Date',
     mainData: 'Main data',
     address: 'Address',
     addressHelper: 'Student address.',
@@ -550,6 +552,10 @@ const translations: TranslationMap = {
     'status-8': 'Canceled',
     'partialPayment-0': 'No',
     'partialPayment-1': 'Yes',
+    success: 'Success',
+    warning: 'Warning',
+    neutral: 'No status',
+    logsTitle: 'Execution history',
 
 
   },

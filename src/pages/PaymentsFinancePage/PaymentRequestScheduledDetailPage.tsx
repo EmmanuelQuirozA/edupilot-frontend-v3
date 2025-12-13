@@ -326,17 +326,16 @@ export function PaymentRequestScheduledDetailPage({
           const createdList = log?.rules?.[0]?.created ?? [];
           const duplicateList = log?.rules?.[0]?.Duplicated ?? [];
           const referenceDateLabel = formatDate(log?.reference_date, locale);
-          const summaryLabel = `${t('referenceDate')}: ${referenceDateLabel || '—'}`;
 
           return (
             <li key={`${log.reference_date ?? 'log'}-${index}`} className="schedule-detail__log">
               <details>
                 <summary className="schedule-detail__log-summary d-flex justify-content-between align-items-center">
                   <div className="d-flex align-items-center gap-md-4">
-                    <span className={tagClassName[logType]}>{t('logType')}</span>
+                    <span className={tagClassName[logType]}>{t(logType)}</span>
                     <div>
                       <strong>{log?.title || t('logsTitle')}</strong>
-                      <p className="mb-0 schedule-detail__subtitle">{log?.message || summaryLabel}</p>
+                      <p className="mb-0 schedule-detail__subtitle">{log?.message || null}</p>
                       <div className="schedule-detail__log-meta">
                         {referenceDateLabel ? (
                           <span>
