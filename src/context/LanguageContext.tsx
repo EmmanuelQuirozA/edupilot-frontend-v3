@@ -310,6 +310,11 @@ const translations: TranslationMap = {
     searching: 'Buscando...',
     yes: 'Sí',
     no: 'No',
+    scheduleRequest: 'Agendar Solicitud',
+    scheduleRequestDescription: 'Crea reglas programadas de pago',
+    createSingleRequest: 'Crea una Solicitud',
+    createSingleRequestDescription: 'Crea una solicitud de pago',
+    createPayment: 'Crear un pago',
 
   },
   en: {
@@ -616,6 +621,11 @@ const translations: TranslationMap = {
     searching: 'Searching...',
     yes: 'Yes',
     no: 'No',
+    scheduleRequest: 'Schedule a Request',
+    scheduleRequestDescription: 'Create scheduled payment request rules',
+    createSingleRequest: 'Create a Request',
+    createSingleRequestDescription: 'Create a payment request',
+    createPayment: 'Create a payment',
 
 
   },

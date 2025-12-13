@@ -400,6 +400,27 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
                   ) : null}
                 </button>
               </div>
+                ) : null}
+              </button>
+              <button
+                className="btn d-flex align-items-center"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <span className="payment-requests__create-icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 5v14M5 12h14"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span className="fw-semibold">{t('createPayment')}</span>
+              </button>
             </div>
           </div>
 
