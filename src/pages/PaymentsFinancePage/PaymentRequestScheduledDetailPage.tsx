@@ -274,22 +274,26 @@ export function PaymentRequestScheduledDetailPage({
     if (!entries || entries.length === 0) return null
 
     return (
-      <div className="d-flex flex-column gap-2">
+      <div className="d-flex flex-column gap-3">
         <span className="fw-semibold">{label}</span>
-        <div className="d-flex flex-column gap-2">
+        <div className="d-flex flex-column gap-3">
           {entries.map((entry, index) => (
-            <div key={`${label}-${entry.payment_request_id ?? index}`} className="border rounded p-3 d-flex flex-column gap-1">
-              <div className="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-                <div className="d-flex flex-column">
-                  <span className="fw-semibold">{entry.full_name ?? t('noInformation')}</span>
-                  <span className="text-muted small">
-                    {[entry.grade_group, entry.scholar_level, entry.generation].filter(Boolean).join(' · ') || t('noInformation')}
-                  </span>
-                </div>
-                {entry.register_id ? <span className="badge bg-light text-dark">{entry.register_id}</span> : null}
-              </div>
-              {entry.payment_request_id ? (
-            <div className="d-flex justify-content-end">
+            <div
+              key={`${label}-${entry.payment_request_id ?? index}`}
+              className="border rounded-3 p-3 d-flex flex-column gap-2"
+            >
+              <div className="d-flex justify-content-between flex-wrap gap-2 align-items-center">
+                <StudentTableCell
+                  name={entry.full_name}
+                  fallbackName={t('noInformation')}
+                  gradeGroup={entry.grade_group || undefined}
+                  scholarLevel={entry.scholar_level || undefined}
+                  enrollment={entry.register_id || undefined}
+                  avatarFallback={entry.register_id}
+                  className="flex-grow-1"
+                />
+
+                {entry.payment_request_id ? (
                   <button
                     type="button"
                     className="btn btn-sm btn-outline-primary"
@@ -297,8 +301,8 @@ export function PaymentRequestScheduledDetailPage({
                   >
                     {t('viewDetails')}
                   </button>
-                </div>
-              ) : null}
+                ) : null}
+              </div>
             </div>
           ))}
         </div>
@@ -306,43 +310,44 @@ export function PaymentRequestScheduledDetailPage({
     )
   }
 
-  const renderLogCard = (log: ScheduledLogEntry, index: number) => {
-    const isExpanded = expandedLog === index
+  const renderLogCard = (log: ScheduledLogEntry, index: number, forceExpanded = false) => {
+    const isExpanded = forceExpanded || expandedLog === index
     const variant = getLogVariant(log)
+
+    const toggleButton = forceExpanded ? null : (
+      <div className="d-flex justify-content-end">
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-primary"
+          onClick={() => setExpandedLog(isExpanded ? null : index)}
+        >
+          {isExpanded ? t('close') : t('viewDetails')}
+        </button>
+      </div>
+    )
 
     return (
       <div key={`${log.reference_date}-${index}`} className="card shadow-sm border-0">
         <div className="card-body d-flex flex-column gap-3">
           <div className="d-flex flex-wrap gap-3 align-items-start justify-content-between">
-              <div className="d-flex gap-2 align-items-center">
-                <Badge
-                  label={log.type ? log.type.toUpperCase() : t('status')}
-                  variant={variant}
-                />
-                <div className="d-flex flex-column">
-                  <span className="fw-semibold">{log.title || t('noInformation')}</span>
-                  <span className="text-muted">{log.message || t('noInformation')}</span>
-                </div>
-              </div>
-              <div className="d-flex flex-wrap gap-4">
-                <DetailRow
-                  label={t('referenceDate')}
-                  value={formatDate(log.reference_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
-                />
-                <DetailRow label={t('createdCount')} value={log.created_count ?? 0} />
-                <DetailRow label={t('duplicateCount')} value={log.duplicate_count ?? 0} />
+            <div className="d-flex gap-2 align-items-center">
+              <Badge label={log.type ? log.type.toUpperCase() : t('status')} variant={variant} />
+              <div className="d-flex flex-column">
+                <span className="fw-semibold">{log.title || t('noInformation')}</span>
+                <span className="text-muted">{log.message || t('noInformation')}</span>
               </div>
             </div>
-
-          <div className="d-flex justify-content-end">
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-primary"
-              onClick={() => setExpandedLog(isExpanded ? null : index)}
-            >
-              {isExpanded ? t('close') : t('viewDetails')}
-            </button>
+            <div className="d-flex flex-wrap gap-4">
+              <DetailRow
+                label={t('referenceDate')}
+                value={formatDate(log.reference_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
+              />
+              <DetailRow label={t('createdCount')} value={log.created_count ?? 0} />
+              <DetailRow label={t('duplicateCount')} value={log.duplicate_count ?? 0} />
+            </div>
           </div>
+
+          {toggleButton}
 
           {isExpanded ? (
             <div className="border-top pt-3 d-flex flex-column gap-3">
@@ -362,7 +367,7 @@ export function PaymentRequestScheduledDetailPage({
               </div>
 
               {log.rules?.map((rule, ruleIndex) => (
-                <div key={`rules-${ruleIndex}`} className="d-flex flex-column gap-3">
+                <div key={`rules-${ruleIndex}`} className="d-flex flex-column gap-4">
                   {renderRuleList(t('createdRequests'), rule.created)}
                   {renderRuleList(t('duplicates'), rule.Duplicated)}
                 </div>
@@ -558,27 +563,35 @@ export function PaymentRequestScheduledDetailPage({
                   <h5 className="mb-0">{t('assignment')}</h5>
                 </div>
                 <div className="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
-                  <div className="d-flex align-items-center gap-3">
-                    <div className="prsd-avatar">{requestDetail.group_detail?.group || requestDetail.student_detail?.register_id || 'PR'}</div>
-                    <div>
-                      <p className="text-muted small mb-1">{requestDetail.student_detail ? t('student') : requestDetail.group_detail ? t('assignedGroup') : t('schoolsTitle')}</p>
-                      <h5 className="mb-0">{
-                        requestDetail.student_detail
-                          ? requestDetail.student_detail.full_name
-                          : requestDetail.group_detail
+                  {requestDetail.student_detail ? (
+                    <StudentTableCell
+                      name={requestDetail.student_detail.full_name}
+                      gradeGroup={requestDetail.student_detail.grade_group || undefined}
+                      scholarLevel={requestDetail.student_detail.scholar_level || undefined}
+                      enrollment={requestDetail.student_detail.register_id || undefined}
+                      avatarFallback={requestDetail.student_detail.register_id || 'PR'}
+                      className="flex-grow-1"
+                    />
+                  ) : (
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="prsd-avatar">{requestDetail.group_detail?.group || requestDetail.school_detail?.school_name?.charAt(0) || 'PR'}</div>
+                      <div>
+                        <p className="text-muted small mb-1">{requestDetail.group_detail ? t('assignedGroup') : t('schoolsTitle')}</p>
+                        <h5 className="mb-0">{
+                          requestDetail.group_detail
                             ? `${requestDetail.group_detail.grade ?? ''}° ${requestDetail.group_detail.group ?? ''}`.trim()
                             : requestDetail.school_detail?.school_name || t('noInformation')
-                      }</h5>
-                      <p className="text-muted small mb-0">
-                        {
-                          requestDetail.group_detail?.generation ||
-                          requestDetail.student_detail?.generation ||
-                          requestDetail.school_detail?.scholar_level ||
-                          t('noInformation')
-                        }
-                      </p>
+                        }</h5>
+                        <p className="text-muted small mb-0">
+                          {
+                            requestDetail.group_detail?.generation ||
+                            requestDetail.school_detail?.scholar_level ||
+                            t('noInformation')
+                          }
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -618,17 +631,47 @@ export function PaymentRequestScheduledDetailPage({
           items={[
             {
               key: 'executionLogs',
-              label: 'executionLogs',
+              label: t('recentExecutions'),
               content: (
-                <>
-                </>
+                <div className="d-flex flex-column gap-3">
+                  {logsError ? (
+                    <div className="alert alert-danger" role="alert">
+                      {logsError}
+                    </div>
+                  ) : null}
+
+                  {logsLoading ? (
+                    <LoadingSkeleton variant="table" rowCount={3} />
+                  ) : logs.length === 0 ? (
+                    <div className="alert alert-light border" role="alert">
+                      {t('noResultsAvailable')}
+                    </div>
+                  ) : (
+                    logs.map((log, index) => renderLogCard(log, index))
+                  )}
+                </div>
               ),
             },
             {
               key: 'logs',
-              label: 'Solicitudes',
+              label: t('requests'),
               content: (
                 <div className="d-flex flex-column gap-3">
+                  {logsError ? (
+                    <div className="alert alert-danger" role="alert">
+                      {logsError}
+                    </div>
+                  ) : null}
+
+                  {logsLoading ? (
+                    <LoadingSkeleton variant="table" rowCount={4} />
+                  ) : logs.length === 0 ? (
+                    <div className="alert alert-light border" role="alert">
+                      {t('scheduledRequestsPlaceholder')}
+                    </div>
+                  ) : (
+                    logs.map((log, index) => renderLogCard(log, index, true))
+                  )}
                 </div>
               ),
             },
