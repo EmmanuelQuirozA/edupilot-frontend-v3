@@ -118,29 +118,7 @@ interface ScheduledLogEntry {
   payment_request_scheduled_id: number
 }
 
-function DetailRow({ label, value }: { label: string; value: string | number | null }) {
-  return (
-    <div className="col-md-3">
-      <div className="text-muted small mb-1">{label}</div>
-      <div className="fw-semibold">{value ?? '-'}</div>
-    </div>
-  )
-}
-
 type TabKey = 'executionLogs' | 'logs'
-type BadgeVariant = 'success' | 'warning' | 'danger' | 'secondary'
-
-function Badge({ label, variant }: { label: string; variant: BadgeVariant }) {
-  const variants: Record<BadgeVariant, string> = {
-    success: 'bg-success',
-    warning: 'bg-warning text-dark',
-    danger: 'bg-danger',
-    secondary: 'bg-secondary',
-  }
-
-  return <span className={`badge ${variants[variant]}`}>{label}</span>
-}
-
 export function PaymentRequestScheduledDetailPage({
   onNavigate,
   paymentRequestScheduledId,
@@ -156,7 +134,6 @@ export function PaymentRequestScheduledDetailPage({
   const [logsLoading, setLogsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [logsError, setLogsError] = useState<string | null>(null)
-  const [expandedLog, setExpandedLog] = useState<number | null>(null)
 
   const currencyFormatter = useMemo(() => createCurrencyFormatter(locale, 'MXN'), [locale])
 
@@ -269,182 +246,69 @@ export function PaymentRequestScheduledDetailPage({
     return () => controller.abort()
   }, [fetchLogs])
 
-  const getLogVariant = (log: ScheduledLogEntry): 'success' | 'warning' | 'danger' | 'secondary' => {
-    if (log.type === 'warning') return 'warning'
-    if (log.type === 'success' || log.success === true) return 'success'
-    if (log.success === false) return 'danger'
-    return 'secondary'
-  }
-
-  const renderRuleList = (label: string, entries: RuleLogEntry[] | null) => {
-    if (!entries || entries.length === 0) return null
-
-    return (
-      <div className="d-flex flex-column gap-3">
-        <span className="fw-semibold">{label}</span>
-        <div className="d-flex flex-column gap-3">
-          {entries.map((entry, index) => (
-            <div
-              key={`${label}-${entry.payment_request_id ?? index}`}
-              className="border rounded-3 p-3 d-flex flex-column gap-2"
-            >
-              <div className="d-flex justify-content-between flex-wrap gap-2 align-items-center">
-                <StudentTableCell
-                  name={entry.full_name}
-                  fallbackName={t('noInformation')}
-                  gradeGroup={entry.grade_group || undefined}
-                  scholarLevel={entry.scholar_level || undefined}
-                  enrollment={entry.register_id || undefined}
-                  avatarFallback={entry.register_id}
-                  className="flex-grow-1"
-                />
-
-                {entry.payment_request_id ? (
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-primary"
-                    onClick={() => onNavigate(`/${locale}/finance/request/${entry.payment_request_id}`)}
-                  >
-                    {t('viewDetails')}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  const renderLogCard = (log: ScheduledLogEntry, index: number, forceExpanded = false) => {
-    const isExpanded = forceExpanded || expandedLog === index
-    const variant = getLogVariant(log)
-
-    const toggleButton = forceExpanded ? null : (
-      <div className="d-flex justify-content-end">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chevron-right" viewBox="0 0 16 16">
-          <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
-        </svg>
-      </div>
-    )
-
-    return (
-      <div key={`${log.reference_date}-${index}`} className="card shadow-sm border-0">
-        <div className="card-body d-flex flex-column gap-3">
-          <div className="d-flex flex-wrap gap-3 align-items-start justify-content-between">
-            <div className="d-flex gap-2 align-items-center">
-              <Badge label={log.type ? log.type.toUpperCase() : t('status')} variant={variant} />
-              <div className="d-flex flex-column">
-                <span className="fw-semibold">{log.title || t('noInformation')}</span>
-                <span className="text-muted">{log.message || t('noInformation')}</span>
-              </div>
-            </div>
-            <div className="row gap-4">
-              <DetailRow
-                label={t('referenceDate')}
-                value={formatDate(log.reference_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
-              />
-              <DetailRow label={t('createdCount')} value={log.created_count ?? 0} />
-              <DetailRow label={t('duplicateCount')} value={log.duplicate_count ?? 0} />
-            </div>
-          </div>
-
-          {toggleButton}
-
-          {isExpanded ? (
-            <div className="border-top pt-3 d-flex flex-column gap-3">
-              <div className="d-flex flex-wrap gap-4">
-                <DetailRow label={t('concept')} value={log.schedule.concept}
-                />
-                <DetailRow label={t('amount')} value={currencyFormatter.format(log.schedule.amount ?? 0)} />
-                <DetailRow
-                  label={t('paymentDate')}
-                  value={formatDate(log.schedule.start_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
-                />
-                <DetailRow
-                  label={t('nextExecution')}
-                  value={formatDate(log.schedule.next_execution_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
-                />
-                <DetailRow label={t('periodicity')} value={log.schedule.period_of_time_name} />
-              </div>
-
-              {log.rules?.map((rule, ruleIndex) => (
-                <div key={`rules-${ruleIndex}`} className="d-flex flex-column gap-4">
-                  {renderRuleList(t('createdRequests'), rule.created)}
-                  {renderRuleList(t('duplicates'), rule.Duplicated)}
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </div>
-    )
-  }
-
-  const normalizeLogType = (value) => {
+  const normalizeLogType = (value: string | null | undefined): keyof typeof tagClassName => {
     if (!value) {
-      return 'neutral';
+      return 'neutral'
     }
 
-    const normalized = String(value).toLowerCase();
+    const normalized = String(value).toLowerCase()
     if (normalized === 'success') {
-      return 'success';
+      return 'success'
     }
 
     if (normalized === 'warning') {
-      return 'warning';
+      return 'warning'
     }
 
-    return 'neutral';
-  };
+    return 'neutral'
+  }
 
   const tagClassName = {
     success: 'schedule-detail__tag schedule-detail__tag--success',
     warning: 'schedule-detail__tag schedule-detail__tag--warning',
     neutral: 'schedule-detail__tag schedule-detail__tag--neutral',
-  };
+  }
 
-
-
-  const renderLogStudents = (title, list = []) => {
+  const renderLogStudents = (title: string, list: RuleLogEntry[] | null = []) => {
     if (!list || list.length === 0) {
-      return null;
+      return null
     }
 
     return (
       <div className="schedule-detail__log-section">
         <h4>{title}</h4>
-        {list.map((student, index) => {
-          const studentId = student?.student_id;
-          const requestId = student?.payment_request_id;
-          const meta = student?.grade_group ?? student?.register_id ?? '';
-          const rowKey = `${title}-${requestId ?? studentId ?? index}`;
+        <div className="d-flex flex-column">
+          {list.map((student, index) => {
+            const requestId = student?.payment_request_id
+            const rowKey = `${title}-${requestId ?? student.student_id ?? index}`
 
-          return (
-            <div key={rowKey} className="schedule-detail__student-row">
-              <StudentTableCell
-                name={student?.full_name}
-                metaValue={meta}
-                onClick={studentId ? () => onStudentDetail?.(studentId) : undefined}
-                avatarText={getInitials(student?.full_name)}
-                nameButtonProps={{ 'aria-label': student?.full_name ?? mergedStrings.viewStudent }}
-              />
-              <div
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={requestId ? () => onPaymentRequestDetail?.(requestId) : undefined}
-                disabled={!requestId}
-                aria-label={mergedStrings.viewRequest}
-              >
-                {mergedStrings.viewRequest}
+            return (
+              <div key={rowKey} className="schedule-detail__student-row">
+                <StudentTableCell
+                  name={student?.full_name}
+                  fallbackName={t('noInformation')}
+                  gradeGroup={student?.grade_group || undefined}
+                  scholarLevel={student?.scholar_level || undefined}
+                  enrollment={student?.register_id || undefined}
+                  avatarFallback={student?.register_id || 'PR'}
+                  className="flex-grow-1"
+                />
+
+                <button
+                  type="button"
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => requestId && onNavigate(`/${locale}/finance/request/${requestId}`)}
+                  disabled={!requestId}
+                >
+                  {t('viewDetails')}
+                </button>
               </div>
-            </div>
-          );
-        })}
+            )
+          })}
+        </div>
       </div>
-    );
-  };
+    )
+  }
 
   const renderLogs = () => {
     if (logsLoading) {
@@ -467,8 +331,8 @@ export function PaymentRequestScheduledDetailPage({
           return (
             <li key={`${log.reference_date ?? 'log'}-${index}`} className="schedule-detail__log">
               <details>
-                <summary className='justify-content-between'>
-                  <div className='d-flex align-items-center gap-md-4'>
+                <summary className="schedule-detail__log-summary d-flex justify-content-between align-items-center">
+                  <div className="d-flex align-items-center gap-md-4">
                     <span className={tagClassName[logType]}>{t('logType')}</span>
                     <div>
                       <strong>{log?.title || t('logsTitle')}</strong>
@@ -493,8 +357,15 @@ export function PaymentRequestScheduledDetailPage({
                     </div>
                   </div>
 
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chevron-right" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    className="bi bi-chevron-right schedule-detail__log-chevron"
+                    viewBox="0 0 16 16"
+                  >
+                    <path fillRule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708" />
                   </svg>
                 </summary>
                 <div className="schedule-detail__log-body">
