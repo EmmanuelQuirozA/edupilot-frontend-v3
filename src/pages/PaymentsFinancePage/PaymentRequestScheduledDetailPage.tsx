@@ -215,6 +215,12 @@ export function PaymentRequestScheduledDetailPage({
     [locale, paymentRequestScheduledId, permissions?.readAllowed, permissionsLoaded, t, token],
   )
 
+  const formatCurrency = (value: number | null | undefined) =>
+  (value ?? 0).toLocaleString(
+    locale === 'es' ? 'es-MX' : 'en-US',
+    { style: 'currency', currency: 'MXN' }
+  );
+  
   const fetchLogs = useCallback(
     async (signal?: AbortSignal) => {
       if (!token || !permissionsLoaded || !permissions?.readAllowed) return
@@ -316,13 +322,9 @@ export function PaymentRequestScheduledDetailPage({
 
     const toggleButton = forceExpanded ? null : (
       <div className="d-flex justify-content-end">
-        <button
-          type="button"
-          className="btn btn-sm btn-outline-primary"
-          onClick={() => setExpandedLog(isExpanded ? null : index)}
-        >
-          {isExpanded ? t('close') : t('viewDetails')}
-        </button>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chevron-right" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
+        </svg>
       </div>
     )
 
@@ -337,7 +339,7 @@ export function PaymentRequestScheduledDetailPage({
                 <span className="text-muted">{log.message || t('noInformation')}</span>
               </div>
             </div>
-            <div className="d-flex flex-wrap gap-4">
+            <div className="row gap-4">
               <DetailRow
                 label={t('referenceDate')}
                 value={formatDate(log.reference_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
@@ -378,6 +380,157 @@ export function PaymentRequestScheduledDetailPage({
       </div>
     )
   }
+
+  const normalizeLogType = (value) => {
+    if (!value) {
+      return 'neutral';
+    }
+
+    const normalized = String(value).toLowerCase();
+    if (normalized === 'success') {
+      return 'success';
+    }
+
+    if (normalized === 'warning') {
+      return 'warning';
+    }
+
+    return 'neutral';
+  };
+
+  const tagClassName = {
+    success: 'schedule-detail__tag schedule-detail__tag--success',
+    warning: 'schedule-detail__tag schedule-detail__tag--warning',
+    neutral: 'schedule-detail__tag schedule-detail__tag--neutral',
+  };
+
+
+
+  const renderLogStudents = (title, list = []) => {
+    if (!list || list.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="schedule-detail__log-section">
+        <h4>{title}</h4>
+        {list.map((student, index) => {
+          const studentId = student?.student_id;
+          const requestId = student?.payment_request_id;
+          const meta = student?.grade_group ?? student?.register_id ?? '';
+          const rowKey = `${title}-${requestId ?? studentId ?? index}`;
+
+          return (
+            <div key={rowKey} className="schedule-detail__student-row">
+              <StudentTableCell
+                name={student?.full_name}
+                metaValue={meta}
+                onClick={studentId ? () => onStudentDetail?.(studentId) : undefined}
+                avatarText={getInitials(student?.full_name)}
+                nameButtonProps={{ 'aria-label': student?.full_name ?? mergedStrings.viewStudent }}
+              />
+              <div
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={requestId ? () => onPaymentRequestDetail?.(requestId) : undefined}
+                disabled={!requestId}
+                aria-label={mergedStrings.viewRequest}
+              >
+                {mergedStrings.viewRequest}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderLogs = () => {
+    if (logsLoading) {
+      return <p className="schedule-detail__subtitle">{t('loading')}</p>;
+    }
+
+    if (logsError) {
+      return <p className="schedule-detail__subtitle">{t('logsError')}</p>;
+    }
+
+    return (
+      <ul className="schedule-detail__logs-list">
+        {logs.map((log, index) => {
+          const logType = normalizeLogType(log?.type);
+          const createdList = log?.rules?.[0]?.created ?? [];
+          const duplicateList = log?.rules?.[0]?.Duplicated ?? [];
+          const referenceDateLabel = formatDate(log?.reference_date, locale);
+          const summaryLabel = `${t('referenceDate')}: ${referenceDateLabel || '—'}`;
+
+          return (
+            <li key={`${log.reference_date ?? 'log'}-${index}`} className="schedule-detail__log">
+              <details>
+                <summary className='justify-content-between'>
+                  <div className='d-flex align-items-center gap-md-4'>
+                    <span className={tagClassName[logType]}>{t('logType')}</span>
+                    <div>
+                      <strong>{log?.title || t('logsTitle')}</strong>
+                      <p className="mb-0 schedule-detail__subtitle">{log?.message || summaryLabel}</p>
+                      <div className="schedule-detail__log-meta">
+                        {referenceDateLabel ? (
+                          <span>
+                            {t('referenceDate')}: <strong>{referenceDateLabel}</strong>
+                          </span>
+                        ) : null}
+                        {log?.created_count != null ? (
+                          <span>
+                            {t('created')}: <strong>{log.created_count}</strong>
+                          </span>
+                        ) : null}
+                        {log?.duplicate_count != null ? (
+                          <span>
+                            {t('duplicates')}: <strong>{log.duplicate_count}</strong>
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chevron-right" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
+                  </svg>
+                </summary>
+                <div className="schedule-detail__log-body">
+                  {log?.schedule ? (
+                    <div className="schedule-detail__log-section">
+                      <h4>{t('schedule')}</h4>
+                      <div className="schedule-detail__log-meta">
+                        <span>
+                          {t('concept')}: <strong>{log.schedule?.concept ?? '—'}</strong>
+                        </span>
+                        <span>
+                          {t('amount')}:{' '}
+                          <strong>{formatCurrency(log.schedule?.amount) || '—'}</strong>
+                        </span>
+                        {log.schedule?.next_execution_date ? (
+                          <span>
+                            {t('nextExecutionDate')}:{' '}
+                            <strong>
+                              {formatDate(log.schedule.next_execution_date, locale) || '—'}
+                            </strong>
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {renderLogStudents(t('createdRequests'), createdList)}
+                  {renderLogStudents(t('duplicatedRequests'), duplicateList)}
+                </div>
+              </details>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
 
   const nextExecutionInPast = useMemo(() => {
     if (!requestDetail?.next_execution_date) return false
@@ -647,7 +800,11 @@ export function PaymentRequestScheduledDetailPage({
                       {t('noResultsAvailable')}
                     </div>
                   ) : (
-                    logs.map((log, index) => renderLogCard(log, index))
+                    <div className='d-flex flex-column gap-3'>
+                      <div className="card">
+                        {renderLogs()}
+                      </div>
+                    </div>
                   )}
                 </div>
               ),
@@ -657,21 +814,6 @@ export function PaymentRequestScheduledDetailPage({
               label: t('requests'),
               content: (
                 <div className="d-flex flex-column gap-3">
-                  {logsError ? (
-                    <div className="alert alert-danger" role="alert">
-                      {logsError}
-                    </div>
-                  ) : null}
-
-                  {logsLoading ? (
-                    <LoadingSkeleton variant="table" rowCount={4} />
-                  ) : logs.length === 0 ? (
-                    <div className="alert alert-light border" role="alert">
-                      {t('scheduledRequestsPlaceholder')}
-                    </div>
-                  ) : (
-                    logs.map((log, index) => renderLogCard(log, index, true))
-                  )}
                 </div>
               ),
             },
