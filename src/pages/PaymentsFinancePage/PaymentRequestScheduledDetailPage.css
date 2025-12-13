@@ -1,0 +1,94 @@
+.payment-schedule-detail {
+  font-family: 'Inter', sans-serif;
+}
+
+.prsd-hero-card {
+  border-radius: 18px;
+}
+
+.prsd-breadcrumbs span {
+  color: #6b7280;
+}
+
+.prsd-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 30px -12px rgba(16, 185, 129, 0.2);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-flex;
+}
+
+.prsd-action-btn {
+  border-radius: 12px;
+  padding: 0.55rem 1rem;
+  box-shadow: 0 10px 30px -18px rgba(37, 99, 235, 0.5);
+}
+
+.prsd-section-card {
+  border-radius: 16px;
+}
+
+.prsd-icon-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: #eef2ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.prsd-warning-card {
+  background: #fff7ed;
+  border-color: #fed7aa !important;
+}
+
+.prsd-note {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.prsd-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: #e0f2fe;
+  color: #0ea5e9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  border: 1px solid #bae6fd;
+}
+
+.prsd-schedule-card {
+  background: linear-gradient(135deg, #312e81, #1d4ed8);
+  padding: 24px;
+  border: none;
+}
+
+.border-white-25 {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.prsd-danger-btn {
+  border-width: 1.5px;
+}
+
+@media (max-width: 768px) {
+  .prsd-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
