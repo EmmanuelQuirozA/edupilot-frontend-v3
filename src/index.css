@@ -490,3 +490,7 @@ a:hover {
 .table-striped {
   --bs-table-striped-bg: #8080800c; /* Light green for striped rows */
 }
+
+.text-warning {
+  color: rgb(157 52 18) !important;
+}
