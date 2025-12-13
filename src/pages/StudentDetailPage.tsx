@@ -941,7 +941,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
               key: 'tuition',
               label: 'Colegiaturas',
               content: (
-                <TuitionTable studentId={studentId} />
+                <TuitionTable studentId={studentId} onNavigate={onNavigate} />
               ),
             },
             {

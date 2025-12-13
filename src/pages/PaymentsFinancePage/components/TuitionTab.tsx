@@ -469,6 +469,7 @@ export function TuitionTab({ onNavigate }: TuitionTabProps) {
             onClose={() => setSelectedPayment(null)}
             paymentData={selectedPayment?.details}
             monthLabel={selectedPayment?.monthKey ?? ''}
+            onNavigate={onNavigate}
             studentData={selectedPayment?.row}
           />
 

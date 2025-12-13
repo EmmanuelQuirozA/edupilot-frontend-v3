@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useLanguage } from "../../../context/LanguageContext";
 import { createCurrencyFormatter } from "../../../utils/currencyFormatter";
 
 interface PaymentEntry {
@@ -21,6 +22,7 @@ interface TuitionPaymentModalProps {
   onClose: () => void;
   paymentData?: PaymentMonthData | null;
   monthLabel: string;
+  onNavigate: (path: string) => void;
   studentData?: {
     student?: string;
     class?: string;
@@ -29,7 +31,10 @@ interface TuitionPaymentModalProps {
   };
 }
 
-const formatDate = (dateString: string): string => {
+const getDateLocale = (locale: string): string =>
+  locale === "en" ? "en-US" : "es-MX";
+
+const formatDate = (dateString: string, locale: string): string => {
   if (!dateString) return "";
 
   const normalized = dateString.replace(/_/g, "-");
@@ -37,14 +42,14 @@ const formatDate = (dateString: string): string => {
 
   if (Number.isNaN(parsedDate.getTime())) return dateString;
 
-  return parsedDate.toLocaleDateString("es-MX", {
+  return parsedDate.toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 };
 
-const formatPaymentMonth = (monthCode: string): string => {
+const formatPaymentMonth = (monthCode: string, locale: string): string => {
   if (!monthCode) return "";
 
   const [year, month] = monthCode.split("_");
@@ -53,7 +58,7 @@ const formatPaymentMonth = (monthCode: string): string => {
   const parsedDate = new Date(Number(year), Number(month) - 1, 1);
   if (Number.isNaN(parsedDate.getTime())) return monthCode;
 
-  return parsedDate.toLocaleDateString("es-MX", {
+  return parsedDate.toLocaleDateString(locale, {
     month: "long",
     year: "numeric",
   });
@@ -71,11 +76,14 @@ export function TuitionPaymentModal({
   onClose,
   paymentData,
   monthLabel,
+  onNavigate,
   studentData,
 }: TuitionPaymentModalProps) {
   if (!paymentData) return null;
 
-  const currencyFormatter = createCurrencyFormatter("es-MX", "MXN");
+  const { t, locale } = useLanguage();
+  const dateLocale = getDateLocale(locale);
+  const currencyFormatter = createCurrencyFormatter(dateLocale, "MXN");
 
   return (
     <>
@@ -96,10 +104,11 @@ export function TuitionPaymentModal({
             <div className="modal-header">
               <div>
                 <h5 className="modal-title fw-semibold">
-                  Detalle de pagos de colegiatura
+                  {t("tuitionPaymentDetail")}
                 </h5>
                 <div className="text-muted small text-capitalize">
-                  {formatPaymentMonth(paymentData.payment_month) || monthLabel}
+                  {formatPaymentMonth(paymentData.payment_month, dateLocale) ||
+                    monthLabel}
                 </div>
               </div>
               <button
@@ -114,29 +123,32 @@ export function TuitionPaymentModal({
             <div className="modal-body">
               <div className="row g-3 mb-3">
                 <div className="col-md-4">
-                  <InfoRow label="Alumno" value={studentData?.student} />
+                  <InfoRow label={t("student")} value={studentData?.student} />
                 </div>
                 <div className="col-md-4">
-                  <InfoRow label="Grupo" value={studentData?.class} />
-                </div>
-                <div className="col-md-4">
-                  <InfoRow label="Generación" value={studentData?.generation} />
+                  <InfoRow label={t("class")} value={studentData?.class} />
                 </div>
                 <div className="col-md-4">
                   <InfoRow
-                    label="Nivel Académico"
+                    label={t("generation")}
+                    value={studentData?.generation}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <InfoRow
+                    label={t("scholarLevel")}
                     value={studentData?.scholar_level_name}
                   />
                 </div>
                 <div className="col-md-4">
                   <InfoRow
-                    label="Mes de Pago"
-                    value={formatPaymentMonth(paymentData.payment_month)}
+                    label={t("paymentMonth")}
+                    value={formatPaymentMonth(paymentData.payment_month, dateLocale)}
                   />
                 </div>
                 <div className="col-md-4">
                   <InfoRow
-                    label="Monto total"
+                    label={t("totalAmount")}
                     value={currencyFormatter.format(paymentData.total_amount)}
                   />
                 </div>
@@ -146,28 +158,38 @@ export function TuitionPaymentModal({
               {paymentData.payment_request_id ? (
                 <div className="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
                   <div>
-                    <div className="text-muted small">Solicitud de pago</div>
+                    <div className="text-muted small">{t("paymentRequest")}</div>
                     <div className="fw-semibold">
                       {paymentData.payment_request_id}
                     </div>
                   </div>
-                  <button type="button" className="btn btn-outline-primary btn-sm">
-                    Ver solicitud de pago
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() =>
+                      onNavigate(
+                        `/${locale}/finance/request/${paymentData.payment_request_id}`,
+                      )
+                    }
+                  >
+                    {t("viewPaymentRequest")}
                   </button>
                 </div>
               ) : null}
 
               {/* TABLE */}
-              <h6 className="fw-semibold mb-2">Pagos registrados</h6>
+              <h6 className="fw-semibold mb-2">{t("registeredPayments")}</h6>
               <div className="table-responsive">
                 <table className="table align-middle mb-0">
                   <thead>
                     <tr>
                       <th className="text-muted small text-uppercase">ID</th>
-                      <th className="text-muted small text-uppercase">Fecha</th>
-                      <th className="text-muted small text-uppercase">Monto</th>
-                      <th className="text-muted small text-uppercase">Estatus</th>
-                      <th className="text-muted small text-uppercase">Acciones</th>
+                      <th className="text-muted small text-uppercase">{t("date")}</th>
+                      <th className="text-muted small text-uppercase">{t("amount")}</th>
+                      <th className="text-muted small text-uppercase">{t("status")}</th>
+                      <th className="text-muted small text-uppercase">
+                        {t("tableActions")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -176,7 +198,7 @@ export function TuitionPaymentModal({
                         <tr key={payment.payment_id}>
                           <td className="fw-semibold">{payment.payment_id}</td>
                           <td className="text-muted">
-                            {formatDate(payment.created_at)}
+                            {formatDate(payment.created_at, dateLocale)}
                           </td>
                           <td className="fw-semibold text-dark">
                             {currencyFormatter.format(payment.amount)}
@@ -185,8 +207,15 @@ export function TuitionPaymentModal({
                             {payment.payment_status_name}
                           </td>
                           <td>
-                            <button className="btn btn-link p-0">
-                              Ver detalle
+                            <button
+                              className="btn btn-link p-0"
+                              onClick={() =>
+                                onNavigate(
+                                  `/${locale}/finance/payments/${payment.payment_id}`,
+                                )
+                              }
+                            >
+                              {t("viewDetails")}
                             </button>
                           </td>
                         </tr>
@@ -194,7 +223,7 @@ export function TuitionPaymentModal({
                     ) : (
                       <tr>
                         <td colSpan={5} className="text-center text-muted">
-                          No hay pagos registrados
+                          {t("noPaymentsRegistered")}
                         </td>
                       </tr>
                     )}
@@ -210,7 +239,7 @@ export function TuitionPaymentModal({
                 className="btn btn-secondary"
                 onClick={onClose}
               >
-                Cerrar
+                {t("close")}
               </button>
             </div>
           </div>
