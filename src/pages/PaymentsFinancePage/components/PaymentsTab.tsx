@@ -7,6 +7,9 @@ import SearchInput from '../../../components/ui/SearchInput';
 import StudentTableCell from '../../../components/ui/StudentTableCell';
 import { FilterSidebar, type FilterField, type FilterValues } from '../../../components/FilterSidebar'
 import ManualPaymentModal from './ManualPaymentModal'
+import { useModulePermissions } from '../../../hooks/useModulePermissions'
+import { NoPermission } from '../../../components/NoPermission'
+import { LoadingSkeleton } from '../../../components/LoadingSkeleton'
 
 type OrderDirection = 'ASC' | 'DESC'
 
@@ -66,6 +69,7 @@ interface PaymentsTabProps {
 export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
+  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('finance')
 
   // 
   const [rows, setRows] = useState<ResultsColumns[]>([])
@@ -75,6 +79,8 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
   const [TotalElements, setTotalElements] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const canCreate = permissions?.createAllowed ?? false
 
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
@@ -338,6 +344,32 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
     ],
     [locale, onNavigate, t],
   )
+  
+  if (permissionsLoading || !permissionsLoaded) {
+    return (
+      <>
+        <LoadingSkeleton variant="table" rowCount={10} />
+      </>
+    )
+  }
+
+  if (permissionsError) {
+    return (
+      <>
+        <div className="alert alert-danger" role="alert">
+          {t('defaultError')}
+        </div>
+      </>
+    )
+  }
+  
+  if (permissionsLoaded && permissions && !permissions.readAllowed) {
+    return (
+      <>
+        <NoPermission />
+      </>
+    )
+  }
 
   return (
     <>
@@ -361,26 +393,28 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
                 inputClassName="w-100"
               />
               <div className="d-flex align-items-center gap-2">
-                <button
-                  className="btn d-flex align-items-center"
-                  type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                  onClick={() => setIsCreatePaymentOpen(true)}
-                >
-                  <span className="payment-requests__create-icon" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M12 5v14M5 12h14"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                  <span className="fw-semibold">{t('createPayment')}</span>
-                </button>
+                {canCreate ? (
+                  <button
+                    className="btn d-flex align-items-center"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    onClick={() => setIsCreatePaymentOpen(true)}
+                  >
+                    <span className="payment-requests__create-icon" aria-hidden="true">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M12 5v14M5 12h14"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                    <span className="fw-semibold">{t('createPayment')}</span>
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="students-filter-button"

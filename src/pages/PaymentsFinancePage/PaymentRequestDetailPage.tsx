@@ -124,7 +124,7 @@ interface PaymentRequestForm {
 export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: PaymentRequestDetailPageProps) {
   const { t, locale } = useLanguage()
   const { token, hydrated } = useAuth()
-  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('payments')
+  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('finance')
 
   const [paymentRequestDetail, setPaymentRequestDetail] = useState<PaymentRequestDetailResponse | null>(null)
   const [logs, setLogs] = useState<PaymentLog[]>([])

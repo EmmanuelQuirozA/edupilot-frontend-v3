@@ -17,6 +17,7 @@ interface ModuleAccess {
   moduleAccessControlId: number
   schoolId: number | null
   enabled: boolean
+  sortOrder: number | null
 }
 
 interface MenuItem {
@@ -200,6 +201,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
         const data = await response.json() as ModuleAccess[]
         setModules(data)  // ← SIN FILTROS, backend manda lo que existe
       } catch (error) {
+        if ((error as DOMException)?.name === 'AbortError') return
         console.error('Error fetching access control modules', error)
         setModules([]) // ← Sidebar vacío si falla
       }
@@ -216,10 +218,20 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
       schools: `/${locale}/schools`,
     }
     if (!token) return []
+
+    const visibleModules = modules
+      .filter((module) => module.enabled && moduleLabels[module.moduleKey])
+      .sort((a, b) => {
+        const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER
+        const orderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER
+        if (orderA !== orderB) return orderA - orderB
+        return a.moduleName.localeCompare(b.moduleName)
+      })
+      
     return [
       {
         label: 'Menú principal',
-        items: modules.map((m) => ({
+        items: visibleModules.map((m) => ({
           key: m.moduleKey,
           label: moduleLabels[m.moduleKey] || m.moduleName,
           path: modulePaths[m.moduleKey] ?? `/${locale}/${m.moduleKey}`,

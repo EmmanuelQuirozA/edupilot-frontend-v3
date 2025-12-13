@@ -125,7 +125,7 @@ export function PaymentRequestScheduledDetailPage({
 }: PaymentRequestScheduledDetailPageProps) {
   const { t, locale } = useLanguage()
   const { token } = useAuth()
-  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('payments')
+  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('finance')
   const [activeTab, setActiveTab] = useState<TabKey>('executionLogs')
 
   const [requestDetail, setRequestDetail] = useState<PaymentRequestScheduleDetail | null>(null)

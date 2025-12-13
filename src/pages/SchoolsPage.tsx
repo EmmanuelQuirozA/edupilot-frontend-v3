@@ -7,6 +7,8 @@ import { DataTable, type DataTableColumn } from '../components/DataTable'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { formatDate } from '../utils/formatDate';
+import { useModulePermissions } from '../hooks/useModulePermissions'
+import { NoPermission } from '../components/NoPermission'
 
 interface School {
   school_id: number
@@ -40,6 +42,7 @@ interface SchoolsPageProps {
 export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
   const { token, hydrated } = useAuth()
   const { locale, t } = useLanguage()
+  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('schools')
 
   const [schools, setSchools] = useState<School[]>([])
   const [page, setPage] = useState(0)
@@ -48,6 +51,8 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
   const [totalElements, setTotalElements] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const canCreate = permissions?.createAllowed ?? false
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -194,10 +199,28 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
     return () => controller.abort()
   }, [locale, page, pageSize, t, token])
 
-  if (!hydrated) {
+  if (!hydrated || permissionsLoading || !permissionsLoaded) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
         <LoadingSkeleton variant="table" rowCount={10} />
+      </Layout>
+    )
+  }
+
+  if (permissionsError) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle={t('paymentRequestDetail')} breadcrumbItems={breadcrumbItems}>
+        <div className="alert alert-danger" role="alert">
+          {t('defaultError')}
+        </div>
+      </Layout>
+    )
+  }
+  
+  if (permissionsLoaded && permissions && !permissions.readAllowed) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle={t('paymentRequestDetail')} breadcrumbItems={breadcrumbItems}>
+        <NoPermission />
       </Layout>
     )
   }
@@ -212,9 +235,19 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
           </div>
         ) : null}
 
-        <div className="d-flex justify-content-end">
-          <button className="ui-btn" type="button"><span className="ui-button__label">Agregar escuela</span></button>
-        </div>
+        {canCreate ? (
+          <div className="d-flex justify-content-end">
+            <button
+              type="button"
+              className="btn d-flex align-items-center gap-2 btn-edit text-muted fw-medium"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-plus" viewBox="0 0 16 16">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+              </svg>
+              {t('addSchool')}
+            </button>
+          </div>
+        ) : null}
 
         <DataTable
           columns={columns}
