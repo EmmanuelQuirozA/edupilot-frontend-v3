@@ -162,6 +162,7 @@ const menuIcons = {
 const moduleLabels: Record<string, string> = {
   dashboard: 'Dashboard',
   schools: 'Escuelas',
+  users: 'Usuarios y roles',
   finance: 'Pagos y Finanzas',
   students: 'Alumnos y Grupos',
   teachers: 'Profesores',
@@ -216,6 +217,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
     const modulePaths: Record<string, string> = {
       dashboard: `/${locale}`,
       schools: `/${locale}/schools`,
+      users: `/${locale}/users`,
     }
     if (!token) return []
 
