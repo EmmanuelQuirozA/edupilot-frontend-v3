@@ -299,7 +299,7 @@ export function PaymentRequestScheduledDetailPage({
                 {entry.register_id ? <span className="badge bg-light text-dark">{entry.register_id}</span> : null}
               </div>
               {entry.payment_request_id ? (
-                <div className="d-flex justify-content-end">
+            <div className="d-flex justify-content-end">
                   <button
                     type="button"
                     className="btn btn-sm btn-outline-primary"
@@ -324,25 +324,25 @@ export function PaymentRequestScheduledDetailPage({
       <div key={`${log.reference_date}-${index}`} className="card shadow-sm border-0">
         <div className="card-body d-flex flex-column gap-3">
           <div className="d-flex flex-wrap gap-3 align-items-start justify-content-between">
-            <div className="d-flex gap-2 align-items-center">
-              <Badge
-                label={log.type ? log.type.toUpperCase() : t('status')}
-                variant={variant}
-              />
-              <div className="d-flex flex-column">
-                <span className="fw-semibold">{log.title || t('noInformation')}</span>
-                <span className="text-muted">{log.message || t('noInformation')}</span>
+              <div className="d-flex gap-2 align-items-center">
+                <Badge
+                  label={log.type ? log.type.toUpperCase() : t('status')}
+                  variant={variant}
+                />
+                <div className="d-flex flex-column">
+                  <span className="fw-semibold">{log.title || t('noInformation')}</span>
+                  <span className="text-muted">{log.message || t('noInformation')}</span>
+                </div>
+              </div>
+              <div className="d-flex flex-wrap gap-4">
+                <DetailRow
+                  label={t('referenceDate')}
+                  value={formatDate(log.reference_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
+                />
+                <DetailRow label={t('createdCount')} value={log.created_count ?? 0} />
+                <DetailRow label={t('duplicateCount')} value={log.duplicate_count ?? 0} />
               </div>
             </div>
-            <div className="d-flex flex-wrap gap-4">
-              <DetailRow
-                label="Fecha de referencia"
-                value={formatDate(log.reference_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
-              />
-              <DetailRow label={t('createdCount')} value={log.created_count ?? 0} />
-              <DetailRow label={t('duplicateCount')} value={log.duplicate_count ?? 0} />
-            </div>
-          </div>
 
           <div className="d-flex justify-content-end">
             <button
@@ -365,16 +365,16 @@ export function PaymentRequestScheduledDetailPage({
                   value={formatDate(log.schedule.start_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
                 />
                 <DetailRow
-                  label="Próxima ejecución"
+                  label={t('nextExecution')}
                   value={formatDate(log.schedule.next_execution_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}
                 />
-                <DetailRow label="Periodicidad" value={log.schedule.period_of_time_name} />
+                <DetailRow label={t('periodicity')} value={log.schedule.period_of_time_name} />
               </div>
 
               {log.rules?.map((rule, ruleIndex) => (
                 <div key={`rules-${ruleIndex}`} className="d-flex flex-column gap-3">
-                  {renderRuleList('Solicitudes creadas', rule.created)}
-                  {renderRuleList('Duplicados', rule.Duplicated)}
+                  {renderRuleList(t('createdRequests'), rule.created)}
+                  {renderRuleList(t('duplicates'), rule.Duplicated)}
                 </div>
               ))}
             </div>
@@ -440,18 +440,18 @@ export function PaymentRequestScheduledDetailPage({
                       className={`badge rounded-pill px-3 py-2 prsd-status-badge ${requestDetail.active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}`}
                     >
                       <span className={`status-dot ${requestDetail.active ? 'bg-success' : 'bg-secondary'}`} />
-                      {requestDetail.active ? 'Activa' : 'Inactiva'}
+                      {requestDetail.active ? t('active') : t('inactive')}
                     </span>
                   </div>
                 </div>
                 <div className="d-flex flex-wrap gap-2">
                   <button type="button" className="btn btn-light prsd-action-btn">
                     <span className="me-2">⏸️</span>
-                    Pausar
+                    {t('pause')}
                   </button>
                   <button type="button" className="btn btn-primary prsd-action-btn">
                     <span className="me-2">✏️</span>
-                    Editar regla
+                    {t('editRule')}
                   </button>
                 </div>
               </div>
@@ -464,34 +464,34 @@ export function PaymentRequestScheduledDetailPage({
                 <div className="card-header bg-light border-0 d-flex align-items-center justify-content-between">
                   <div className="d-flex align-items-center gap-2">
                     <span className="prsd-icon-circle text-primary">$</span>
-                    <h5 className="mb-0">Configuración financiera</h5>
+                    <h5 className="mb-0">{t('financialConfiguration')}</h5>
                   </div>
                   <span className="badge text-bg-light text-primary">{requestDetail.payment_concept}</span>
                 </div>
                 <div className="card-body">
                   <div className="row g-4">
                     <div className="col-sm-6">
-                      <p className="text-uppercase text-muted small fw-semibold mb-1">Monto base</p>
+                      <p className="text-uppercase text-muted small fw-semibold mb-1">{t('baseAmount')}</p>
                       <div className="d-flex align-items-baseline gap-2">
                         <span className="display-6 fw-bold text-dark">{currencyFormatter.format(requestDetail.amount)}</span>
                       </div>
-                      <p className="text-muted small mb-0">Concepto: <span className="fw-semibold text-dark">{requestDetail.payment_concept}</span></p>
+                      <p className="text-muted small mb-0">{t('concept')}: <span className="fw-semibold text-dark">{requestDetail.payment_concept}</span></p>
                     </div>
                     <div className="col-sm-6">
                       <div className="p-3 rounded-4 border prsd-warning-card h-100">
                         <div className="d-flex gap-3 align-items-start">
                           <div className="prsd-icon-circle bg-warning-subtle text-warning">⏰</div>
                           <div className="d-flex flex-column gap-1">
-                            <p className="text-warning fw-semibold mb-0">Recargo por mora</p>
+                            <p className="text-warning fw-semibold mb-0">{t('lateFeeCharge')}</p>
                             <p className="fs-4 fw-bold text-dark mb-0">{currencyFormatter.format(requestDetail.late_fee)}</p>
-                            <p className="text-muted small mb-0">{requestDetail.late_fee_frequency || requestDetail.fee_type}</p>
+                            <p className="text-muted small mb-0">{requestDetail.late_fee_frequency || requestDetail.fee_type || t('noInformation')}</p>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                   <div className="prsd-note mt-4">
-                    <span className="fw-semibold text-dark me-2">Nota interna:</span>
+                    <span className="fw-semibold text-dark me-2">{t('internalNote')}:</span>
                     <span className="text-muted">{requestDetail.comments || t('noInformation')}</span>
                   </div>
                 </div>
@@ -500,13 +500,13 @@ export function PaymentRequestScheduledDetailPage({
               <div className="card shadow-sm border-0 prsd-section-card">
                 <div className="card-header bg-light border-0 d-flex align-items-center gap-2">
                   <span className="prsd-icon-circle bg-primary-subtle text-primary">🎯</span>
-                  <h5 className="mb-0">Asignación</h5>
+                  <h5 className="mb-0">{t('assignment')}</h5>
                 </div>
                 <div className="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
                   <div className="d-flex align-items-center gap-3">
                     <div className="prsd-avatar">{requestDetail.group_detail?.group || requestDetail.student_detail?.register_id || 'PR'}</div>
                     <div>
-                      <p className="text-muted small mb-1">{requestDetail.student_detail ? t('student') : requestDetail.group_detail ? 'Grupo asignado' : t('schoolsTitle')}</p>
+                      <p className="text-muted small mb-1">{requestDetail.student_detail ? t('student') : requestDetail.group_detail ? t('assignedGroup') : t('schoolsTitle')}</p>
                       <h5 className="mb-0">{
                         requestDetail.student_detail
                           ? requestDetail.student_detail.full_name
@@ -525,14 +525,14 @@ export function PaymentRequestScheduledDetailPage({
                     </div>
                   </div>
                   <button type="button" className="btn btn-link text-decoration-none fw-semibold text-primary">
-                    Ver alumnos ({logs[0]?.created_count ?? '—'})
+                    {t('viewStudents')} ({logs[0]?.created_count ?? '—'})
                   </button>
                 </div>
               </div>
 
               <div className="card shadow-sm border-0 prsd-section-card">
                 <div className="card-header bg-white border-0 d-flex align-items-center justify-content-between">
-                  <h6 className="mb-0 text-uppercase text-muted small fw-semibold">Últimas ejecuciones</h6>
+                  <h6 className="mb-0 text-uppercase text-muted small fw-semibold">{t('recentExecutions')}</h6>
                   {logsLoading ? <span className="text-muted small">{t('tableLoading')}</span> : null}
                 </div>
                 {logsError ? (
@@ -541,14 +541,14 @@ export function PaymentRequestScheduledDetailPage({
                   </div>
                 ) : null}
                 <div className="table-responsive">
-                  <table className="table table-borderless align-middle mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th className="text-muted text-uppercase small">Fecha</th>
-                        <th className="text-muted text-uppercase small">Estado</th>
-                        <th className="text-muted text-uppercase small text-end">Generados</th>
-                      </tr>
-                    </thead>
+                      <table className="table table-borderless align-middle mb-0">
+                        <thead className="table-light">
+                          <tr>
+                            <th className="text-muted text-uppercase small">{t('date')}</th>
+                            <th className="text-muted text-uppercase small">{t('status')}</th>
+                            <th className="text-muted text-uppercase small text-end">{t('generatedRequests')}</th>
+                          </tr>
+                        </thead>
                     <tbody>
                       {logs.length === 0 && !logsLoading ? (
                         <tr>
@@ -577,24 +577,24 @@ export function PaymentRequestScheduledDetailPage({
                                 </span>
                               </td>
                               <td className="text-end text-muted">
-                                {log.created_count ?? 0} solicitudes
-                              </td>
-                            </tr>
-                          )
-                        })
-                      )}
+                                  {log.created_count ?? 0} {t('requests')}
+                                </td>
+                              </tr>
+                            )
+                          })
+                        )}
                     </tbody>
                   </table>
                 </div>
                 {logs.length ? (
-                  <div className="p-3 border-top">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span className="text-muted small">Ver detalle de ejecución</span>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => setExpandedLog(expandedLog === 0 ? null : 0)}
-                      >
+                    <div className="p-3 border-top">
+                      <div className="d-flex align-items-center justify-content-between">
+                        <span className="text-muted small">{t('viewExecutionDetail')}</span>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => setExpandedLog(expandedLog === 0 ? null : 0)}
+                        >
                         {expandedLog === 0 ? t('close') : t('viewDetails')}
                       </button>
                     </div>
@@ -608,34 +608,34 @@ export function PaymentRequestScheduledDetailPage({
               <div className="prsd-schedule-card text-white rounded-4 shadow-sm">
                 <div className="d-flex align-items-center gap-2 mb-3">
                   <span className="prsd-icon-circle bg-white text-primary">📅</span>
-                  <h5 className="mb-0 text-white">Programación</h5>
+                  <h5 className="mb-0 text-white">{t('schedule')}</h5>
                 </div>
                 <div className="d-flex flex-column gap-3">
                   <div>
-                    <p className="text-uppercase small text-white-50 mb-1">Frecuencia</p>
-                    <p className="fs-5 fw-semibold mb-0">Cada {requestDetail.interval_count} {requestDetail.period_name}</p>
+                    <p className="text-uppercase small text-white-50 mb-1">{t('frequency')}</p>
+                    <p className="fs-5 fw-semibold mb-0">{t('every')} {requestDetail.interval_count} {requestDetail.period_name}</p>
                   </div>
                   <div className="border-top border-white-25 pt-3">
-                    <p className="text-uppercase small text-white-50 mb-1">Próxima ejecución</p>
+                    <p className="text-uppercase small text-white-50 mb-1">{t('nextExecution')}</p>
                     <div className="d-flex align-items-center gap-2">
                       <span className="prsd-icon-circle bg-success text-white">➜</span>
                       <span className="fw-semibold">{formatDate(requestDetail.next_execution_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}</span>
                     </div>
                     {nextExecutionInPast ? (
                       <p className="text-warning small mt-1 d-flex align-items-center gap-1 mb-0">
-                        ⚠️ Fecha en el pasado (Pendiente)
+                        ⚠️ {t('dateInPastPending')}
                       </p>
                     ) : null}
                   </div>
                   <div className="border-top border-white-25 pt-3">
                     <div className="row g-3">
                       <div className="col-6">
-                        <p className="text-uppercase small text-white-50 mb-1">Inicio</p>
+                        <p className="text-uppercase small text-white-50 mb-1">{t('start')}</p>
                         <p className="fw-semibold mb-0">{formatDate(requestDetail.start_date, locale, { year: 'numeric', month: 'short', day: '2-digit' })}</p>
                       </div>
                       <div className="col-6">
-                        <p className="text-uppercase small text-white-50 mb-1">Fin</p>
-                        <p className="fw-semibold mb-0">{requestDetail.end_date ? formatDate(requestDetail.end_date, locale, { year: 'numeric', month: 'short', day: '2-digit' }) : 'Indefinido'}</p>
+                        <p className="text-uppercase small text-white-50 mb-1">{t('end')}</p>
+                        <p className="fw-semibold mb-0">{requestDetail.end_date ? formatDate(requestDetail.end_date, locale, { year: 'numeric', month: 'short', day: '2-digit' }) : t('undefinedEnd')}</p>
                       </div>
                     </div>
                   </div>
@@ -645,25 +645,25 @@ export function PaymentRequestScheduledDetailPage({
               <div className="card shadow-sm border-0 prsd-section-card">
                 <div className="card-body d-flex flex-column gap-3">
                   <div className="d-flex align-items-center justify-content-between">
-                    <h6 className="mb-0">Condiciones de cobro</h6>
+                    <h6 className="mb-0">{t('chargeConditions')}</h6>
                   </div>
                   <div>
                     <div className="d-flex align-items-center justify-content-between text-muted small">
-                      <span>Ventana de pago</span>
-                      <span className="text-dark fw-semibold">{requestDetail.payment_window} días</span>
+                      <span>{t('paymentWindow')}</span>
+                      <span className="text-dark fw-semibold">{requestDetail.payment_window} {t('days')}</span>
                     </div>
-                    <div className="progress mt-2" role="progressbar" aria-label="Ventana de pago" aria-valuenow={paymentWindowProgress} aria-valuemin={0} aria-valuemax={100}>
+                    <div className="progress mt-2" role="progressbar" aria-label={t('paymentWindow')} aria-valuenow={paymentWindowProgress} aria-valuemin={0} aria-valuemax={100}>
                       <div className="progress-bar bg-primary" style={{ width: `${paymentWindowProgress}%` }} />
                     </div>
-                    <p className="text-muted small text-end mb-0">Días para pagar sin mora</p>
+                    <p className="text-muted small text-end mb-0">{t('daysWithoutLateFee')}</p>
                   </div>
                   <div className="border-top pt-2 text-muted small d-flex flex-column gap-1">
                     <div className="d-flex justify-content-between">
-                      <span>Creado</span>
+                      <span>{t('createdShort')}</span>
                       <span>{formatDate(requestDetail.created_at, locale, { year: 'numeric', month: 'short', day: '2-digit' })}</span>
                     </div>
                     <div className="d-flex justify-content-between">
-                      <span>Última mod.</span>
+                      <span>{t('lastUpdatedShort')}</span>
                       <span>{formatDate(requestDetail.updated_at, locale, { year: 'numeric', month: 'short', day: '2-digit' })}</span>
                     </div>
                   </div>
@@ -671,7 +671,7 @@ export function PaymentRequestScheduledDetailPage({
               </div>
 
               <button type="button" className="btn btn-outline-danger rounded-4 py-3 fw-semibold prsd-danger-btn">
-                🗑️ Eliminar regla
+                🗑️ {t('deleteRule')}
               </button>
             </div>
           </div>
