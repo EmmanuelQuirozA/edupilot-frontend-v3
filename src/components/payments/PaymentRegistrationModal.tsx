@@ -7,6 +7,8 @@ import { API_BASE_URL } from '../../config'
 import { createCurrencyFormatter } from '../../utils/currencyFormatter'
 import './payment-registration-modal.css'
 
+declare const Swal: any
+
 export interface PaymentRequestSummary {
   tuitionLabel: string
   conceptName: string
@@ -61,8 +63,8 @@ export function PaymentRegistrationModal({
   requestSummary,
   lang = 'es',
   onSuccess,
-  title = 'Registrar pago',
-  description = 'Ingresa la información del pago para continuar.',
+  title,
+  description,
 }: PaymentRegistrationModalProps) {
   const { token } = useAuth()
   const { t } = useLanguage()
@@ -85,6 +87,8 @@ export function PaymentRegistrationModal({
 
   const hasPaymentRequestContext = Boolean(requestSummary)
   const requireFullPendingPayment = !!requestSummary && !requestSummary.isPartialPayment
+  const resolvedTitle = title ?? t('registerPaymentTitle')
+  const resolvedDescription = description ?? t('registerPaymentDescription')
 
   useEffect(() => {
     if (!isOpen) return
@@ -121,13 +125,13 @@ export function PaymentRegistrationModal({
 
   const validateAmount = (amountValue: number) => {
     if (!amountValue || Number.isNaN(amountValue)) {
-      return 'Ingresa un monto válido'
+      return t('enterValidAmount')
     }
 
     if (requireFullPendingPayment) {
       const difference = Math.abs(amountValue - requestSummary.pendingAmount)
       if (difference > PENDING_COMPARISON_DELTA) {
-        return 'El monto debe cubrir el 100% del pendiente de pago'
+        return t('amountMustCoverPending')
       }
     }
 
@@ -147,12 +151,12 @@ export function PaymentRegistrationModal({
     }
 
     if (!form.paymentThroughId) {
-      setError('Selecciona un método de pago')
+      setError(t('paymentMethodRequired'))
       return
     }
 
     if (!token) {
-      setError('No hay sesión activa')
+      setError(t('noActiveSession'))
       return
     }
 
@@ -185,7 +189,7 @@ export function PaymentRegistrationModal({
 
       if (!response.ok) {
         const message = await response.text()
-        throw new Error(message || 'No se pudo registrar el pago')
+        throw new Error(message || t('paymentRegisterError'))
       }
 
       const result = await response.json()
@@ -205,13 +209,13 @@ export function PaymentRegistrationModal({
         text: result?.message || '',
       })
 
-      setSuccessMessage('Pago registrado correctamente')
+      setSuccessMessage(t('paymentRegisterSuccess'))
       onSuccess?.()
     } catch (submitError) {
       const message =
         submitError instanceof Error
           ? submitError.message
-          : 'Ocurrió un error al registrar el pago'
+          : t('paymentRegisterUnexpected')
       setError(message)
     } finally {
       setSubmitting(false)
@@ -239,8 +243,8 @@ export function PaymentRegistrationModal({
           <div className="modal-content">
             <div className="modal-header">
               <div>
-                <h5 className="modal-title fw-semibold">{title}</h5>
-                <p className="mb-0 text-muted">{description}</p>
+                <h5 className="modal-title fw-semibold">{resolvedTitle}</h5>
+                <p className="mb-0 text-muted">{resolvedDescription}</p>
               </div>
               <button
                 type="button"
@@ -256,25 +260,25 @@ export function PaymentRegistrationModal({
                   <div className="payment-summary-card mb-3">
                     <div className="payment-summary-card__header">
                       <div>
-                        <div className="text-muted small">Colegiatura</div>
+                        <div className="text-muted small">{t('tuition') || 'Colegiatura'}</div>
                         <div className="fw-semibold text-capitalize">
                           {tuitionLabel}
                         </div>
                       </div>
                       <div className="text-end">
-                        <div className="text-muted small">Concepto</div>
+                        <div className="text-muted small">{t('concept')}</div>
                         <div className="fw-semibold">{requestSummary.conceptName}</div>
                       </div>
                     </div>
                     <div className="payment-summary-card__body">
                       <div>
-                        <span className="text-muted small d-block">Pago parcial</span>
+                        <span className="text-muted small d-block">{t('partialPayment')}</span>
                         <span className="fw-semibold">
-                          {requestSummary.isPartialPayment ? 'Sí' : 'No'}
+                          {requestSummary.isPartialPayment ? t('yes') : t('no')}
                         </span>
                       </div>
                       <div className="text-end">
-                        <span className="text-muted small d-block">Pendiente de pago</span>
+                        <span className="text-muted small d-block">{t('pendingPayment')}</span>
                         <span className="fw-semibold text-primary">
                           {currencyFormatter.format(requestSummary.pendingAmount)}
                         </span>
@@ -285,7 +289,7 @@ export function PaymentRegistrationModal({
 
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label">Monto a pagar</label>
+                    <label className="form-label">{t('amount')}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -297,11 +301,11 @@ export function PaymentRegistrationModal({
                       readOnly={Boolean(requireFullPendingPayment)}
                     />
                     {requireFullPendingPayment && (
-                      <small className="text-muted">El monto debe cubrir el pendiente.</small>
+                      <small className="text-muted">{t('amountMustCoverPending')}</small>
                     )}
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Método de pago</label>
+                    <label className="form-label">{t('paymentThrough')}</label>
                     <PaymentThroughSelect
                       value={form.paymentThroughId}
                       onChange={(value) => handleChange('paymentThroughId', value)}
@@ -311,14 +315,14 @@ export function PaymentRegistrationModal({
                   {!hasPaymentRequestContext && (
                     <>
                       <div className="col-md-6">
-                        <label className="form-label">Concepto de pago</label>
+                        <label className="form-label">{t('paymentType')}</label>
                         <PaymentConceptSelect
                           value={form.paymentConceptId}
                           onChange={(value) => handleChange('paymentConceptId', value)}
                         />
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label">Mes de pago</label>
+                        <label className="form-label">{t('paymentMonth')}</label>
                         <input
                           type="month"
                           value={form.paymentMonth}
@@ -329,21 +333,19 @@ export function PaymentRegistrationModal({
                     </>
                   )}
                   <div className="col-12">
-                    <label className="form-label">Comentarios</label>
+                    <label className="form-label">{t('comments')}</label>
                     <textarea
                       className="form-control"
                       rows={3}
                       value={form.comments}
                       onChange={(e) => handleChange('comments', e.target.value)}
-                      placeholder="Agrega información adicional"
+                      placeholder={t('addAdditionalInformation')}
                     />
                   </div>
                   <div className="col-12">
-                    <label className="form-label">Adjuntar archivo</label>
+                    <label className="form-label">{t('receipt')}</label>
                     <label className="payment-file-drop w-100" htmlFor="payment-receipt">
-                      <span className="text-muted">
-                        Arrastra y suelta o haz clic para seleccionar
-                      </span>
+                      <span className="text-muted">{t('uploadReceipt')}</span>
                       <input
                         id="payment-receipt"
                         type="file"
@@ -357,7 +359,7 @@ export function PaymentRegistrationModal({
                     </label>
                     {form.receipt && (
                       <div className="small text-muted mt-1">
-                        Archivo seleccionado: {form.receipt.name}
+                        {t('selectedFile')}: {form.receipt.name}
                       </div>
                     )}
                   </div>
@@ -376,10 +378,10 @@ export function PaymentRegistrationModal({
                   onClick={onClose}
                   disabled={submitting}
                 >
-                  Cancelar
+                  {t('cancel')}
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={submitting}>
-                  {submitting ? 'Registrando...' : 'Registrar pago'}
+                  {submitting ? t('registeringPayment') : t('registerPayment')}
                 </button>
               </div>
             </form>
@@ -399,8 +401,6 @@ export function RequestPaymentModal(
     <PaymentRegistrationModal
       {...props}
       requestSummary={props.requestSummary}
-      title="Registrar pago"
-      description="Ingresa el pago correspondiente a esta solicitud."
     />
   )
 }
@@ -411,8 +411,6 @@ export function StandalonePaymentModal(
   return (
     <PaymentRegistrationModal
       {...props}
-      title={props.title ?? 'Registrar pago'}
-      description={props.description ?? 'Registra un pago desde otra sección.'}
     />
   )
 }

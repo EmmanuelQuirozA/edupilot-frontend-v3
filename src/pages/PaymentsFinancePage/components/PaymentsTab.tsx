@@ -6,6 +6,7 @@ import { DataTable, type DataTableColumn } from '../../../components/DataTable'
 import SearchInput from '../../../components/ui/SearchInput';
 import StudentTableCell from '../../../components/ui/StudentTableCell';
 import { FilterSidebar, type FilterField, type FilterValues } from '../../../components/FilterSidebar'
+import ManualPaymentModal from './ManualPaymentModal'
 
 type OrderDirection = 'ASC' | 'DESC'
 
@@ -80,6 +81,8 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [appliedFilters, setAppliedFilters] = useState<FilterValues>({})
+  const [isCreatePaymentOpen, setIsCreatePaymentOpen] = useState(false)
+  const [refreshCounter, setRefreshCounter] = useState(0)
 
   const activeFiltersCount = useMemo(
     () =>
@@ -256,7 +259,7 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
     fetchData()
 
     return () => controller.abort()
-  }, [appliedFilters, appliedSearch, OrderBy, OrderDir, Page, PageSize, locale, t, token])
+  }, [appliedFilters, appliedSearch, OrderBy, OrderDir, Page, PageSize, locale, t, token, refreshCounter])
 
   const handleSearchSubmit = () => {
     setAppliedSearch(searchTerm)
@@ -357,26 +360,46 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
                 className="flex-grow-1"
                 inputClassName="w-100"
               />
-              <button
-                type="button"
-                className="students-filter-button"
-                onClick={() => setFiltersOpen(true)}
-              >
-                <svg
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
-                  className="students-filter-button__icon"
-                  focusable="false"
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-primary d-flex align-items-center gap-2"
+                  onClick={() => setIsCreatePaymentOpen(true)}
                 >
-                  <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
-                </svg>
-                <span className="fw-semibold">Filtros</span>
-                {activeFiltersCount > 0 ? (
-                  <span className="badge bg-primary rounded-pill ms-2">
-                    {activeFiltersCount}
+                  <span aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M12 5v14M5 12h14"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </span>
-                ) : null}
-              </button>
+                  <span className="fw-semibold">{t('createPayment')}</span>
+                </button>
+                <button
+                  type="button"
+                  className="students-filter-button"
+                  onClick={() => setFiltersOpen(true)}
+                >
+                  <svg
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                    className="students-filter-button__icon"
+                    focusable="false"
+                  >
+                    <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
+                  </svg>
+                  <span className="fw-semibold">Filtros</span>
+                  {activeFiltersCount > 0 ? (
+                    <span className="badge bg-primary rounded-pill ms-2">
+                      {activeFiltersCount}
+                    </span>
+                  ) : null}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -417,6 +440,15 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
             initialValues={appliedFilters}
           />
         </>
+        <ManualPaymentModal
+          isOpen={isCreatePaymentOpen}
+          onClose={() => setIsCreatePaymentOpen(false)}
+          lang="es"
+          onSuccess={() => {
+            setIsCreatePaymentOpen(false)
+            setRefreshCounter((prev) => prev + 1)
+          }}
+        />
       </div>
     </>
   )
