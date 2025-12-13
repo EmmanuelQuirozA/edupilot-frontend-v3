@@ -20,7 +20,7 @@ interface PaymentDetail {
   payment_id: number
   student_id: number
   school_id: number
-  payment_month: string
+  payment_month: string | null
   amount: number
   payment_status_id: number
   payment_through_id: number
@@ -435,7 +435,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     return parsedDate.toISOString().slice(0, 16)
   }
 
-  const toMonthInputValue = (value: string) => {
+  const toMonthInputValue = (value: string | null) => {
     if (!value) return ''
     const parsedDate = new Date(value)
 
@@ -454,7 +454,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
       payment_through_id: payment.payment_through_id ?? '',
       created_at: toDateTimeLocalValue(payment.payment_created_at),
       payment_date: toDateTimeLocalValue(payment.payment_date),
-      payment_month: toMonthInputValue(payment.payment_month),
+      payment_month: payment.payment_concept_id === 1 ? toMonthInputValue(payment.payment_month) : '',
       amount: payment.amount ? String(payment.amount) : '',
       comments: payment.comments ?? '',
     })
@@ -472,7 +472,19 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
   }
 
   const handlePaymentFormChange = (field: keyof typeof paymentForm, value: string | number | '') => {
-    setPaymentForm((prev) => ({ ...prev, [field]: value }))
+    setPaymentForm((prev) => {
+      if (field === 'payment_concept_id') {
+        const newConceptId = value as number | ''
+
+        return {
+          ...prev,
+          payment_concept_id: newConceptId,
+          payment_month: newConceptId === 1 ? prev.payment_month : '',
+        }
+      }
+
+      return { ...prev, [field]: value }
+    })
   }
 
   const handleStatusUpdate = async (paymentStatusId: number) => {
@@ -558,12 +570,18 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
       const normalizedLanguage = locale || 'es'
       const url = `${API_BASE_URL}/payments/update/${payment.payment_id}?lang=${normalizedLanguage}`
 
+      const isPaymentMonthRequired = paymentForm.payment_concept_id === 1
+      const paymentMonthValue =
+        isPaymentMonthRequired && paymentForm.payment_month
+          ? `${paymentForm.payment_month}-01`
+          : null
+
       const payload = {
         payment_concept_id: paymentForm.payment_concept_id === '' ? undefined : Number(paymentForm.payment_concept_id),
         payment_through_id: paymentForm.payment_through_id === '' ? undefined : Number(paymentForm.payment_through_id),
         created_at: appendSeconds(paymentForm.created_at),
         payment_date: appendSeconds(paymentForm.payment_date),
-        payment_month: paymentForm.payment_month ? `${paymentForm.payment_month}-01` : undefined,
+        payment_month: paymentMonthValue,
         amount: paymentForm.amount ? Number(paymentForm.amount) : undefined,
         comments: paymentForm.comments ?? '',
       }
@@ -615,6 +633,8 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
       setIsUpdatingPayment(false)
     }
   }
+
+  const isPaymentMonthRequired = paymentForm.payment_concept_id === 1
 
   if (!hydrated || permissionsLoading || !permissionsLoaded) {
     return (
@@ -808,8 +828,8 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                     className="form-control"
                     value={paymentForm.payment_month}
                     onChange={(event) => handlePaymentFormChange('payment_month', event.target.value)}
-                    disabled={isUpdatingPayment}
-                    required
+                    disabled={isUpdatingPayment || !isPaymentMonthRequired}
+                    required={isPaymentMonthRequired}
                   />
                 </div>
                 <div className="col-md-4">
@@ -900,7 +920,11 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
                 </div>
                 <div className="col-md-3 mb-3">
                   <div className="text-muted small mb-1">{t('paymentMonth')}</div>
-                  <div className="fw-semibold">{formatDate(payment.payment_month, locale, {year: 'numeric', month: 'long'})}</div>
+                  <div className="fw-semibold">
+                    {payment.payment_month
+                      ? formatDate(payment.payment_month, locale, { year: 'numeric', month: 'long' })
+                      : t('noInformation')}
+                  </div>
                 </div>
               </div>
             )}
