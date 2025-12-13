@@ -26,6 +26,7 @@ import { PaymentDetailPage } from "./pages/PaymentsFinancePage/PaymentDetailPage
 import { PaymentRequestDetailPage } from "./pages/PaymentsFinancePage/PaymentRequestDetailPage";
 import { PaymentRequestUploadResultPage } from "./pages/PaymentsFinancePage/PaymentRequestUploadResultPage";
 import { PaymentRequestScheduledDetailPage } from "./pages/PaymentsFinancePage/PaymentRequestScheduledDetailPage";
+import { RolesPermissionsPage } from "./pages/RolesPermissionsPage";
 
 import { LoadingSkeleton } from "./components/LoadingSkeleton";
 import { Layout } from "./layout/Layout";
@@ -116,6 +117,7 @@ function Router() {
   const isStudentsPath = /^\/(es|en)\/students$/.test(path);
   const studentDetailMatch = path.match(/^\/(es|en)\/students\/(\d+)$/);
   const isStudentDetailPath = Boolean(studentDetailMatch);
+  const isUsersPath = /^\/(es|en)\/users$/.test(path);
   const scheduledFinanceMatch = path.match(/^\/(es|en)\/finance\/request\/scheduled\/(\d+)$/);
   const financeMatch = path.match(/^\/(es|en)\/finance(?:\/(payments|request|request-upload)(?:\/(\d+))?)?$/);
   const isFinancePath = Boolean(financeMatch) || Boolean(scheduledFinanceMatch);
@@ -198,6 +200,7 @@ function Router() {
     }
 
     if (isFinancePath) return <PaymentsFinancePage onNavigate={navigate} currentPath={path} />;
+    if (isUsersPath) return <RolesPermissionsPage onNavigate={navigate} />;
 
     if (isRootPath) {
       switch (role) {
