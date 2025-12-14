@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { Layout } from '../layout/Layout'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -30,6 +30,13 @@ interface PermissionRow {
   r: boolean
   u: boolean
   d: boolean
+}
+
+interface PlanModule {
+  moduleName: string
+  moduleId: number
+  moduleKey: string
+  moduleDescription: string | null
 }
 
 type PermissionKey = 'c' | 'r' | 'u' | 'd'
@@ -66,6 +73,15 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
   const [permissionRows, setPermissionRows] = useState<PermissionRow[]>([])
   const [permissionRowsLoading, setPermissionRowsLoading] = useState(false)
   const [updatingPermissionKey, setUpdatingPermissionKey] = useState<string | null>(null)
+  const [planModules, setPlanModules] = useState<PlanModule[]>([])
+  const [planModulesLoading, setPlanModulesLoading] = useState(false)
+  const [showAddPermissionForm, setShowAddPermissionForm] = useState(false)
+  const [selectedModuleId, setSelectedModuleId] = useState<number | ''>('')
+  const [permissionCreate, setPermissionCreate] = useState(true)
+  const [permissionRead, setPermissionRead] = useState(true)
+  const [permissionUpdate, setPermissionUpdate] = useState(false)
+  const [permissionDelete, setPermissionDelete] = useState(false)
+  const [addPermissionLoading, setAddPermissionLoading] = useState(false)
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -153,10 +169,47 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
   }, [locale, selectedSchoolId, token])
 
   useEffect(() => {
-    if (!token || !selectedRoleId) return
+    if (!token || !selectedSchoolId) return
 
     const controller = new AbortController()
-    const fetchPermissions = async () => {
+    const fetchPlanModules = async () => {
+      setPlanModulesLoading(true)
+      setPlanModules([])
+      try {
+        const params = new URLSearchParams({
+          lang: locale,
+          school_id: String(selectedSchoolId),
+        })
+        const response = await fetch(`${API_BASE_URL}/catalog/plan-modules?${params.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const json = (await response.json()) as PlanModule[]
+        setPlanModules(json)
+      } catch (error) {
+        if ((error as DOMException).name !== 'AbortError') {
+          setPlanModules([])
+        }
+      } finally {
+        setPlanModulesLoading(false)
+      }
+    }
+
+    fetchPlanModules()
+    return () => controller.abort()
+  }, [locale, selectedSchoolId, token])
+
+  const fetchPermissions = useCallback(
+    async (options?: { signal?: AbortSignal }) => {
+      if (!token || !selectedRoleId) return
+
       setPermissionRowsLoading(true)
       try {
         const response = await fetch(
@@ -165,7 +218,7 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
             headers: {
               Authorization: `Bearer ${token}`,
             },
-            signal: controller.signal,
+            signal: options?.signal,
           },
         )
 
@@ -182,11 +235,17 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
       } finally {
         setPermissionRowsLoading(false)
       }
-    }
+    },
+    [selectedRoleId, token],
+  )
 
-    fetchPermissions()
+  useEffect(() => {
+    if (!token || !selectedRoleId) return
+
+    const controller = new AbortController()
+    fetchPermissions({ signal: controller.signal })
     return () => controller.abort()
-  }, [selectedRoleId, token])
+  }, [fetchPermissions, selectedRoleId, token])
 
   const sortedPermissions = useMemo(
     () =>
@@ -198,6 +257,27 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
       }),
     [permissionRows],
   )
+
+  const availableModules = useMemo(
+    () =>
+      planModules.filter(
+        (planModule) => !permissionRows.some((permission) => permission.module_id === planModule.moduleId),
+      ),
+    [permissionRows, planModules],
+  )
+
+  const resetAddPermissionForm = useCallback(() => {
+    setSelectedModuleId('')
+    setPermissionCreate(true)
+    setPermissionRead(true)
+    setPermissionUpdate(false)
+    setPermissionDelete(false)
+  }, [])
+
+  useEffect(() => {
+    resetAddPermissionForm()
+    setShowAddPermissionForm(false)
+  }, [resetAddPermissionForm, selectedRoleId])
 
   const handlePermissionToggle = async (permission: PermissionRow, key: PermissionKey) => {
     if (!token) return
@@ -250,7 +330,7 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
         title: json.title ?? t('successTitle') ?? 'Permiso actualizado',
         text: json.message ?? t('successMessage') ?? 'El permiso se actualizó correctamente.',
       })
-    } catch (error) {
+    } catch {
       Swal.fire({
         icon: 'error',
         title: t('defaultError') || 'Error',
@@ -258,6 +338,57 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
       })
     } finally {
       setUpdatingPermissionKey(null)
+    }
+  }
+
+  const handleAddPermissionSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!token || !selectedRoleId || !selectedModuleId) return
+
+    setAddPermissionLoading(true)
+    try {
+      const params = new URLSearchParams({ lang: locale })
+      const payload = {
+        role_id: selectedRoleId,
+        module_id: selectedModuleId,
+        c: permissionCreate ? 1 : 0,
+        r: permissionRead ? 1 : 0,
+        u: permissionUpdate ? 1 : 0,
+        d: permissionDelete ? 1 : 0,
+      }
+
+      const response = await fetch(`${API_BASE_URL}/permissions/create?${params.toString()}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error('failed_request')
+      }
+
+      const json = (await response.json()) as PermissionUpdateResponse
+
+      await Swal.fire({
+        icon: json.type ?? 'success',
+        title: json.title ?? t('successTitle') ?? 'Permiso creado',
+        text: json.message ?? t('successMessage') ?? 'El permiso se creó correctamente.',
+      })
+
+      resetAddPermissionForm()
+      setShowAddPermissionForm(false)
+      await fetchPermissions()
+    } catch {
+      Swal.fire({
+        icon: 'error',
+        title: t('defaultError') || 'Error',
+        text: t('defaultError') || 'Ocurrió un error al agregar el permiso.',
+      })
+    } finally {
+      setAddPermissionLoading(false)
     }
   }
 
@@ -413,6 +544,139 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
                     ))}
                   </tbody>
                 </table>
+              </div>
+            ) : null}
+
+            {selectedRoleId ? (
+              <div className="mt-4">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div>
+                    <h4 className="h6 mb-1">{t('addPermissionFormTitle')}</h4>
+                    <p className="text-muted small mb-0">{t('addPermissionFormDescription')}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setShowAddPermissionForm((current) => !current)}
+                    disabled={planModulesLoading || addPermissionLoading}
+                  >
+                    {t('addPermissionButton')}
+                  </button>
+                </div>
+
+                {showAddPermissionForm ? (
+                  <form className="border rounded-3 p-3 bg-light" onSubmit={handleAddPermissionSubmit}>
+                    <div className="row g-3 align-items-center">
+                      <div className="col-lg-4">
+                        <label className="form-label fw-semibold" htmlFor="moduleSelect">
+                          {t('selectModuleLabel')}
+                        </label>
+                        <select
+                          id="moduleSelect"
+                          className="form-select"
+                          value={selectedModuleId}
+                          onChange={(event) =>
+                            setSelectedModuleId(event.target.value ? Number(event.target.value) : '')
+                          }
+                          disabled={planModulesLoading || addPermissionLoading}
+                        >
+                          <option value="">{planModulesLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
+                          {availableModules.map((module) => (
+                            <option key={module.moduleId} value={module.moduleId}>
+                              {module.moduleName}
+                            </option>
+                          ))}
+                        </select>
+                        {availableModules.length === 0 && !planModulesLoading ? (
+                          <p className="text-muted small mt-2 mb-0">{t('noAvailableModules')}</p>
+                        ) : null}
+                      </div>
+
+                      <div className="col-lg-8">
+                        <label className="form-label fw-semibold d-block">{t('permissionsTableTitle')}</label>
+                        <div className="d-flex flex-wrap gap-3">
+                          <div className="form-check form-switch">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              role="switch"
+                              id="add-permission-create"
+                              checked={permissionCreate}
+                              onChange={(event) => setPermissionCreate(event.target.checked)}
+                              disabled={addPermissionLoading}
+                            />
+                            <label className="form-check-label" htmlFor="add-permission-create">
+                              {t('permissionCreate')}
+                            </label>
+                          </div>
+                          <div className="form-check form-switch">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              role="switch"
+                              id="add-permission-read"
+                              checked={permissionRead}
+                              onChange={(event) => setPermissionRead(event.target.checked)}
+                              disabled={addPermissionLoading}
+                            />
+                            <label className="form-check-label" htmlFor="add-permission-read">
+                              {t('permissionRead')}
+                            </label>
+                          </div>
+                          <div className="form-check form-switch">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              role="switch"
+                              id="add-permission-update"
+                              checked={permissionUpdate}
+                              onChange={(event) => setPermissionUpdate(event.target.checked)}
+                              disabled={addPermissionLoading}
+                            />
+                            <label className="form-check-label" htmlFor="add-permission-update">
+                              {t('permissionUpdate')}
+                            </label>
+                          </div>
+                          <div className="form-check form-switch">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              role="switch"
+                              id="add-permission-delete"
+                              checked={permissionDelete}
+                              onChange={(event) => setPermissionDelete(event.target.checked)}
+                              disabled={addPermissionLoading}
+                            />
+                            <label className="form-check-label" htmlFor="add-permission-delete">
+                              {t('permissionDelete')}
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="d-flex gap-2 mt-3">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={() => {
+                          setShowAddPermissionForm(false)
+                          resetAddPermissionForm()
+                        }}
+                        disabled={addPermissionLoading}
+                      >
+                        {t('cancel')}
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={addPermissionLoading || !selectedModuleId || availableModules.length === 0}
+                      >
+                        {addPermissionLoading ? t('tableLoading') : t('save')}
+                      </button>
+                    </div>
+                  </form>
+                ) : null}
               </div>
             ) : null}
           </div>
