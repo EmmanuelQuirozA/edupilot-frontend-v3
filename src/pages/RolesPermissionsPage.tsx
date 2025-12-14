@@ -32,6 +32,15 @@ interface PermissionRow {
   d: boolean
 }
 
+type PermissionKey = 'c' | 'r' | 'u' | 'd'
+
+interface PermissionUpdateResponse {
+  type?: 'success' | 'error'
+  title?: string
+  message?: string
+  success?: boolean
+}
+
 interface RolesPermissionsPageProps {
   onNavigate: (path: string) => void
 }
@@ -56,6 +65,7 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
 
   const [permissionRows, setPermissionRows] = useState<PermissionRow[]>([])
   const [permissionRowsLoading, setPermissionRowsLoading] = useState(false)
+  const [updatingPermissionKey, setUpdatingPermissionKey] = useState<string | null>(null)
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -189,6 +199,68 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
     [permissionRows],
   )
 
+  const handlePermissionToggle = async (permission: PermissionRow, key: PermissionKey) => {
+    if (!token) return
+
+    const nextValue = !permission[key]
+    const confirmation = await Swal.fire({
+      icon: 'question',
+      title: t('updatePermissionTitle') || 'Actualizar permiso',
+      text: t('updatePermissionConfirmation') || '¿Deseas actualizar el estado de este permiso?',
+      showCancelButton: true,
+      confirmButtonText: t('accept') || 'Aceptar',
+      cancelButtonText: t('cancel') || 'Cancelar',
+    })
+
+    if (!confirmation.isConfirmed) return
+
+    const permissionKey = `${permission.permission_id}-${key}`
+    setUpdatingPermissionKey(permissionKey)
+
+    try {
+      const payload = {
+        c: permission.c ? 1 : 0,
+        r: permission.r ? 1 : 0,
+        u: permission.u ? 1 : 0,
+        d: permission.d ? 1 : 0,
+        [key]: nextValue ? 1 : 0,
+      }
+
+      const response = await fetch(`${API_BASE_URL}/permissions/update?permissionId=${permission.permission_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error('failed_request')
+      }
+
+      const json = (await response.json()) as PermissionUpdateResponse
+
+      setPermissionRows((current) =>
+        current.map((row) => (row.permission_id === permission.permission_id ? { ...row, [key]: nextValue } : row)),
+      )
+
+      await Swal.fire({
+        icon: json.type ?? 'success',
+        title: json.title ?? t('successTitle') ?? 'Permiso actualizado',
+        text: json.message ?? t('successMessage') ?? 'El permiso se actualizó correctamente.',
+      })
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: t('defaultError') || 'Error',
+        text: t('defaultError') || 'Ocurrió un error al actualizar el permiso.',
+      })
+    } finally {
+      setUpdatingPermissionKey(null)
+    }
+  }
+
   if (!hydrated || permissionsLoading || !permissionsLoaded) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('rolesPermissionsTitle')} breadcrumbItems={breadcrumbItems}>
@@ -318,13 +390,25 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
                             <small className="text-muted">{permission.module_key}</small>
                           </div>
                         </th>
-                        {[permission.c, permission.r, permission.u, permission.d].map((value, index) => (
-                          <td key={index} className="text-center">
-                            <span className={`badge ${value ? 'bg-success' : 'bg-secondary'} px-3`}>
-                              {value ? t('permissionAllowed') : t('permissionDenied')}
-                            </span>
-                          </td>
-                        ))}
+                        {(['c', 'r', 'u', 'd'] as PermissionKey[]).map((key) => {
+                          const switchId = `permission-${permission.permission_id}-${key}`
+                          const isUpdating = updatingPermissionKey === `${permission.permission_id}-${key}`
+                          return (
+                            <td key={key} className="text-center">
+                              <div className="form-check form-switch d-inline-flex align-items-center justify-content-center">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  role="switch"
+                                  id={switchId}
+                                  checked={permission[key]}
+                                  onChange={() => handlePermissionToggle(permission, key)}
+                                  disabled={permissionRowsLoading || isUpdating}
+                                />
+                              </div>
+                            </td>
+                          )
+                        })}
                       </tr>
                     ))}
                   </tbody>
