@@ -50,9 +50,10 @@ interface PermissionUpdateResponse {
 
 interface RolesPermissionsPageProps {
   onNavigate: (path: string) => void
+  embedded?: boolean
 }
 
-export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) {
+export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPermissionsPageProps) {
   const { token, hydrated } = useAuth()
   const { locale, t } = useLanguage()
   const {
@@ -392,20 +393,301 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
     }
   }
 
+  const pageContent = (
+    <div className="d-flex flex-column gap-4">
+      <div className="card shadow-sm">
+        <div className="card-body">
+          <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div>
+              <h2 className="h4 mb-1">{t('rolesPermissionsTitle')}</h2>
+              <p className="text-muted mb-0">{t('rolesPermissionsSubtitle')}</p>
+            </div>
+            <div className="text-muted small">
+              {t('rolesPermissionsHelper')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card shadow-sm">
+        <div className="card-body">
+          <div className="row g-3">
+            <div className="col-lg-6">
+              <label className="form-label fw-semibold" htmlFor="schoolSelect">
+                {t('selectSchoolLabel')}
+              </label>
+              <select
+                id="schoolSelect"
+                className="form-select"
+                value={selectedSchoolId ?? ''}
+                onChange={(event) => setSelectedSchoolId(event.target.value ? Number(event.target.value) : null)}
+                disabled={schoolsLoading}
+              >
+                <option value="">{schoolsLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
+                {schools.map((school) => (
+                  <option key={school.school_id} value={school.school_id}>
+                    {school.description}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-lg-6">
+              <label className="form-label fw-semibold" htmlFor="roleSelect">
+                {t('selectRoleLabel')}
+              </label>
+              <select
+                id="roleSelect"
+                className="form-select"
+                value={selectedRoleId ?? ''}
+                onChange={(event) => setSelectedRoleId(event.target.value ? Number(event.target.value) : null)}
+                disabled={!selectedSchoolId || rolesLoading}
+              >
+                <option value="">{rolesLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
+                {roles.map((role) => (
+                  <option key={role.role_id} value={role.role_id}>
+                    {role.role_name}
+                  </option>
+                ))}
+              </select>
+              {selectedRoleId && (
+                <p className="text-muted small mt-2 mb-0">
+                  {roles.find((role) => role.role_id === selectedRoleId)?.role_description || t('noDescription')}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card shadow-sm">
+        <div className="card-body">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h3 className="h5 mb-1">{t('permissionsTableTitle')}</h3>
+              <p className="text-muted mb-0">{t('permissionsTableSubtitle')}</p>
+            </div>
+            {permissionRowsLoading ? (
+              <span className="badge bg-secondary">{t('tableLoading')}</span>
+            ) : null}
+          </div>
+
+          {!selectedRoleId ? (
+            <p className="text-muted mb-0">{t('selectRolePrompt')}</p>
+          ) : null}
+
+          {selectedRoleId && !permissionRowsLoading && sortedPermissions.length === 0 ? (
+            <p className="text-muted mb-0">{t('tableNoData')}</p>
+          ) : null}
+
+          {selectedRoleId && sortedPermissions.length > 0 ? (
+            <div className="table-responsive">
+              <table className="table align-middle">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('moduleColumn')}</th>
+                    <th scope="col" className="text-center">{t('permissionCreate')}</th>
+                    <th scope="col" className="text-center">{t('permissionRead')}</th>
+                    <th scope="col" className="text-center">{t('permissionUpdate')}</th>
+                    <th scope="col" className="text-center">{t('permissionDelete')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedPermissions.map((permission) => (
+                    <tr key={permission.permission_id}>
+                      <th scope="row" className="fw-semibold">
+                        <div className="d-flex flex-column">
+                          <span>{permission.module_name}</span>
+                          <small className="text-muted">{permission.module_key}</small>
+                        </div>
+                      </th>
+                      {(['c', 'r', 'u', 'd'] as PermissionKey[]).map((key) => {
+                        const switchId = `permission-${permission.permission_id}-${key}`
+                        const isUpdating = updatingPermissionKey === `${permission.permission_id}-${key}`
+                        return (
+                          <td key={key} className="text-center">
+                            <div className="form-check form-switch d-inline-flex align-items-center justify-content-center">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                role="switch"
+                                id={switchId}
+                                checked={permission[key]}
+                                onChange={() => handlePermissionToggle(permission, key)}
+                                disabled={permissionRowsLoading || isUpdating}
+                              />
+                            </div>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+
+          {selectedRoleId ? (
+            <div className="mt-4">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <h4 className="h6 mb-1">{t('addPermissionFormTitle')}</h4>
+                  <p className="text-muted small mb-0">{t('addPermissionFormDescription')}</p>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setShowAddPermissionForm((current) => !current)}
+                  disabled={planModulesLoading || addPermissionLoading}
+                >
+                  {t('addPermissionButton')}
+                </button>
+              </div>
+
+              {showAddPermissionForm ? (
+                <form className="border rounded-3 p-3 bg-light" onSubmit={handleAddPermissionSubmit}>
+                  <div className="row g-3 align-items-center">
+                    <div className="col-lg-4">
+                      <label className="form-label fw-semibold" htmlFor="moduleSelect">
+                        {t('selectModuleLabel')}
+                      </label>
+                      <select
+                        id="moduleSelect"
+                        className="form-select"
+                        value={selectedModuleId}
+                        onChange={(event) =>
+                          setSelectedModuleId(event.target.value ? Number(event.target.value) : '')
+                        }
+                        disabled={planModulesLoading || addPermissionLoading}
+                      >
+                        <option value="">{planModulesLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
+                        {availableModules.map((module) => (
+                          <option key={module.moduleId} value={module.moduleId}>
+                            {module.moduleName}
+                          </option>
+                        ))}
+                      </select>
+                      {availableModules.length === 0 && !planModulesLoading ? (
+                        <p className="text-muted small mt-2 mb-0">{t('noAvailableModules')}</p>
+                      ) : null}
+                    </div>
+
+                    <div className="col-lg-8">
+                      <label className="form-label fw-semibold d-block">{t('permissionsTableTitle')}</label>
+                      <div className="d-flex flex-wrap gap-3">
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="add-permission-create"
+                            checked={permissionCreate}
+                            onChange={(event) => setPermissionCreate(event.target.checked)}
+                            disabled={addPermissionLoading}
+                          />
+                          <label className="form-check-label" htmlFor="add-permission-create">
+                            {t('permissionCreate')}
+                          </label>
+                        </div>
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="add-permission-read"
+                            checked={permissionRead}
+                            onChange={(event) => setPermissionRead(event.target.checked)}
+                            disabled={addPermissionLoading}
+                          />
+                          <label className="form-check-label" htmlFor="add-permission-read">
+                            {t('permissionRead')}
+                          </label>
+                        </div>
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="add-permission-update"
+                            checked={permissionUpdate}
+                            onChange={(event) => setPermissionUpdate(event.target.checked)}
+                            disabled={addPermissionLoading}
+                          />
+                          <label className="form-check-label" htmlFor="add-permission-update">
+                            {t('permissionUpdate')}
+                          </label>
+                        </div>
+                        <div className="form-check form-switch">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="add-permission-delete"
+                            checked={permissionDelete}
+                            onChange={(event) => setPermissionDelete(event.target.checked)}
+                            disabled={addPermissionLoading}
+                          />
+                          <label className="form-check-label" htmlFor="add-permission-delete">
+                            {t('permissionDelete')}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="d-flex gap-2 mt-3">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => {
+                        setShowAddPermissionForm(false)
+                        resetAddPermissionForm()
+                      }}
+                      disabled={addPermissionLoading}
+                    >
+                      {t('cancel')}
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={addPermissionLoading || !selectedModuleId || availableModules.length === 0}
+                    >
+                      {addPermissionLoading ? t('tableLoading') : t('save')}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+
   if (!hydrated || permissionsLoading || !permissionsLoaded) {
-    return (
+    const loader = <LoadingSkeleton variant="dashboard" cardCount={8} />
+    return embedded ? (
+      loader
+    ) : (
       <Layout onNavigate={onNavigate} pageTitle={t('rolesPermissionsTitle')} breadcrumbItems={breadcrumbItems}>
-        <LoadingSkeleton variant="dashboard" cardCount={8} />
+        {loader}
       </Layout>
     )
   }
 
   if (permissionsError || !permissions?.readAllowed) {
-    return (
+    const noPermission = <NoPermission />
+    return embedded ? (
+      noPermission
+    ) : (
       <Layout onNavigate={onNavigate} pageTitle={t('rolesPermissionsTitle')} breadcrumbItems={breadcrumbItems}>
-        <NoPermission onNavigate={onNavigate} />
+        {noPermission}
       </Layout>
     )
+  }
+
+  if (embedded) {
+    return pageContent
   }
 
   return (
@@ -414,274 +696,7 @@ export function RolesPermissionsPage({ onNavigate }: RolesPermissionsPageProps) 
       pageTitle={t('rolesPermissionsTitle')}
       breadcrumbItems={breadcrumbItems}
     >
-      <div className="d-flex flex-column gap-4">
-        <div className="card shadow-sm">
-          <div className="card-body">
-            <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-              <div>
-                <h2 className="h4 mb-1">{t('rolesPermissionsTitle')}</h2>
-                <p className="text-muted mb-0">{t('rolesPermissionsSubtitle')}</p>
-              </div>
-              <div className="text-muted small">
-                {t('rolesPermissionsHelper')}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card shadow-sm">
-          <div className="card-body">
-            <div className="row g-3">
-              <div className="col-lg-6">
-                <label className="form-label fw-semibold" htmlFor="schoolSelect">
-                  {t('selectSchoolLabel')}
-                </label>
-                <select
-                  id="schoolSelect"
-                  className="form-select"
-                  value={selectedSchoolId ?? ''}
-                  onChange={(event) => setSelectedSchoolId(event.target.value ? Number(event.target.value) : null)}
-                  disabled={schoolsLoading}
-                >
-                  <option value="">{schoolsLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
-                  {schools.map((school) => (
-                    <option key={school.school_id} value={school.school_id}>
-                      {school.description}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-lg-6">
-                <label className="form-label fw-semibold" htmlFor="roleSelect">
-                  {t('selectRoleLabel')}
-                </label>
-                <select
-                  id="roleSelect"
-                  className="form-select"
-                  value={selectedRoleId ?? ''}
-                  onChange={(event) => setSelectedRoleId(event.target.value ? Number(event.target.value) : null)}
-                  disabled={!selectedSchoolId || rolesLoading}
-                >
-                  <option value="">{rolesLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
-                  {roles.map((role) => (
-                    <option key={role.role_id} value={role.role_id}>
-                      {role.role_name}
-                    </option>
-                  ))}
-                </select>
-                {selectedRoleId && (
-                  <p className="text-muted small mt-2 mb-0">
-                    {roles.find((role) => role.role_id === selectedRoleId)?.role_description || t('noDescription')}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card shadow-sm">
-          <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <h3 className="h5 mb-1">{t('permissionsTableTitle')}</h3>
-                <p className="text-muted mb-0">{t('permissionsTableSubtitle')}</p>
-              </div>
-              {permissionRowsLoading ? (
-                <span className="badge bg-secondary">{t('tableLoading')}</span>
-              ) : null}
-            </div>
-
-            {!selectedRoleId ? (
-              <p className="text-muted mb-0">{t('selectRolePrompt')}</p>
-            ) : null}
-
-            {selectedRoleId && !permissionRowsLoading && sortedPermissions.length === 0 ? (
-              <p className="text-muted mb-0">{t('tableNoData')}</p>
-            ) : null}
-
-            {selectedRoleId && sortedPermissions.length > 0 ? (
-              <div className="table-responsive">
-                <table className="table align-middle">
-                  <thead>
-                    <tr>
-                      <th scope="col">{t('moduleColumn')}</th>
-                      <th scope="col" className="text-center">{t('permissionCreate')}</th>
-                      <th scope="col" className="text-center">{t('permissionRead')}</th>
-                      <th scope="col" className="text-center">{t('permissionUpdate')}</th>
-                      <th scope="col" className="text-center">{t('permissionDelete')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedPermissions.map((permission) => (
-                      <tr key={permission.permission_id}>
-                        <th scope="row" className="fw-semibold">
-                          <div className="d-flex flex-column">
-                            <span>{permission.module_name}</span>
-                            <small className="text-muted">{permission.module_key}</small>
-                          </div>
-                        </th>
-                        {(['c', 'r', 'u', 'd'] as PermissionKey[]).map((key) => {
-                          const switchId = `permission-${permission.permission_id}-${key}`
-                          const isUpdating = updatingPermissionKey === `${permission.permission_id}-${key}`
-                          return (
-                            <td key={key} className="text-center">
-                              <div className="form-check form-switch d-inline-flex align-items-center justify-content-center">
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  role="switch"
-                                  id={switchId}
-                                  checked={permission[key]}
-                                  onChange={() => handlePermissionToggle(permission, key)}
-                                  disabled={permissionRowsLoading || isUpdating}
-                                />
-                              </div>
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : null}
-
-            {selectedRoleId ? (
-              <div className="mt-4">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <div>
-                    <h4 className="h6 mb-1">{t('addPermissionFormTitle')}</h4>
-                    <p className="text-muted small mb-0">{t('addPermissionFormDescription')}</p>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => setShowAddPermissionForm((current) => !current)}
-                    disabled={planModulesLoading || addPermissionLoading}
-                  >
-                    {t('addPermissionButton')}
-                  </button>
-                </div>
-
-                {showAddPermissionForm ? (
-                  <form className="border rounded-3 p-3 bg-light" onSubmit={handleAddPermissionSubmit}>
-                    <div className="row g-3 align-items-center">
-                      <div className="col-lg-4">
-                        <label className="form-label fw-semibold" htmlFor="moduleSelect">
-                          {t('selectModuleLabel')}
-                        </label>
-                        <select
-                          id="moduleSelect"
-                          className="form-select"
-                          value={selectedModuleId}
-                          onChange={(event) =>
-                            setSelectedModuleId(event.target.value ? Number(event.target.value) : '')
-                          }
-                          disabled={planModulesLoading || addPermissionLoading}
-                        >
-                          <option value="">{planModulesLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
-                          {availableModules.map((module) => (
-                            <option key={module.moduleId} value={module.moduleId}>
-                              {module.moduleName}
-                            </option>
-                          ))}
-                        </select>
-                        {availableModules.length === 0 && !planModulesLoading ? (
-                          <p className="text-muted small mt-2 mb-0">{t('noAvailableModules')}</p>
-                        ) : null}
-                      </div>
-
-                      <div className="col-lg-8">
-                        <label className="form-label fw-semibold d-block">{t('permissionsTableTitle')}</label>
-                        <div className="d-flex flex-wrap gap-3">
-                          <div className="form-check form-switch">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="add-permission-create"
-                              checked={permissionCreate}
-                              onChange={(event) => setPermissionCreate(event.target.checked)}
-                              disabled={addPermissionLoading}
-                            />
-                            <label className="form-check-label" htmlFor="add-permission-create">
-                              {t('permissionCreate')}
-                            </label>
-                          </div>
-                          <div className="form-check form-switch">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="add-permission-read"
-                              checked={permissionRead}
-                              onChange={(event) => setPermissionRead(event.target.checked)}
-                              disabled={addPermissionLoading}
-                            />
-                            <label className="form-check-label" htmlFor="add-permission-read">
-                              {t('permissionRead')}
-                            </label>
-                          </div>
-                          <div className="form-check form-switch">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="add-permission-update"
-                              checked={permissionUpdate}
-                              onChange={(event) => setPermissionUpdate(event.target.checked)}
-                              disabled={addPermissionLoading}
-                            />
-                            <label className="form-check-label" htmlFor="add-permission-update">
-                              {t('permissionUpdate')}
-                            </label>
-                          </div>
-                          <div className="form-check form-switch">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="add-permission-delete"
-                              checked={permissionDelete}
-                              onChange={(event) => setPermissionDelete(event.target.checked)}
-                              disabled={addPermissionLoading}
-                            />
-                            <label className="form-check-label" htmlFor="add-permission-delete">
-                              {t('permissionDelete')}
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="d-flex gap-2 mt-3">
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={() => {
-                          setShowAddPermissionForm(false)
-                          resetAddPermissionForm()
-                        }}
-                        disabled={addPermissionLoading}
-                      >
-                        {t('cancel')}
-                      </button>
-                      <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={addPermissionLoading || !selectedModuleId || availableModules.length === 0}
-                      >
-                        {addPermissionLoading ? t('tableLoading') : t('save')}
-                      </button>
-                    </div>
-                  </form>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      {pageContent}
     </Layout>
   )
 }

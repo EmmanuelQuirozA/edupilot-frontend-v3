@@ -218,6 +218,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
       dashboard: `/${locale}`,
       schools: `/${locale}/schools`,
       users: `/${locale}/control-access`,
+      settings: `/${locale}/settings`,
     }
     if (!token) return []
 
@@ -242,7 +243,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
       {
         label: 'Ajustes',
         items: [
-          { key: 'settings', label: 'Configuración' }
+          { key: 'settings', label: 'Configuración', path: modulePaths.settings }
         ]
       }
     ]
