@@ -342,7 +342,9 @@ const translations: TranslationMap = {
     scheduleRequestDescription: 'Crea reglas programadas de pago',
     createSingleRequest: 'Crea una Solicitud',
     createSingleRequestDescription: 'Crea una solicitud de pago',
-
+    updatePermissionTitle: '¿Estás seguro que deseas cambiar los permisos?',
+    updatePermissionConfirmation: 'Puedes volver a cambiarlos en cualquier momento.',
+    
   },
   en: {
     homeTitle: 'Welcome to EduPilot',
@@ -680,6 +682,8 @@ const translations: TranslationMap = {
     scheduleRequestDescription: 'Create scheduled payment request rules',
     createSingleRequest: 'Create a Request',
     createSingleRequestDescription: 'Create a payment request',
+    updatePermissionTitle: 'Are you sure you want to change the permissions?',
+    updatePermissionConfirmation: 'You can restore the permissions at any time.',
 
 
   },

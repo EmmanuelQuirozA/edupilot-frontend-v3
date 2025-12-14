@@ -165,7 +165,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
 
   const loadPaymentRequest = useCallback(
     async (signal?: AbortSignal) => {
-      if (!token || !permissionsLoaded || !permissions?.readAllowed) return
+      if (!token || !permissionsLoaded || !permissions?.r) return
 
       setIsLoading(true)
       setError(null)
@@ -194,7 +194,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
         setIsLoading(false)
       }
     },
-    [locale, paymentRequestId, permissions?.readAllowed, permissionsLoaded, t, token],
+    [locale, paymentRequestId, permissions?.r, permissionsLoaded, t, token],
   )
 
   const handlePaymentSuccess = useCallback(() => {
@@ -233,7 +233,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
   }, [loadPaymentRequest])
 
   useEffect(() => {
-    if (!token || !permissionsLoaded || !permissions?.readAllowed) return
+    if (!token || !permissionsLoaded || !permissions?.r) return
 
     const controller = new AbortController()
     const fetchLogs = async () => {
@@ -264,7 +264,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     fetchLogs()
 
     return () => controller.abort()
-  }, [locale, paymentRequestId, permissions?.readAllowed, permissionsLoaded, t, token])
+  }, [locale, paymentRequestId, permissions?.r, permissionsLoaded, t, token])
 
   const handlePrint = () => {
     window.print()
@@ -471,7 +471,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     )
   }
 
-  if (permissionsLoaded && permissions && !permissions.readAllowed) {
+  if (permissionsLoaded && permissions && !permissions.r) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentRequestDetail')} breadcrumbItems={breadcrumbItems}>
         <NoPermission />
@@ -499,8 +499,8 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
 
   const { student, paymentRequest, paymentInfo, payments, breakdown } = paymentRequestDetail
 
-  const canCreatePayment = permissions?.createAllowed ?? false
-  const canUpdatePayment = permissions?.updateAllowed ?? false
+  const canCreatePayment = permissions?.c ?? false
+  const canUpdatePayment = permissions?.u ?? false
   const isFinalStatus = paymentRequest.payment_status_id === 7 || paymentRequest.payment_status_id === 8
 
 

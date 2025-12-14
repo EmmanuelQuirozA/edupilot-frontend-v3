@@ -92,7 +92,7 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     [t],
   )
 
-  const canCreate = permissions?.createAllowed ?? false
+  const canCreate = permissions?.c ?? false
 
   useEffect(() => {
     if (!token) return
@@ -494,7 +494,7 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     )
   }
     
-  if (permissionsLoaded && permissions && !permissions.readAllowed) {
+  if (permissionsLoaded && permissions && !permissions.r) {
     return (
       <>
         <NoPermission />

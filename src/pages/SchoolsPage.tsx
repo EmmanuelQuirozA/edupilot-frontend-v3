@@ -52,7 +52,7 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const canCreate = permissions?.createAllowed ?? false
+  const canCreate = permissions?.c ?? false
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -217,7 +217,7 @@ export function SchoolsPage({ onNavigate }: SchoolsPageProps) {
     )
   }
   
-  if (permissionsLoaded && permissions && !permissions.readAllowed) {
+  if (permissionsLoaded && permissions && !permissions.r) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentRequestDetail')} breadcrumbItems={breadcrumbItems}>
         <NoPermission />

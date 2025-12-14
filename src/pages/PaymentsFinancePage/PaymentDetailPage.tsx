@@ -177,7 +177,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
 
   const fetchPaymentDetails = useCallback(
     async (signal?: AbortSignal) => {
-      if (!token || !permissionsLoaded || !permissions?.readAllowed) return
+      if (!token || !permissionsLoaded || !permissions?.r) return
 
       setIsLoading(true)
       setError(null)
@@ -208,7 +208,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
         }
       }
     },
-    [locale, paymentId, permissions?.readAllowed, permissionsLoaded, t, token],
+    [locale, paymentId, permissions?.r, permissionsLoaded, t, token],
   )
 
   useEffect(() => {
@@ -218,7 +218,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
   }, [fetchPaymentDetails])
 
   useEffect(() => {
-    if (!token || !permissionsLoaded || !permissions?.readAllowed) return
+    if (!token || !permissionsLoaded || !permissions?.r) return
 
     const controller = new AbortController()
     const fetchLogs = async () => {
@@ -249,7 +249,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     fetchLogs()
 
     return () => controller.abort()
-  }, [locale, paymentId, permissions?.readAllowed, permissionsLoaded, t, token])
+  }, [locale, paymentId, permissions?.r, permissionsLoaded, t, token])
 
   const handleFileSelect = (file: File | null) => {
     setSelectedFile(file)
@@ -654,7 +654,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     )
   }
 
-  if (permissionsLoaded && permissions && !permissions.readAllowed) {
+  if (permissionsLoaded && permissions && !permissions.r) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentDetail')} breadcrumbItems={breadcrumbItems}>
         <NoPermission />
@@ -685,7 +685,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     .replace('{{level}}', payment.scholar_level_name || '-')
     .replace('{{generation}}', payment.generation || '-')
 
-  const canUpdatePayment = permissions?.updateAllowed ?? false
+  const canUpdatePayment = permissions?.u ?? false
   const isFinalStatus = payment.payment_status_id === 3 || payment.payment_status_id === 4
 
   return (

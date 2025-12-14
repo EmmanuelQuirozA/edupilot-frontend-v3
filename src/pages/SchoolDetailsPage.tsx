@@ -109,9 +109,9 @@ interface SchoolDetailsResponse {
 
 interface ModulePermission {
   enabled: boolean
-  createAllowed: boolean
-  readAllowed: boolean
-  updateAllowed: boolean
+  c: boolean
+  r: boolean
+  u: boolean
 }
 
 type TabKey = 'overview' | 'details' | 'billing' | 'settings' | 'structure'
@@ -186,7 +186,7 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
       setPermissionsLoading(true)
       try {
         const params = new URLSearchParams({ moduleKey: 'schools' })
-        const response = await fetch(`${API_BASE_URL}/permissions/module?${params.toString()}`, {
+        const response = await fetch(`${API_BASE_URL}/permissions/module-access?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         })
@@ -201,9 +201,9 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
           permission
             ? {
                 enabled: Boolean(permission.enabled),
-                createAllowed: Boolean(permission.createAllowed),
-                readAllowed: Boolean(permission.readAllowed),
-                updateAllowed: Boolean(permission.updateAllowed),
+                c: Boolean(permission.c),
+                r: Boolean(permission.r),
+                u: Boolean(permission.u),
               }
             : null,
         )
@@ -270,8 +270,8 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
     return municipality || state || t('schoolNoData')
   }, [data?.school_details, t])
 
-  const canUpdate = permissions?.updateAllowed ?? false
-  const canCreate = permissions?.createAllowed ?? false
+  const canUpdate = permissions?.u ?? false
+  const canCreate = permissions?.c ?? false
 
   if (!hydrated) {
     return (
@@ -297,7 +297,7 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
     )
   }
 
-  if (!permissions || !permissions.readAllowed || !permissions.enabled) {
+  if (!permissions || !permissions.r || !permissions.enabled) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
         <div className="alert alert-warning" role="alert">

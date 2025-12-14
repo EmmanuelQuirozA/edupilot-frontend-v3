@@ -80,7 +80,7 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const canCreate = permissions?.createAllowed ?? false
+  const canCreate = permissions?.c ?? false
 
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
@@ -363,7 +363,7 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
     )
   }
   
-  if (permissionsLoaded && permissions && !permissions.readAllowed) {
+  if (permissionsLoaded && permissions && !permissions.r) {
     return (
       <>
         <NoPermission />

@@ -14,10 +14,10 @@ export interface ModulePermission {
   roleId?: number
   roleName?: string
   roleNameDisplay?: string
-  createAllowed: boolean
-  readAllowed: boolean
-  updateAllowed: boolean
-  deleteAllowed: boolean
+  c: boolean
+  r: boolean
+  u: boolean
+  d: boolean
 }
 
 interface UseModulePermissionsResult {
@@ -28,10 +28,10 @@ interface UseModulePermissionsResult {
 }
 
 const DEFAULT_PERMISSIONS: ModulePermission = {
-  createAllowed: false,
-  readAllowed: false,
-  updateAllowed: false,
-  deleteAllowed: false,
+  c: false,
+  r: false,
+  u: false,
+  d: false,
 }
 
 export function useModulePermissions(moduleKey: string): UseModulePermissionsResult {
@@ -51,7 +51,7 @@ export function useModulePermissions(moduleKey: string): UseModulePermissionsRes
       setError(null)
 
       try {
-        const response = await fetch(`${API_BASE_URL}/permissions/module?moduleKey=${moduleKey}`, {
+        const response = await fetch(`${API_BASE_URL}/permissions/module-access?moduleKey=${moduleKey}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         })

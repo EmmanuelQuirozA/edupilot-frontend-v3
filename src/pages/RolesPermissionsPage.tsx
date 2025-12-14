@@ -61,7 +61,7 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
     loading: permissionsLoading,
     loaded: permissionsLoaded,
     error: permissionsError,
-  } = useModulePermissions('users')
+  } = useModulePermissions('roles')
 
   const [schools, setSchools] = useState<School[]>([])
   const [selectedSchoolId, setSelectedSchoolId] = useState<number | null>(null)
@@ -192,8 +192,25 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
           throw new Error('failed_request')
         }
 
-        const json = (await response.json()) as PlanModule[]
-        setPlanModules(json)
+        const json = (await response.json()) as Array<
+          PlanModule & {
+            module_id?: number
+            module_name?: string
+            module_key?: string
+            module_description?: string | null
+          }
+        >
+
+        const normalizedModules = json
+          .map((module) => ({
+            moduleId: module.moduleId ?? module.module_id,
+            moduleName: module.moduleName ?? module.module_name ?? '',
+            moduleKey: module.moduleKey ?? module.module_key ?? '',
+            moduleDescription: module.moduleDescription ?? module.module_description ?? null,
+          }))
+          .filter((module): module is PlanModule => module.moduleId !== undefined)
+
+        setPlanModules(normalizedModules)
       } catch (error) {
         if ((error as DOMException).name !== 'AbortError') {
           setPlanModules([])
@@ -558,7 +575,7 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
                         onChange={(event) =>
                           setSelectedModuleId(event.target.value ? Number(event.target.value) : '')
                         }
-                        disabled={planModulesLoading || addPermissionLoading}
+                        disabled={planModulesLoading || addPermissionLoading || availableModules.length === 0}
                       >
                         <option value="">{planModulesLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
                         {availableModules.map((module) => (
@@ -568,7 +585,7 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
                         ))}
                       </select>
                       {availableModules.length === 0 && !planModulesLoading ? (
-                        <p className="text-muted small mt-2 mb-0">{t('noAvailableModules')}</p>
+                        <p className="text-muted text-warning small mt-2 mb-0">{t('noAvailableModules')}</p>
                       ) : null}
                     </div>
 
@@ -675,7 +692,7 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
     )
   }
 
-  if (permissionsError || !permissions?.readAllowed) {
+  if (permissionsError || !permissions?.r) {
     const noPermission = <NoPermission />
     return embedded ? (
       noPermission

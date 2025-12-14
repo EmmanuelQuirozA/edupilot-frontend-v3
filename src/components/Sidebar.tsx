@@ -11,19 +11,25 @@ interface SidebarProps {
 }
 
 interface ModuleAccess {
-  moduleId: number
-  moduleName: string
-  moduleKey: string
-  moduleAccessControlId: number
-  schoolId: number | null
-  enabled: boolean
-  sortOrder: number | null
+  module_id: number
+  role_id: number
+  school_id: number
+  permission_id: number
+  module_key: string
+  module_name: string
+  sort_order: number | null
+  c: boolean
+  r: boolean
+  u: boolean
+  d: boolean
+  icon: string | null
 }
 
 interface MenuItem {
   key: string
   label: string
   path?: string
+  icon: string | TrustedHTML
 }
 
 interface MenuSection {
@@ -32,112 +38,6 @@ interface MenuSection {
 }
 
 const menuIcons = {
-  dashboard: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" />
-      <rect x="13" y="3" width="8" height="5" rx="2" fill="currentColor" />
-      <rect x="13" y="10" width="8" height="11" rx="2" fill="currentColor" />
-      <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" />
-    </svg>
-  ),
-  schools: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="4" y="8" width="16" height="12" rx="2" fill="currentColor" opacity="0.2" />
-      <rect x="4" y="10" width="16" height="2" fill="currentColor" />
-      <rect x="11" y="14" width="2" height="6" rx="1" fill="currentColor" />
-      <rect x="6" y="12" width="3" height="2" rx="1" fill="currentColor" />
-      <rect x="15" y="12" width="3" height="2" rx="1" fill="currentColor" />
-      <rect x="11.5" y="4" width="1" height="4" fill="currentColor" />
-      <path d="M12.5 4 L15 5.2 L12.5 6.4 Z" fill="currentColor" />
-    </svg>
-  ),
-  finance: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="2" y="6" width="20" height="12" rx="2" fill="currentColor" opacity="0.2" />
-      <rect x="2" y="8" width="20" height="3" fill="currentColor" />
-      <rect x="4" y="14" width="6" height="2" rx="1" fill="currentColor" />
-      <rect x="12" y="14" width="4" height="2" rx="1" fill="currentColor" />
-    </svg>
-  ),
-  students: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3 2 8l10 5 7-3.5V15a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-2" fill="currentColor" opacity="0.2" />
-      <path d="M12 3 2 8l10 5 10-5-10-5Z" fill="currentColor" />
-      <path d="M19 10v6a2 2 0 0 0 2 2h1" fill="currentColor" />
-    </svg>
-  ),
-  teachers: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="9" y="4" width="12" height="8" rx="1.5" fill="currentColor" />
-      <circle cx="6.5" cy="9" r="2.5" fill="currentColor" />
-      <path d="M2 18a4.5 4.5 0 0 1 9 0v2H2v-2Z" fill="currentColor" />
-      <rect x="11" y="13" width="8" height="2" rx="1" fill="currentColor" />
-    </svg>
-  ),
-  schedules: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="16" rx="2" fill="currentColor" opacity="0.2" />
-      <rect x="3" y="8" width="18" height="3" fill="currentColor" />
-      <rect x="7" y="3" width="2" height="4" rx="1" fill="currentColor" />
-      <rect x="15" y="3" width="2" height="4" rx="1" fill="currentColor" />
-      <path
-        d="M9 16l2 2 4-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  ),
-  grades: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M6 3h8l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
-        fill="currentColor"
-        opacity="0.2"
-      />
-      <path d="M14 3v5h5" fill="currentColor" />
-      <rect x="8" y="12" width="8" height="2" rx="1" fill="currentColor" />
-      <rect x="8" y="16" width="6" height="2" rx="1" fill="currentColor" />
-    </svg>
-  ),
-  communications: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 4h10a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3Z" fill="currentColor" />
-      <path d="M10 12h6a2 2 0 0 1 2 2v5l3-2" fill="currentColor" opacity="0.3" />
-    </svg>
-  ),
-  balances: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2" fill="currentColor" opacity="0.2" />
-      <path d="M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="9" cy="13" r="2" fill="currentColor" />
-      <circle cx="15" cy="13" r="2" fill="currentColor" />
-    </svg>
-  ),
-  classes: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 5h12a2 2 0 0 1 2 2v12H6a2 2 0 0 1-2-2Z" fill="currentColor" opacity="0.2" />
-      <path d="M16 5V3H6a2 2 0 0 0-2 2v12h2V5Z" fill="currentColor" />
-      <path d="M8 9h8M8 13h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  ),
-  coffee: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 5h11v9a5 5 0 0 1-5 5H6Z" fill="currentColor" opacity="0.2" />
-      <path d="M17 7h2.5a2.5 2.5 0 0 1 0 5H17" stroke="currentColor" strokeWidth="2" />
-      <path d="M9 3v3M12 3v3M15 3v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M4 19h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  ),
-  reports: (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 4h9l3 3v13H6Z" fill="currentColor" opacity="0.2" />
-      <path d="M15 4v4h3" stroke="currentColor" strokeWidth="2" />
-      <path d="M9 11h6M9 15h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  ),
   settings: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
@@ -159,21 +59,6 @@ const menuIcons = {
   ),
 }
 
-const moduleLabels: Record<string, string> = {
-  dashboard: 'Dashboard',
-  schools: 'Escuelas',
-  users: 'Usuarios y roles',
-  finance: 'Pagos y Finanzas',
-  students: 'Alumnos y Grupos',
-  teachers: 'Profesores',
-  schedules: 'Horarios y Tareas',
-  grades: 'Calificaciones',
-  communications: 'Comunicaciones',
-  balances: 'Balances',
-  classes: 'Clases',
-  coffee: 'Cafetería',
-  reports: 'Reportes',
-}
 
 export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
   const { user, token, logout } = useAuth()
@@ -192,7 +77,10 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
 
     async function fetchModules() {
       try {
-        const response = await fetch(`${API_BASE_URL}/modules/access-control`, {
+        const params = new URLSearchParams({
+          lang: locale,
+        })
+        const response = await fetch(`${API_BASE_URL}/permissions/module-access?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         })
@@ -200,7 +88,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
         if (!response.ok) throw new Error('Failed to fetch modules')
 
         const data = await response.json() as ModuleAccess[]
-        setModules(data)  // ← SIN FILTROS, backend manda lo que existe
+        setModules(data)
       } catch (error) {
         if ((error as DOMException)?.name === 'AbortError') return
         console.error('Error fetching access control modules', error)
@@ -210,7 +98,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
 
     fetchModules()
     return () => controller.abort()
-  }, [token])
+  }, [locale, token])
 
   // Construcción de secciones SOLO si usuario autenticado
   const menuSections: MenuSection[] = useMemo(() => {
@@ -223,21 +111,22 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
     if (!token) return []
 
     const visibleModules = modules
-      .filter((module) => module.enabled && moduleLabels[module.moduleKey])
+      .filter((module) => module.r)
       .sort((a, b) => {
-        const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER
-        const orderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER
+        const orderA = a.sort_order ?? Number.MAX_SAFE_INTEGER
+        const orderB = b.sort_order ?? Number.MAX_SAFE_INTEGER
         if (orderA !== orderB) return orderA - orderB
-        return a.moduleName.localeCompare(b.moduleName)
+        return a.module_name.localeCompare(b.module_name)
       })
       
     return [
       {
         label: 'Menú principal',
         items: visibleModules.map((m) => ({
-          key: m.moduleKey,
-          label: moduleLabels[m.moduleKey] || m.moduleName,
-          path: modulePaths[m.moduleKey] ?? `/${locale}/${m.moduleKey}`,
+          key: m.module_key,
+          label: m.module_name,
+          path: modulePaths[m.module_key] ?? `/${locale}/${m.module_key}`,
+          icon: m.icon,
         })),
       },
       {
@@ -286,8 +175,22 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
                 href={item.path ?? '#'}
                 onClick={(event) => handleNavigation(event, item.path)}
               >
+                {/* <span
+                  className="sidebar-icon"
+                  dangerouslySetInnerHTML={{
+                    __html: item.icon
+                      || menuIcons[item.key as keyof typeof menuIcons]
+                      || menuIcons.default
+                  }}
+                /> */}
                 <span className="sidebar-icon">
-                  {menuIcons[item.key as keyof typeof menuIcons] || menuIcons.default}
+                  {typeof item.icon === 'string' ? (
+                    <span
+                      dangerouslySetInnerHTML={{ __html: item.icon }}
+                    />
+                  ) : (
+                    menuIcons[item.key as keyof typeof menuIcons] || menuIcons.default
+                  )}
                 </span>
                 <span>{item.label}</span>
               </a>

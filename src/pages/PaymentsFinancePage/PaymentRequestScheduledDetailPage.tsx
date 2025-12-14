@@ -158,7 +158,7 @@ export function PaymentRequestScheduledDetailPage({
 
   const fetchScheduleDetail = useCallback(
     async (signal?: AbortSignal) => {
-      if (!token || !permissionsLoaded || !permissions?.readAllowed) return
+      if (!token || !permissionsLoaded || !permissions?.r) return
 
       setIsLoading(true)
       setError(null)
@@ -189,7 +189,7 @@ export function PaymentRequestScheduledDetailPage({
         }
       }
     },
-    [locale, paymentRequestScheduledId, permissions?.readAllowed, permissionsLoaded, t, token],
+    [locale, paymentRequestScheduledId, permissions?.r, permissionsLoaded, t, token],
   )
 
   const formatCurrency = (value: number | null | undefined) =>
@@ -200,7 +200,7 @@ export function PaymentRequestScheduledDetailPage({
   
   const fetchLogs = useCallback(
     async (signal?: AbortSignal) => {
-      if (!token || !permissionsLoaded || !permissions?.readAllowed) return
+      if (!token || !permissionsLoaded || !permissions?.r) return
 
       setLogsLoading(true)
       setLogsError(null)
@@ -231,7 +231,7 @@ export function PaymentRequestScheduledDetailPage({
         }
       }
     },
-    [locale, paymentRequestScheduledId, permissions?.readAllowed, permissionsLoaded, t, token],
+    [locale, paymentRequestScheduledId, permissions?.r, permissionsLoaded, t, token],
   )
 
   useEffect(() => {
@@ -415,7 +415,7 @@ export function PaymentRequestScheduledDetailPage({
     )
   }
 
-  if (permissionsError || !permissions?.readAllowed) {
+  if (permissionsError || !permissions?.r) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentsFinance')}>
         <NoPermission />

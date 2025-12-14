@@ -10,9 +10,14 @@ import { RolesPermissionsPage } from './RolesPermissionsPage'
 interface ModuleAccess {
   moduleId: number
   moduleName: string
-  moduleKey: string
-  enabled: boolean
+  moduleKey: string 
+  moduleDescription: string 
   sortOrder: number | null
+}
+
+interface School {
+  school_id: number
+  description: string
 }
 
 interface GlobalSettingsPageProps {
@@ -21,11 +26,15 @@ interface GlobalSettingsPageProps {
 }
 
 export function GlobalSettingsPage({ onNavigate, initialTab = 'modules' }: GlobalSettingsPageProps) {
-  const { token } = useAuth()
+  const { token, } = useAuth()
   const { locale, t } = useLanguage()
   const [activeTab, setActiveTab] = useState<'modules' | 'roles'>(initialTab)
   const [modules, setModules] = useState<ModuleAccess[]>([])
   const [modulesLoading, setModulesLoading] = useState(false)
+  
+  const [schools, setSchools] = useState<School[]>([])
+  const [selectedSchoolId, setSelectedSchoolId] = useState<number | null>(null)
+  const [schoolsLoading, setSchoolsLoading] = useState(false)
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -37,9 +46,44 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'modules' }: Globa
     ],
     [locale, onNavigate, t],
   )
+  
+  useEffect(() => {
+    if (!token) return
+
+    const controller = new AbortController()
+
+    const fetchSchools = async () => {
+      setSchoolsLoading(true)
+      try {
+        const response = await fetch(`${API_BASE_URL}/schools/list`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const json = (await response.json()) as School[]
+        setSchools(json)
+      } catch (error) {
+        if ((error as DOMException).name !== 'AbortError') {
+          setSchools([])
+        }
+      } finally {
+        setSchoolsLoading(false)
+      }
+    }
+
+    fetchSchools()
+
+    return () => controller.abort()
+  }, [token])
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !selectedSchoolId) {
       setModules([])
       return
     }
@@ -48,7 +92,11 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'modules' }: Globa
     const fetchModules = async () => {
       setModulesLoading(true)
       try {
-        const response = await fetch(`${API_BASE_URL}/modules/access-control`, {
+        const params = new URLSearchParams({
+          lang: locale,
+          school_id: String(selectedSchoolId),
+        })
+        const response = await fetch(`${API_BASE_URL}/catalog/plan-modules?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         })
@@ -68,12 +116,11 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'modules' }: Globa
 
     fetchModules()
     return () => controller.abort()
-  }, [token])
+  }, [locale, selectedSchoolId, token])
 
   const sortedModules = useMemo(
     () =>
       [...modules]
-        .filter((module) => module.enabled)
         .sort((a, b) => {
           const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER
           const orderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER
@@ -117,10 +164,31 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'modules' }: Globa
 
         {activeTab === 'modules' ? (
           <div className="card shadow-sm">
+            <div className="card-header border-bottom-0 bg-white">
+              <h3 className="h5 mb-1">{t('modulesCatalogTab')}</h3>
+            </div>
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  <h3 className="h5 mb-1">{t('modulesCatalogTab')}</h3>
+                <div className='d-flex flex-column gap-3'>
+                  <div>
+                    <label className="form-label fw-semibold" htmlFor="schoolSelect">
+                      {t('selectSchoolLabel')}
+                    </label>
+                    <select
+                      id="schoolSelect"
+                      className="form-select"
+                      value={selectedSchoolId ?? ''}
+                      onChange={(event) => setSelectedSchoolId(event.target.value ? Number(event.target.value) : null)}
+                      disabled={schoolsLoading}
+                    >
+                      <option value="">{schoolsLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
+                      {schools.map((school) => (
+                        <option key={school.school_id} value={school.school_id}>
+                          {school.description}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <p className="text-muted mb-0">{t('modulesCatalogDescription')}</p>
                 </div>
                 {modulesLoading ? <span className="badge bg-secondary">{t('tableLoading')}</span> : null}
@@ -136,11 +204,8 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'modules' }: Globa
                         <div className="d-flex justify-content-between align-items-start gap-3">
                           <div>
                             <p className="fw-semibold mb-1">{module.moduleName}</p>
-                            <small className="text-muted text-uppercase">{module.moduleKey}</small>
+                            <small className="text-muted">{module.moduleDescription}</small>
                           </div>
-                          <span className="badge bg-success-subtle text-success fw-semibold">
-                            {t('moduleEnabledLabel')}
-                          </span>
                         </div>
                       </div>
                     </div>
