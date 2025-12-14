@@ -217,7 +217,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
     const modulePaths: Record<string, string> = {
       dashboard: `/${locale}`,
       schools: `/${locale}/schools`,
-      users: `/${locale}/users`,
+      users: `/${locale}/control-access`,
     }
     if (!token) return []
 

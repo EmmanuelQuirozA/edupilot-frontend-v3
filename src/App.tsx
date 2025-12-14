@@ -117,7 +117,7 @@ function Router() {
   const isStudentsPath = /^\/(es|en)\/students$/.test(path);
   const studentDetailMatch = path.match(/^\/(es|en)\/students\/(\d+)$/);
   const isStudentDetailPath = Boolean(studentDetailMatch);
-  const isUsersPath = /^\/(es|en)\/users$/.test(path);
+  const isControlAccessPath = /^\/(es|en)\/control-access$/.test(path);
   const scheduledFinanceMatch = path.match(/^\/(es|en)\/finance\/request\/scheduled\/(\d+)$/);
   const financeMatch = path.match(/^\/(es|en)\/finance(?:\/(payments|request|request-upload)(?:\/(\d+))?)?$/);
   const isFinancePath = Boolean(financeMatch) || Boolean(scheduledFinanceMatch);
@@ -200,7 +200,7 @@ function Router() {
     }
 
     if (isFinancePath) return <PaymentsFinancePage onNavigate={navigate} currentPath={path} />;
-    if (isUsersPath) return <RolesPermissionsPage onNavigate={navigate} />;
+    if (isControlAccessPath) return <RolesPermissionsPage onNavigate={navigate} />;
 
     if (isRootPath) {
       switch (role) {
