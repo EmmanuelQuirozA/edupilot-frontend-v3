@@ -320,7 +320,7 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
         c: permission.c ? 1 : 0,
         r: permission.r ? 1 : 0,
         u: permission.u ? 1 : 0,
-        d: permission.d ? 1 : 0,
+        // d: permission.d ? 1 : 0,
         [key]: nextValue ? 1 : 0,
       }
 
@@ -372,7 +372,7 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
         c: permissionCreate ? 1 : 0,
         r: permissionRead ? 1 : 0,
         u: permissionUpdate ? 1 : 0,
-        d: permissionDelete ? 1 : 0,
+        // d: permissionDelete ? 1 : 0,
       }
 
       const response = await fetch(`${API_BASE_URL}/permissions/create?${params.toString()}`, {
@@ -506,7 +506,7 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
                     <th scope="col" className="text-center">{t('permissionCreate')}</th>
                     <th scope="col" className="text-center">{t('permissionRead')}</th>
                     <th scope="col" className="text-center">{t('permissionUpdate')}</th>
-                    <th scope="col" className="text-center">{t('permissionDelete')}</th>
+                    {/* <th scope="col" className="text-center">{t('permissionDelete')}</th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -518,7 +518,12 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
                           <small className="text-muted">{permission.module_key}</small>
                         </div>
                       </th>
-                      {(['c', 'r', 'u', 'd'] as PermissionKey[]).map((key) => {
+                      {([
+                        'c', 
+                        'r', 
+                        'u', 
+                        // 'd'
+                      ] as PermissionKey[]).map((key) => {
                         const switchId = `permission-${permission.permission_id}-${key}`
                         const isUpdating = updatingPermissionKey === `${permission.permission_id}-${key}`
                         return (

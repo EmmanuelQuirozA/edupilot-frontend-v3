@@ -247,7 +247,7 @@ export function PaymentRequestsHistory({
             fallbackName={'tableStrings.studentFallback'}
             gradeGroup={row.grade_group}
             scholarLevel={row.scholar_level_name}
-            onClick={() => onNavigate(`/${locale}/students/${row.student_id}`)}
+            onClick={() => onNavigate(`/${locale}/students&Classes/students/${row.student_id}`)}
             nameButtonProps={{ 'aria-label': row.student_full_name }}
           />
         ),

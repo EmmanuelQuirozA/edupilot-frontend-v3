@@ -192,7 +192,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
             gradeGroup={student.grade_group}
             scholarLevel={student.scholar_level_name}
             enrollment={student.register_id}
-            onClick={() => onNavigate(`/${locale}/students/${student.student_id}`)}
+            onClick={() => onNavigate(`/${locale}/students&Classes/students/${student.student_id}`)}
             nameButtonProps={{ 'aria-label': student.full_name }}
           />
         ),

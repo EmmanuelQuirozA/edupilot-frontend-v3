@@ -39,7 +39,6 @@ interface SchoolModule {
   name_es: string
   key: string
   sort_order: number
-  enabled: boolean
 }
 
 interface SchoolDetailsResponse {
@@ -297,7 +296,7 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
     )
   }
 
-  if (!permissions || !permissions.r || !permissions.enabled) {
+  if (!permissions || !permissions.r) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
         <div className="alert alert-warning" role="alert">
@@ -559,312 +558,309 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
 
                 <div>
                   {activeTab === 'overview' ? (
-                <div className="row g-3">
-                  <div className="col-12 col-lg-6">
-                    <div className="card h-100">
-                      <div className="d-flex align-items-center gap-2 mb-3">
-                        <h6 className="mb-0 fw-bold">{t('schoolOverviewTitle')}</h6>
-                      </div>
-                      <ul className="d-flex flex-column p-0 gap-3">
-                        <li className="d-flex align-items-center gap-2">
-                          <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="user" className="lucide lucide-user h-5 w-5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <div className="row g-3">
+                      <div className="col-12 col-lg-6">
+                        <div className="card h-100">
+                          <div className="d-flex align-items-center gap-2 mb-3">
+                            <h6 className="mb-0 fw-bold">{t('schoolOverviewTitle')}</h6>
                           </div>
-                          <div className='d-flex flex-column'>
-                            <span className="text-sm text-gray-500">{t('main_contact')}</span>
-                            <span className="fw-medium ">{data.conctacts?.full_name || t('schoolNoData')}</span>
-                          </div>
-                        </li>
-                        <li className="d-flex align-items-center gap-2">
-                          <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="mail" className="lucide lucide-mail h-5 w-5"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path><rect x="2" y="4" width="20" height="16" rx="2"></rect></svg>
-                        </div>
-                          <div className='d-flex flex-column'>
-                            <span className="text-sm text-gray-500">{t('email')}</span>
-                            <span className="fw-medium ">{data.conctacts?.personal_email || t('schoolNoData')}</span>
-                          </div>
-                        </li>
-                        <li className="d-flex align-items-center gap-2">
-                          <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="phone" className="lucide lucide-phone h-5 w-5"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"></path></svg>
-                          </div>
-                          <div className='d-flex flex-column'>
-                            <span className="text-sm text-gray-500">{t('schoolContactPhone')}</span>
-                            <span className="fw-medium ">{data.conctacts?.phone_number || t('schoolNoData')}</span>
-                          </div>
-                        </li>
-                        <li className="d-flex align-items-center gap-2">
-                          <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map" className="lucide lucide-map h-5 w-5"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path><path d="M15 5.764v15"></path><path d="M9 3.236v15"></path></svg>
-                          </div>
-                          <div className='d-flex flex-column'>
-                            <span className="text-sm text-gray-500">{t('schoolAddressLabel')}</span>
-                            <span className="fw-medium ">{data.conctacts?.address || t('schoolNoData')}</span>
-                          </div>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="col-12 col-lg-6">
-                    <div className="plan-card">
-                      <div className="d-flex flex-wrap justify-content-between align-items-center">
-                        <div>
-                          <p className="text-white-50 fw-semibold mb-1">{t('schoolPlanTitle')}</p>
-                        </div>
-                        <span className="badge-soft" style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', borderColor: 'rgba(255,255,255,0.3)' }}>
-                          {t('schoolStatusBadge')}: {data.current_plan?.status_name}
-                        </span>
-                      </div>
-                      <div className="d-flex flex-wrap justify-content-between align-items-center my-4">
-                        <div>
-                          <h5 className="fw-bolder mb-2">{data.current_plan?.plan_name}</h5>
-                          <span className="plan-chip">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="9"></circle>
-                              <line x1="12" y1="12" x2="12" y2="7"></line>
-                              <line x1="12" y1="12" x2="16" y2="12"></line>
-                            </svg>
-
-                            {data.current_plan?.pot_name}
-                          </span>
-                        </div>
-                          <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm rounded" style={{color:'rgb(253 224 71)'}}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="crown" className="lucide lucide-crown h-8 w-8 text-yellow-300"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path><path d="M5 21h14"></path></svg>
-                          </div>
-                      </div>
-                      <div className="d-flex gap-2 pt-3"
-                        style={{borderTop: '.5px solid rgb(255 255 255 / 0.1)'}}
-                      >
-                        <div className='col-md-6'>
-                          <span className="fw-light">{t('startDate')}</span>
-                          <div className="d-flex flex-wrap gap-2 align-items-center">
-                            <small className="text-white-50">{formatDate(data.current_plan?.start_date, locale, {year: 'numeric', month: 'short', day: '2-digit'}) || t('schoolNoData')}</small>
-                          </div>
-                        </div>
-
-                        <div className='col-md-6'>
-                          <span className="fw-light">{t('schoolNextBilling')}</span>
-                          <div className="d-flex flex-wrap gap-2 align-items-center">
-                            <span className="fw-bold">${data.current_plan?.price_yearly.toLocaleString(locale)}</span>
-                            <small className="text-white-50">{formatDate(data.current_plan?.renew_plan, locale, {year: 'numeric', month: 'short', day: '2-digit'}) || t('schoolNoData')}</small>
-                          </div>
+                          <ul className="d-flex flex-column p-0 gap-3">
+                            <li className="d-flex align-items-center gap-2">
+                              <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="user" className="lucide lucide-user h-5 w-5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                              </div>
+                              <div className='d-flex flex-column'>
+                                <span className="text-sm text-gray-500">{t('main_contact')}</span>
+                                <span className="fw-medium ">{data.conctacts?.full_name || t('schoolNoData')}</span>
+                              </div>
+                            </li>
+                            <li className="d-flex align-items-center gap-2">
+                              <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="mail" className="lucide lucide-mail h-5 w-5"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path><rect x="2" y="4" width="20" height="16" rx="2"></rect></svg>
+                            </div>
+                              <div className='d-flex flex-column'>
+                                <span className="text-sm text-gray-500">{t('email')}</span>
+                                <span className="fw-medium ">{data.conctacts?.personal_email || t('schoolNoData')}</span>
+                              </div>
+                            </li>
+                            <li className="d-flex align-items-center gap-2">
+                              <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="phone" className="lucide lucide-phone h-5 w-5"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"></path></svg>
+                              </div>
+                              <div className='d-flex flex-column'>
+                                <span className="text-sm text-gray-500">{t('schoolContactPhone')}</span>
+                                <span className="fw-medium ">{data.conctacts?.phone_number || t('schoolNoData')}</span>
+                              </div>
+                            </li>
+                            <li className="d-flex align-items-center gap-2">
+                              <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="map" className="lucide lucide-map h-5 w-5"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path><path d="M15 5.764v15"></path><path d="M9 3.236v15"></path></svg>
+                              </div>
+                              <div className='d-flex flex-column'>
+                                <span className="text-sm text-gray-500">{t('schoolAddressLabel')}</span>
+                                <span className="fw-medium ">{data.conctacts?.address || t('schoolNoData')}</span>
+                              </div>
+                            </li>
+                          </ul>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
 
-              {activeTab === 'details' ? (
-                <div className="row g-3">
-                  <div className="col-12 col-lg-6">
-                    <div className="card h-100">
-                      <div className="d-flex align-items-center gap-2 mb-3">
-                        <h6 className="mb-0 fw-bold">{t('schoolDetailsTitle')}</h6>
+                      <div className="col-12 col-lg-6">
+                        <div className="plan-card">
+                          <div className="d-flex flex-wrap justify-content-between align-items-center">
+                            <div>
+                              <p className="text-white-50 fw-semibold mb-1">{t('schoolPlanTitle')}</p>
+                            </div>
+                            <span className="badge-soft" style={{ background: 'rgba(255,255,255,0.12)', color: '#fff', borderColor: 'rgba(255,255,255,0.3)' }}>
+                              {t('schoolStatusBadge')}: {data.current_plan?.status_name}
+                            </span>
+                          </div>
+                          <div className="d-flex flex-wrap justify-content-between align-items-center my-4">
+                            <div>
+                              <h5 className="fw-bolder mb-2">{data.current_plan?.plan_name}</h5>
+                              <span className="plan-chip">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="9"></circle>
+                                  <line x1="12" y1="12" x2="12" y2="7"></line>
+                                  <line x1="12" y1="12" x2="16" y2="12"></line>
+                                </svg>
+
+                                {data.current_plan?.pot_name}
+                              </span>
+                            </div>
+                              <div className="bg-white/20 p-3 rounded-lg backdrop-blur-sm rounded" style={{color:'rgb(253 224 71)'}}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="crown" className="lucide lucide-crown h-8 w-8 text-yellow-300"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path><path d="M5 21h14"></path></svg>
+                              </div>
+                          </div>
+                          <div className="d-flex gap-2 pt-3"
+                            style={{borderTop: '.5px solid rgb(255 255 255 / 0.1)'}}
+                          >
+                            <div className='col-md-6'>
+                              <span className="fw-light">{t('startDate')}</span>
+                              <div className="d-flex flex-wrap gap-2 align-items-center">
+                                <small className="text-white-50">{formatDate(data.current_plan?.start_date, locale, {year: 'numeric', month: 'short', day: '2-digit'}) || t('schoolNoData')}</small>
+                              </div>
+                            </div>
+
+                            <div className='col-md-6'>
+                              <span className="fw-light">{t('schoolNextBilling')}</span>
+                              <div className="d-flex flex-wrap gap-2 align-items-center">
+                                <span className="fw-bold">${data.current_plan?.price_yearly.toLocaleString(locale)}</span>
+                                <small className="text-white-50">{formatDate(data.current_plan?.renew_plan, locale, {year: 'numeric', month: 'short', day: '2-digit'}) || t('schoolNoData')}</small>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <ul className="info-list d-flex flex-column gap-3">
-                        <li className="d-flex flex-column align-items-start">
-                          <span className="text-sm text-gray-500">{t('schoolCommercialNameLabel')}</span>
-                          <span className="fw-medium">{schoolDetails?.commercial_name || t('schoolNoData')}</span>
-                        </li>
-                        <li className="d-flex flex-column align-items-start">
-                          <span className="text-sm text-gray-500">{t('schoolBusinessNameLabel')}</span>
-                          <span className="fw-medium">{schoolDetails?.business_name || t('schoolNoData')}</span>
-                        </li>
-                        <li className="d-flex flex-column align-items-start">
-                          <span className="text-sm text-gray-500">{t('schoolTaxIdLabel')}</span>
-                          <span className="fw-medium">{schoolDetails?.tax_id || t('schoolNoData')}</span>
-                        </li>
-                        <li className="d-flex flex-column gap-1">
-                          <span className="text-sm text-gray-500">{t('schoolDescriptionLabel')}</span>
-                          <span className="info-list__value">{schoolDetails?.school_description || t('schoolNoData')}</span>
-                        </li>
-                      </ul>
                     </div>
-                  </div>
+                  ) : null}
 
-                  <div className="col-12 col-lg-6">
-                    <div className="card h-100">
-                      <div className="d-flex align-items-center gap-2 mb-3">
-                        <h6 className="mb-0 fw-bold">{t('schoolDetailsLocationTitle')}</h6>
+                  {activeTab === 'details' ? (
+                    <div className="row g-3">
+                      <div className="col-12 col-lg-6">
+                        <div className="card h-100">
+                          <div className="d-flex align-items-center gap-2 mb-3">
+                            <h6 className="mb-0 fw-bold">{t('schoolDetailsTitle')}</h6>
+                          </div>
+                          <ul className="info-list d-flex flex-column gap-3">
+                            <li className="d-flex flex-column align-items-start">
+                              <span className="text-sm text-gray-500">{t('schoolCommercialNameLabel')}</span>
+                              <span className="fw-medium">{schoolDetails?.commercial_name || t('schoolNoData')}</span>
+                            </li>
+                            <li className="d-flex flex-column align-items-start">
+                              <span className="text-sm text-gray-500">{t('schoolBusinessNameLabel')}</span>
+                              <span className="fw-medium">{schoolDetails?.business_name || t('schoolNoData')}</span>
+                            </li>
+                            <li className="d-flex flex-column align-items-start">
+                              <span className="text-sm text-gray-500">{t('schoolTaxIdLabel')}</span>
+                              <span className="fw-medium">{schoolDetails?.tax_id || t('schoolNoData')}</span>
+                            </li>
+                            <li className="d-flex flex-column gap-1">
+                              <span className="text-sm text-gray-500">{t('schoolDescriptionLabel')}</span>
+                              <span className="info-list__value">{schoolDetails?.school_description || t('schoolNoData')}</span>
+                            </li>
+                          </ul>
+                        </div>
                       </div>
-                      <ul className="info-list d-flex flex-column gap-3">
-                        <li className="d-flex flex-column align-items-start">
-                          <span className="text-sm text-gray-500">{t('schoolAddressLabel')}</span>
-                          <span className="fw-medium">{fullAddress || t('schoolNoData')}</span>
-                        </li>
-                        <li className="d-flex flex-column align-items-start">
-                          <span className="text-sm text-gray-500">{t('schoolContactPhone')}</span>
-                          <span className="fw-medium">{schoolDetails?.phone_number || t('schoolNoData')}</span>
-                        </li>
-                        <li className="d-flex flex-column align-items-start">
-                          <span className="text-sm text-gray-500">{t('schoolContactEmail')}</span>
-                          <span className="fw-medium">{schoolDetails?.email || t('schoolNoData')}</span>
-                        </li>
-                        <li className="d-flex flex-column align-items-start">
-                          <span className="text-sm text-gray-500">{t('schoolCreationDateLabel')}</span>
-                          <span className="fw-medium">{formatDate(schoolDetails?.created_at, locale, {year: 'numeric', month: 'short', day: '2-digit'}) || t('schoolNoData')}</span>
-                        </li>
-                        <li className="d-flex flex-column align-items-start">
-                          <span className="text-sm text-gray-500">{t('schoolMaxDebtLabel')}</span>
-                          <span className="fw-medium">{schoolDetails?.max_debt?.toLocaleString(locale) ?? t('schoolNoData')}</span>
-                        </li>
-                        <li className="d-flex flex-column align-items-start">
-                          <span className="text-sm text-gray-500">{t('schoolDefaultTuitionLabel')}</span>
-                          <span className="fw-medium">{schoolDetails?.default_tuition?.toLocaleString(locale) ?? t('schoolNoData')}</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
 
-              {activeTab === 'billing' ? (
-                <div className="d-flex flex-column gap-3">
-                  <div className="card">
-                    <div className="d-flex align-items-center gap-2 mb-3">
-                      <h6 className="mb-0 fw-bold">{t('schoolPreviousPeriods')}</h6>
+                      <div className="col-12 col-lg-6">
+                        <div className="card h-100">
+                          <div className="d-flex align-items-center gap-2 mb-3">
+                            <h6 className="mb-0 fw-bold">{t('schoolDetailsLocationTitle')}</h6>
+                          </div>
+                          <ul className="info-list d-flex flex-column gap-3">
+                            <li className="d-flex flex-column align-items-start">
+                              <span className="text-sm text-gray-500">{t('schoolAddressLabel')}</span>
+                              <span className="fw-medium">{fullAddress || t('schoolNoData')}</span>
+                            </li>
+                            <li className="d-flex flex-column align-items-start">
+                              <span className="text-sm text-gray-500">{t('schoolContactPhone')}</span>
+                              <span className="fw-medium">{schoolDetails?.phone_number || t('schoolNoData')}</span>
+                            </li>
+                            <li className="d-flex flex-column align-items-start">
+                              <span className="text-sm text-gray-500">{t('schoolContactEmail')}</span>
+                              <span className="fw-medium">{schoolDetails?.email || t('schoolNoData')}</span>
+                            </li>
+                            <li className="d-flex flex-column align-items-start">
+                              <span className="text-sm text-gray-500">{t('schoolCreationDateLabel')}</span>
+                              <span className="fw-medium">{formatDate(schoolDetails?.created_at, locale, {year: 'numeric', month: 'short', day: '2-digit'}) || t('schoolNoData')}</span>
+                            </li>
+                            <li className="d-flex flex-column align-items-start">
+                              <span className="text-sm text-gray-500">{t('schoolMaxDebtLabel')}</span>
+                              <span className="fw-medium">{schoolDetails?.max_debt?.toLocaleString(locale) ?? t('schoolNoData')}</span>
+                            </li>
+                            <li className="d-flex flex-column align-items-start">
+                              <span className="text-sm text-gray-500">{t('schoolDefaultTuitionLabel')}</span>
+                              <span className="fw-medium">{schoolDetails?.default_tuition?.toLocaleString(locale) ?? t('schoolNoData')}</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
-                    {payments && payments.length ? (
-                      <table className="table-custom">
-                        <thead>
-                          <tr>
-                            <th>{t('schoolNextBilling')}</th>
-                            <th>{t('tableActions')}</th>
-                            <th>{t('schoolPlanStatusLabel')}</th>
-                            <th>{t('schoolsPlanColumn')}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {payments.map((payment, index) => (
-                            <tr key={`${payment.period}-${index}`}>
-                              <td className="fw-bold">{payment.payment_date}</td>
-                              <td>{payment.payment_method}</td>
-                              <td>
-                                <span className="pill-chip" style={{ background: 'rgba(16,185,129,0.15)', color: '#0f766e' }}>
-                                  {payment.status}
-                                </span>
-                              </td>
-                              <td>${payment.amount.toLocaleString(locale)}</td>
+                  ) : null}
+
+                  {activeTab === 'billing' ? (
+                    <div className="d-flex flex-column gap-3">
+                      <div className="card">
+                        <div className="d-flex align-items-center gap-2 mb-3">
+                          <h6 className="mb-0 fw-bold">{t('schoolPreviousPeriods')}</h6>
+                        </div>
+                        {payments && payments.length ? (
+                          <table className="table-custom">
+                            <thead>
+                              <tr>
+                                <th>{t('schoolNextBilling')}</th>
+                                <th>{t('tableActions')}</th>
+                                <th>{t('schoolPlanStatusLabel')}</th>
+                                <th>{t('schoolsPlanColumn')}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {payments.map((payment, index) => (
+                                <tr key={`${payment.period}-${index}`}>
+                                  <td className="fw-bold">{payment.payment_date}</td>
+                                  <td>{payment.payment_method}</td>
+                                  <td>
+                                    <span className="pill-chip" style={{ background: 'rgba(16,185,129,0.15)', color: '#0f766e' }}>
+                                      {payment.status}
+                                    </span>
+                                  </td>
+                                  <td>${payment.amount.toLocaleString(locale)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        ) : (
+                          <p className="mb-0 text-muted fw-semibold">{t('schoolPaymentsEmpty')}</p>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {activeTab === 'settings' ? (
+                    <div className="row g-3">
+                      <div className="col-12 col-lg-6">
+                        <div className="card h-100">
+                          <div className="d-flex align-items-center gap-2 mb-3">
+                            <h6 className="mb-0 fw-bold">{t('schoolModulesTitle')}</h6>
+                          </div>
+                          {modules && modules.length ? (
+                            <ul className="info-list">
+                              {modules
+                                .sort((a, b) => a.sort_order - b.sort_order)
+                                .map((module) => (
+                                  <li key={module.module_access_control_id} className="d-flex justify-content-between align-items-center">
+                                    <div className="fw-bold">{locale === 'es' ? module.name_es : module.name_en}</div>
+                                  </li>
+                                ))}
+                            </ul>
+                          ) : (
+                            <p className="mb-0 text-muted fw-semibold">{t('schoolNoData')}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="col-12 col-lg-6">
+                        <div className="card h-100">
+                          <div className="d-flex align-items-center gap-2 mb-3">
+                            <h6 className="mb-0 fw-bold">{t('schoolRolesTitle')}</h6>
+                          </div>
+                          <div className="d-flex flex-column gap-2">
+                            <div className="d-flex justify-content-between align-items-center">
+                              <span className="fw-semibold">{t('schoolStudentsCard')}</span>
+                              <span className="pill-chip">{data.roles_per_school.student_count}</span>
+                            </div>
+                            <div className="d-flex justify-content-between align-items-center">
+                              <span className="fw-semibold">{t('schoolTeachersCard')}</span>
+                              <span className="pill-chip">{data.roles_per_school.teacher_count}</span>
+                            </div>
+                            <div className="d-flex justify-content-between align-items-center">
+                              <span className="fw-semibold">{t('schoolAdminsCard')}</span>
+                              <span className="pill-chip">{data.roles_per_school.school_admin_count}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {activeTab === 'structure' ? (
+                    <div className="card">
+                      <div className="d-flex align-items-center justify-content-between gap-2 mb-3">
+                        <h6 className="mb-0 fw-bold">{t('schoolStructureTitle')}</h6>
+                        {canCreate ? (
+                          <button type="button" className="btn btn-primary">
+                            Añadir
+                          </button>
+                        ) : null}
+                      </div>
+                      {childSchools.length ? (
+                        <table className="table-custom">
+                          <thead>
+                            <tr>
+                              <th>{t('schoolsNameColumn')}</th>
+                              <th>{t('schoolsIdColumn')}</th>
+                              <th>{t('schoolLocationLabel')}</th>
+                              <th>{t('schoolStatusBadge')}</th>
+                              <th>{t('tableActions')}</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <p className="mb-0 text-muted fw-semibold">{t('schoolPaymentsEmpty')}</p>
-                    )}
-                  </div>
-                </div>
-              ) : null}
-
-              {activeTab === 'settings' ? (
-                <div className="row g-3">
-                  <div className="col-12 col-lg-6">
-                    <div className="card h-100">
-                      <div className="d-flex align-items-center gap-2 mb-3">
-                        <h6 className="mb-0 fw-bold">{t('schoolModulesTitle')}</h6>
-                      </div>
-                      {modules && modules.length ? (
-                        <ul className="info-list">
-                          {modules
-                            .sort((a, b) => a.sort_order - b.sort_order)
-                            .map((module) => (
-                              <li key={module.module_access_control_id} className="d-flex justify-content-between align-items-center">
-                                <div className="fw-bold">{locale === 'es' ? module.name_es : module.name_en}</div>
-                                <span className="pill-chip" style={{ background: module.enabled ? 'rgba(16,185,129,0.15)' : 'rgba(248,113,113,0.15)', color: module.enabled ? '#0f766e' : '#b91c1c' }}>
-                                  {module.enabled ? t('schoolStatusActive') : t('schoolStatusInactive')}
-                                </span>
-                              </li>
+                          </thead>
+                          <tbody>
+                            {childSchools.map((school) => (
+                              <tr key={school.school_id}>
+                                <td className="fw-bold">{school.commercial_name}</td>
+                                <td>{school.school_id}</td>
+                                <td className="text-muted">{locationLabel}</td>
+                                <td>
+                                  <span className="pill-chip" style={{ background: school.enabled ? 'rgba(16,185,129,0.15)' : 'rgba(248,113,113,0.15)', color: school.enabled ? '#0f766e' : '#b91c1c' }}>
+                                    {school.enabled ? t('schoolStatusActive') : t('schoolStatusInactive')}
+                                  </span>
+                                </td>
+                                <td>
+                                  <button
+                                    type="button"
+                                    className="btn btn-link p-0"
+                                    onClick={() => onNavigate(`/${locale}/schools/${school.school_id}`)}
+                                  >
+                                    {t('schoolViewDetail')}
+                                  </button>
+                                </td>
+                              </tr>
                             ))}
-                        </ul>
+                          </tbody>
+                        </table>
                       ) : (
                         <p className="mb-0 text-muted fw-semibold">{t('schoolNoData')}</p>
                       )}
                     </div>
-                  </div>
-                  <div className="col-12 col-lg-6">
-                    <div className="card h-100">
-                      <div className="d-flex align-items-center gap-2 mb-3">
-                        <h6 className="mb-0 fw-bold">{t('schoolRolesTitle')}</h6>
-                      </div>
-                      <div className="d-flex flex-column gap-2">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span className="fw-semibold">{t('schoolStudentsCard')}</span>
-                          <span className="pill-chip">{data.roles_per_school.student_count}</span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span className="fw-semibold">{t('schoolTeachersCard')}</span>
-                          <span className="pill-chip">{data.roles_per_school.teacher_count}</span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span className="fw-semibold">{t('schoolAdminsCard')}</span>
-                          <span className="pill-chip">{data.roles_per_school.school_admin_count}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  ) : null}
                 </div>
-              ) : null}
-
-              {activeTab === 'structure' ? (
-                <div className="card">
-                  <div className="d-flex align-items-center justify-content-between gap-2 mb-3">
-                    <h6 className="mb-0 fw-bold">{t('schoolStructureTitle')}</h6>
-                    {canCreate ? (
-                      <button type="button" className="btn btn-primary">
-                        Añadir
-                      </button>
-                    ) : null}
-                  </div>
-                  {childSchools.length ? (
-                    <table className="table-custom">
-                      <thead>
-                        <tr>
-                          <th>{t('schoolsNameColumn')}</th>
-                          <th>{t('schoolsIdColumn')}</th>
-                          <th>{t('schoolLocationLabel')}</th>
-                          <th>{t('schoolStatusBadge')}</th>
-                          <th>{t('tableActions')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {childSchools.map((school) => (
-                          <tr key={school.school_id}>
-                            <td className="fw-bold">{school.commercial_name}</td>
-                            <td>{school.school_id}</td>
-                            <td className="text-muted">{locationLabel}</td>
-                            <td>
-                              <span className="pill-chip" style={{ background: school.enabled ? 'rgba(16,185,129,0.15)' : 'rgba(248,113,113,0.15)', color: school.enabled ? '#0f766e' : '#b91c1c' }}>
-                                {school.enabled ? t('schoolStatusActive') : t('schoolStatusInactive')}
-                              </span>
-                            </td>
-                            <td>
-                              <button
-                                type="button"
-                                className="btn btn-link p-0"
-                                onClick={() => onNavigate(`/${locale}/schools/${school.school_id}`)}
-                              >
-                                {t('schoolViewDetail')}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <p className="mb-0 text-muted fw-semibold">{t('schoolNoData')}</p>
-                  )}
-                </div>
-              ) : null}
-            </div>
-          </>
-        ) : (
-          <div className="card">
-            <p className="mb-0 text-muted fw-semibold">{t('schoolNoData')}</p>
-          </div>
-        )}
+              </>
+            ) : (
+              <div className="card">
+                <p className="mb-0 text-muted fw-semibold">{t('schoolNoData')}</p>
+              </div>
+            )}
           </>
         ) : (
           <div className="card">

@@ -142,7 +142,7 @@ export function PaymentRequestUploadResultPage({ onNavigate, massUploadId }: Pay
                            <StudentTableCell
                              name={row.full_name}
                              enrollment={row.register_id}
-                             onClick={() => onNavigate(`/${locale}/students/${row.student_id}`)}
+                             onClick={() => onNavigate(`/${locale}/students&Classes/students/${row.student_id}`)}
                              nameButtonProps={{ 'aria-label': row.full_name }}
                            />
                          </td>

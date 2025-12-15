@@ -115,7 +115,7 @@ function Router() {
   const schoolDetailMatch = path.match(/^\/(es|en)\/schools\/(\d+)$/);
   const isSchoolDetailPath = Boolean(schoolDetailMatch);
   const isStudentsPath = /^\/(es|en)\/students&Classes$/.test(path);
-  const studentDetailMatch = path.match(/^\/(es|en)\/students&Classes\/(\d+)$/);
+  const studentDetailMatch = path.match(/^\/(es|en)\/students&Classes\/students\/(\d+)$/);
   const isStudentDetailPath = Boolean(studentDetailMatch);
   const isControlAccessPath = /^\/(es|en)\/control-access$/.test(path);
   const isGlobalSettingsPath = /^\/(es|en)\/globalSetings$/.test(path);
