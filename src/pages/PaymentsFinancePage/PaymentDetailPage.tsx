@@ -77,7 +77,7 @@ interface PaymentLog {
 export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPageProps) {
   const { t, locale } = useLanguage()
   const { token, hydrated } = useAuth()
-  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('finance')
+  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('payments')
 
   const [payment, setPayment] = useState<PaymentDetail | null>(null)
   const [logs, setLogs] = useState<PaymentLog[]>([])
