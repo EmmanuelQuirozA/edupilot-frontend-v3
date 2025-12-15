@@ -22,14 +22,14 @@ interface PaymentsFinancePageProps {
 export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinancePageProps) {
   const { hydrated } = useAuth()
   const { locale, t } = useLanguage()
-    const { permissions: tuitionsPermissions, loading: tuitionsPermissionsLoading, error: tuitionsPermissionsError, loaded: tuitionsPermissionsLoaded } = useModulePermissions('tuitions')
-    const { permissions: requestsPermissions, loading: requestsPermissionsLoading, error: requestsPermissionsError, loaded: requestsPermissionsLoaded } = useModulePermissions('requests')
-    const { permissions: paymentsPermissions, loading: paymentsPermissionsLoading, error: paymentsPermissionsError, loaded: paymentsPermissionsLoaded } = useModulePermissions('payments')
+  const { permissions: tuitionsPermissions, loading: tuitionsPermissionsLoading, error: tuitionsPermissionsError, loaded: tuitionsPermissionsLoaded } = useModulePermissions('tuitions')
+  const { permissions: requestsPermissions, loading: requestsPermissionsLoading, error: requestsPermissionsError, loaded: requestsPermissionsLoaded } = useModulePermissions('requests')
+  const { permissions: paymentsPermissions, loading: paymentsPermissionsLoading, error: paymentsPermissionsError, loaded: paymentsPermissionsLoaded } = useModulePermissions('payments')
 
   const [error] = useState<string | null>(null)
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<'tuitions' | 'paymentRequests' | 'payments'>('tuitions');
+  const [activeTab, setActiveTab] = useState<'tuitions' | 'paymentRequests' | 'payments'>('tuitions')
 
   const tabLabels = useMemo(
     () => ({
@@ -40,11 +40,26 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
     [t],
   )
 
-  const tabs = [
-    { key: 'tuitions', label: tabLabels.tuitions },
-    { key: 'paymentRequests', label: tabLabels.paymentRequests },
-    { key: 'payments', label: tabLabels.payments }
-  ];
+  const availableTabs = useMemo(
+    () => {
+      const tabsList: { key: 'tuitions' | 'paymentRequests' | 'payments'; label: string }[] = []
+
+      if (tuitionsPermissions?.r) {
+        tabsList.push({ key: 'tuitions', label: tabLabels.tuitions })
+      }
+
+      if (requestsPermissions?.r) {
+        tabsList.push({ key: 'paymentRequests', label: tabLabels.paymentRequests })
+      }
+
+      if (paymentsPermissions?.r) {
+        tabsList.push({ key: 'payments', label: tabLabels.payments })
+      }
+
+      return tabsList
+    },
+    [paymentsPermissions?.r, requestsPermissions?.r, tabLabels, tuitionsPermissions?.r],
+  )
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -59,20 +74,31 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
   )
 
   useEffect(() => {
-    const setTabs = async () => {
-      if (currentPath.includes('/finance/payments')) {
-        setActiveTab('payments')
-      } else if (currentPath.includes('/finance/request')) {
-        setActiveTab('paymentRequests')
-      } else {
-        setActiveTab('tuitions')
-      }
+    if (!availableTabs.length) return
+
+    const availableKeys = availableTabs.map((tab) => tab.key)
+
+    if (currentPath.includes('/finance/payments') && availableKeys.includes('payments')) {
+      setActiveTab('payments')
+    } else if (currentPath.includes('/finance/request') && availableKeys.includes('paymentRequests')) {
+      setActiveTab('paymentRequests')
+    } else if (availableKeys.includes('tuitions')) {
+      setActiveTab('tuitions')
+    } else {
+      setActiveTab(availableTabs[0].key)
     }
-    setTabs()
-  }, [currentPath])
+  }, [availableTabs, currentPath])
 
   const handleTabChange = (key: string) => {
     const nextTab = key as 'tuitions' | 'paymentRequests' | 'payments'
+
+    if (!availableTabs.length) return
+
+    if (!availableTabs.some((tab) => tab.key === nextTab)) {
+      setActiveTab(availableTabs[0].key)
+      return
+    }
+
     setActiveTab(nextTab)
 
     if (nextTab === 'payments') {
@@ -142,7 +168,7 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
         <div className="students-page__header  border-0">
           <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
             <Tabs
-              tabs={tabs}
+              tabs={availableTabs}
               activeKey={activeTab}
               onSelect={handleTabChange}
             />
