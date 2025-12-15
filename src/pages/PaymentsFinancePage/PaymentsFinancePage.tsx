@@ -30,10 +30,20 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
 
   // Tabs
   const [activeTab, setActiveTab] = useState<'tuitions' | 'paymentRequests' | 'payments'>('tuitions');
+
+  const tabLabels = useMemo(
+    () => ({
+      tuitions: t('tuitions'),
+      paymentRequests: t('paymentRequests'),
+      payments: t('payments'),
+    }),
+    [t],
+  )
+
   const tabs = [
-    { key: 'tuitions', label: t('tuitions') },
-    { key: 'paymentRequests', label: t('paymentRequests') },
-    { key: 'payments', label: t('payments') }
+    { key: 'tuitions', label: tabLabels.tuitions },
+    { key: 'paymentRequests', label: tabLabels.paymentRequests },
+    { key: 'payments', label: tabLabels.payments }
   ];
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
@@ -43,8 +53,9 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
         onClick: () => onNavigate(`/${locale}`),
       },
       { label: t('finance') },
+      { label: tabLabels[activeTab] },
     ],
-    [locale, onNavigate, t],
+    [activeTab, locale, onNavigate, tabLabels, t],
   )
 
   useEffect(() => {
