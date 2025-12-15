@@ -45,9 +45,6 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
 
   const [error] = useState<string | null>(null)
 
-  // Tabs
-  const [activeTab, setActiveTab] = useState<TabKey>('tuitions')
-
   const permissionsMap: Record<TabKey, typeof tuitionsPermissions> = useMemo(
     () => ({
       tuitions: tuitionsPermissions,
@@ -71,28 +68,36 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
     [allTabs, permissionsMap],
   )
 
+  const activeTab = useMemo(() => {
+    if (!visibleTabs.length) return null
+
+    const matchingTab = visibleTabs.find((tab) => currentPath.startsWith(tab.path))
+    return (matchingTab ?? visibleTabs[0]).key
+  }, [currentPath, visibleTabs])
+
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
-    () => [
-      {
-        label: t('portalTitle'),
-        onClick: () => onNavigate(`/${locale}`),
-      },
-      { label: t('studentsGroups') },
-    ],
-    [locale, onNavigate, t],
+    () => {
+      const activeTabLabel = visibleTabs.find((tab) => tab.key === activeTab)?.label
+
+      return [
+        {
+          label: t('portalTitle'),
+          onClick: () => onNavigate(`/${locale}`),
+        },
+        { label: t('paymentsFinance') },
+        activeTabLabel ? { label: activeTabLabel } : null,
+      ].filter(Boolean) as BreadcrumbItem[]
+    },
+    [activeTab, locale, onNavigate, t, visibleTabs],
   )
 
   useEffect(() => {
     if (!visibleTabs.length) return
 
     const matchingTab = visibleTabs.find((tab) => currentPath.startsWith(tab.path))
-    if (matchingTab) {
-      setActiveTab(matchingTab.key)
-      return
-    }
+    if (matchingTab) return
 
     const fallbackTab = visibleTabs[0]
-    setActiveTab(fallbackTab.key)
     if (!currentPath.startsWith(fallbackTab.path)) {
       onNavigate(fallbackTab.path)
     }
@@ -102,7 +107,6 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
     const nextTab = visibleTabs.find((tab) => tab.key === key)
     if (!nextTab) return
 
-    setActiveTab(nextTab.key)
     onNavigate(nextTab.path)
   }
     
@@ -157,11 +161,13 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
 
         <div className="students-page__header  border-0">
           <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
-            <Tabs
-              tabs={visibleTabs}
-              activeKey={activeTab}
-              onSelect={handleTabChange}
-            />
+            {activeTab ? (
+              <Tabs
+                tabs={visibleTabs}
+                activeKey={activeTab}
+                onSelect={handleTabChange}
+              />
+            ) : null}
           </div>
         </div>
         {activeTab === 'tuitions' && permissionsMap.tuitions?.r && (
