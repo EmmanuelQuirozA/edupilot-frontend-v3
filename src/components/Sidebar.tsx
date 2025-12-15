@@ -72,6 +72,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
   const { user, token, logout } = useAuth()
   const { locale } = useLanguage()
   const [modules, setModules] = useState<ModuleAccess[]>([])
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname)
 
   const initial = user?.first_name?.[0]?.toUpperCase() || 'U'
 
@@ -107,6 +108,12 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
     fetchModules()
     return () => controller.abort()
   }, [locale, token])
+
+  useEffect(() => {
+    const handlePopState = () => setCurrentPath(window.location.pathname)
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   // Construcción de secciones SOLO si usuario autenticado
   const menuSections: MenuSection[] = useMemo(() => {
@@ -154,9 +161,22 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
     return null
   }
 
+  const isActivePath = (path?: string) => {
+    if (!path) return false
+    return currentPath === path || currentPath.startsWith(`${path}/`)
+  }
+
   const handleNavigation = (event: MouseEvent<HTMLAnchorElement>, path?: string) => {
     if (!path) return
+
+    const active = isActivePath(path)
+    if (active) {
+      event.preventDefault()
+      return
+    }
+
     event.preventDefault()
+    setCurrentPath(path)
     onNavigate?.(path)
     onClose()
   }
@@ -182,9 +202,10 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
             {section.items.map((item) => (
               <a
                 key={item.key}
-                className="nav-link sidebar-link d-flex align-items-center gap-3"
+                className={`nav-link sidebar-link d-flex align-items-center gap-3 ${isActivePath(item.path) ? 'active' : ''}`}
                 href={item.path ?? '#'}
                 onClick={(event) => handleNavigation(event, item.path)}
+                aria-current={isActivePath(item.path) ? 'page' : undefined}
               >
                 {typeof item.icon === 'string' ? (
                   <span className="sidebar-icon"
