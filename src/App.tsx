@@ -114,11 +114,11 @@ function Router() {
   const isSchoolsPath = /^\/(es|en)\/schools$/.test(path);
   const schoolDetailMatch = path.match(/^\/(es|en)\/schools\/(\d+)$/);
   const isSchoolDetailPath = Boolean(schoolDetailMatch);
-  const isStudentsPath = /^\/(es|en)\/students$/.test(path);
-  const studentDetailMatch = path.match(/^\/(es|en)\/students\/(\d+)$/);
+  const isStudentsPath = /^\/(es|en)\/students&Classes$/.test(path);
+  const studentDetailMatch = path.match(/^\/(es|en)\/students&Classes\/(\d+)$/);
   const isStudentDetailPath = Boolean(studentDetailMatch);
   const isControlAccessPath = /^\/(es|en)\/control-access$/.test(path);
-  const isGlobalSettingsPath = /^\/(es|en)\/settings$/.test(path);
+  const isGlobalSettingsPath = /^\/(es|en)\/globalSetings$/.test(path);
   const scheduledFinanceMatch = path.match(/^\/(es|en)\/finance\/request\/scheduled\/(\d+)$/);
   const financeMatch = path.match(/^\/(es|en)\/finance(?:\/(payments|request|request-upload)(?:\/(\d+))?)?$/);
   const isFinancePath = Boolean(financeMatch) || Boolean(scheduledFinanceMatch);
@@ -158,7 +158,6 @@ function Router() {
         <StudentDetailPage
           onNavigate={navigate}
           studentId={Number(studentDetailMatch[2])}
-          language={locale}
         />
       );
     }

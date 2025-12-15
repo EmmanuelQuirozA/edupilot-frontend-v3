@@ -69,7 +69,7 @@ interface PaymentsTabProps {
 export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
-  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('finance')
+  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('payments')
 
   // 
   const [rows, setRows] = useState<ResultsColumns[]>([])

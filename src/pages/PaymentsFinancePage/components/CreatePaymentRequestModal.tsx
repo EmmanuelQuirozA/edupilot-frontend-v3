@@ -9,6 +9,8 @@ export type ApplyScope = 'school' | 'group' | 'student'
 export type SelectedStudent = {
   id: string;
   name: string;
+  student_id: string;
+  full_name: string;
   register_id: string;
   grade_group: string;
   generation: string;

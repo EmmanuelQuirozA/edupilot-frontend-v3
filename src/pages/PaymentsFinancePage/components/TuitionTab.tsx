@@ -9,6 +9,9 @@ import { DateRangePicker } from '../../../components/ui/DateRangePicker'
 import { FilterSidebar, type FilterField, type FilterValues } from '../../../components/FilterSidebar'
 import { createCurrencyFormatter } from '../../../utils/currencyFormatter'
 import { TuitionPaymentModal } from './TuitionPaymentModal'
+import { useModulePermissions } from '../../../hooks/useModulePermissions'
+import { NoPermission } from '../../../components/NoPermission'
+import { LoadingSkeleton } from '../../../components/LoadingSkeleton'
 
 type OrderDirection = 'ASC' | 'DESC'
 
@@ -56,6 +59,7 @@ interface TuitionTabProps {
 export function TuitionTab({ onNavigate }: TuitionTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
+  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('tuitions')
 
   // 
   const [rows, setRows] = useState<ResultsColumns[]>([])
@@ -389,6 +393,32 @@ export function TuitionTab({ onNavigate }: TuitionTabProps) {
 
     return [...baseColumns, ...dynamicMonthColumns]
   }, [currencyFormatter, locale, monthColumns, onNavigate])
+    
+  if (permissionsLoading || !permissionsLoaded) {
+    return (
+      <>
+        <LoadingSkeleton variant="table" rowCount={10} />
+      </>
+    )
+  }
+
+  if (permissionsError) {
+    return (
+      <>
+        <div className="alert alert-danger" role="alert">
+          {t('defaultError')}
+        </div>
+      </>
+    )
+  }
+    
+  if (permissionsLoaded && permissions && !permissions.r) {
+    return (
+      <>
+        <NoPermission />
+      </>
+    )
+  }
 
   return (
     <>

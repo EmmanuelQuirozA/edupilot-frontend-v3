@@ -11,6 +11,8 @@ import { PaymentRequestsTab } from './components/PaymentRequestsTab'
 import './PaymentsFinancePage.css'
 import { LoadingSkeleton } from '../../components/LoadingSkeleton'
 import type { BreadcrumbItem } from '../../components/Breadcrumb'
+import { useModulePermissions } from '../../hooks/useModulePermissions'
+import { NoPermission } from '../../components/NoPermission'
 
 interface PaymentsFinancePageProps {
   onNavigate: (path: string) => void
@@ -20,6 +22,9 @@ interface PaymentsFinancePageProps {
 export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinancePageProps) {
   const { hydrated } = useAuth()
   const { locale, t } = useLanguage()
+    const { permissions: tuitionsPermissions, loading: tuitionsPermissionsLoading, error: tuitionsPermissionsError, loaded: tuitionsPermissionsLoaded } = useModulePermissions('tuitions')
+    const { permissions: requestsPermissions, loading: requestsPermissionsLoading, error: requestsPermissionsError, loaded: requestsPermissionsLoaded } = useModulePermissions('requests')
+    const { permissions: paymentsPermissions, loading: paymentsPermissionsLoading, error: paymentsPermissionsError, loaded: paymentsPermissionsLoaded } = useModulePermissions('payments')
 
   const [error] = useState<string | null>(null)
 
@@ -67,6 +72,45 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
       onNavigate(`/${locale}/finance`)
     }
   }
+    
+    if (
+      tuitionsPermissionsLoading || !tuitionsPermissionsLoaded || 
+      requestsPermissionsLoading || !requestsPermissionsLoaded || 
+      paymentsPermissionsLoading || !paymentsPermissionsLoaded
+    ) {
+      return (
+        <>
+          <LoadingSkeleton variant="table" rowCount={10} />
+        </>
+      )
+    }
+  
+    if (
+      tuitionsPermissionsError || 
+      requestsPermissionsError || 
+      paymentsPermissionsError) {
+      return (
+        <>
+          <div className="alert alert-danger" role="alert">
+            {t('defaultError')}
+          </div>
+        </>
+      )
+    }
+      
+    if (
+      (tuitionsPermissionsLoaded && tuitionsPermissions && !tuitionsPermissions.r)
+      &&
+      (requestsPermissionsLoaded && requestsPermissions && !requestsPermissions.r)
+      &&
+      (paymentsPermissionsLoaded && paymentsPermissions && !paymentsPermissions.r)
+    ) {
+      return (
+        <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')} breadcrumbItems={breadcrumbItems}>
+          <NoPermission />
+        </Layout>
+      )
+    }
 
   if (!hydrated) {
     return (

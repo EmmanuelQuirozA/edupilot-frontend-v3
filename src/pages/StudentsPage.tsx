@@ -10,6 +10,8 @@ import SearchInput from '../components/ui/SearchInput';
 import Tabs from '../components/ui/Tabs';
 import StudentTableCell from '../components/ui/StudentTableCell';
 import './StudentsPage.css'
+import { useModulePermissions } from '../hooks/useModulePermissions'
+import { NoPermission } from '../components/NoPermission'
 
 interface Student {
   student_id: number
@@ -57,6 +59,8 @@ interface ClassesResponse {
 export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const { token, hydrated } = useAuth()
   const { locale, t } = useLanguage()
+  const { permissions: studentsPermissions, loading: studentsPermissionsLoading, error: studentsPermissionsError, loaded: studentsPermissionsLoaded } = useModulePermissions('students')
+  const { permissions: groupsPermissions, loading: groupsPermissionsLoading, error: groupsPermissionsError, loaded: groupsPermissionsLoaded } = useModulePermissions('classes')
 
   // Students
   const [students, setStudents] = useState<Student[]>([])
@@ -324,6 +328,36 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     ],
     [],
   )
+  
+  if (studentsPermissionsLoading || !studentsPermissionsLoaded || groupsPermissionsLoading || !groupsPermissionsLoaded) {
+    return (
+      <>
+        <LoadingSkeleton variant="table" rowCount={10} />
+      </>
+    )
+  }
+
+  if (studentsPermissionsError || groupsPermissionsError) {
+    return (
+      <>
+        <div className="alert alert-danger" role="alert">
+          {t('defaultError')}
+        </div>
+      </>
+    )
+  }
+    
+  if (
+    (studentsPermissionsLoaded && studentsPermissions && !studentsPermissions.r)
+    &&
+    (groupsPermissionsLoaded && groupsPermissions && !groupsPermissions.r)
+  ) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')} breadcrumbItems={breadcrumbItems}>
+        <NoPermission />
+      </Layout>
+    )
+  }
 
   if (!hydrated) {
     return (

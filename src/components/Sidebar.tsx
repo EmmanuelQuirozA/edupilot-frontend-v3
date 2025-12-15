@@ -38,6 +38,14 @@ interface MenuSection {
 }
 
 const menuIcons = {
+  dashboard: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">  
+      <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" />  
+      <rect x="13" y="3" width="8" height="5" rx="2" fill="currentColor" />  
+      <rect x="13" y="10" width="8" height="11" rx="2" fill="currentColor" />  
+      <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" />
+    </svg>
+  ),
   settings: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
@@ -80,7 +88,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
         const params = new URLSearchParams({
           lang: locale,
         })
-        const response = await fetch(`${API_BASE_URL}/permissions/module-access?${params.toString()}`, {
+        const response = await fetch(`${API_BASE_URL}/permissions/menu-access?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         })
@@ -104,14 +112,11 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
   const menuSections: MenuSection[] = useMemo(() => {
     const modulePaths: Record<string, string> = {
       dashboard: `/${locale}`,
-      schools: `/${locale}/schools`,
-      users: `/${locale}/control-access`,
       settings: `/${locale}/settings`,
     }
     if (!token) return []
 
     const visibleModules = modules
-      .filter((module) => module.r)
       .sort((a, b) => {
         const orderA = a.sort_order ?? Number.MAX_SAFE_INTEGER
         const orderB = b.sort_order ?? Number.MAX_SAFE_INTEGER
@@ -120,6 +125,12 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
       })
       
     return [
+      {
+        label: 'Dashboard',
+        items: [
+          { key: 'dashboard', label: 'Dashboard', path: modulePaths.dashboard }
+        ]
+      },
       {
         label: 'Menú principal',
         items: visibleModules.map((m) => ({
@@ -175,23 +186,15 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
                 href={item.path ?? '#'}
                 onClick={(event) => handleNavigation(event, item.path)}
               >
-                {/* <span
-                  className="sidebar-icon"
-                  dangerouslySetInnerHTML={{
-                    __html: item.icon
-                      || menuIcons[item.key as keyof typeof menuIcons]
-                      || menuIcons.default
-                  }}
-                /> */}
-                <span className="sidebar-icon">
-                  {typeof item.icon === 'string' ? (
-                    <span
-                      dangerouslySetInnerHTML={{ __html: item.icon }}
-                    />
-                  ) : (
-                    menuIcons[item.key as keyof typeof menuIcons] || menuIcons.default
-                  )}
-                </span>
+                {typeof item.icon === 'string' ? (
+                  <span className="sidebar-icon"
+                    dangerouslySetInnerHTML={{ __html: item.icon }}
+                  />
+                ) : (
+                  <span className="sidebar-icon">
+                    {menuIcons[item.key as keyof typeof menuIcons] || menuIcons.default}
+                  </span>
+                )}
                 <span>{item.label}</span>
               </a>
             ))}

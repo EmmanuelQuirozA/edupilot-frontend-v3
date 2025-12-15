@@ -55,7 +55,7 @@ interface ScheduleCreationResponse {
 export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
-  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('finance')
+  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('requests')
 
   const [activeTab, setActiveTab] = useState<'history' | 'scheduled'>('history')
 
