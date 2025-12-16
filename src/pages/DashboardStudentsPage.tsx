@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { DataTable, type DataTableColumn, type DataTablePagination } from '../components/DataTable'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 import { Layout } from '../layout/Layout'
@@ -30,40 +29,32 @@ interface PaymentResponse {
   payment_created_at?: string | null
 }
 
-interface PaginatedResponse<T> {
-  content?: T[]
-  totalElements?: number
-  page?: number
-  size?: number
-  totalPages?: number
-}
-
-interface GroupedPaymentItem {
-  paymentId: number
-  amount: number
-  partConceptName: string
-  paymentThroughName: string
-  paymentStatusName: string
-  paymentCreatedAt: string
-  paymentMonth?: string | null
-}
-
-interface GroupedPaymentMonth {
-  month: number
-  total: number
-  items: GroupedPaymentItem[]
-}
-
-interface GroupedPaymentYear {
-  year: number
-  months: GroupedPaymentMonth[]
+interface PaymentRequestItem {
+  payment_request_id: number
+  payment_reference: string
+  student_full_name: string
+  generation: string
+  scholar_level_name: string
+  grade_group: string
+  pr_amount: number
+  pr_created_at: string
+  pr_pay_by: string
+  late_fee: number
+  fee_type: string
+  late_fee_frequency: number
+  payment_month: string | null
+  student_id: number
+  payment_status_id: number
+  ps_pr_name: string
+  pt_name: string
+  total_amount_payments: number | null
+  latest_payment_date: string | null
+  late_fee_total: number
 }
 
 export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps) {
   const { t, locale } = useLanguage()
   const { token } = useAuth()
-
-  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 992)
 
   const [pendingTotals, setPendingTotals] = useState<PendingTotalsResponse | null>(null)
   const [isPendingLoading, setIsPendingLoading] = useState(false)
@@ -74,21 +65,14 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
   const [studentInfoError, setStudentInfoError] = useState<string | null>(null)
 
   const [payments, setPayments] = useState<PaymentResponse[]>([])
-  const [groupedPayments, setGroupedPayments] = useState<GroupedPaymentYear[]>([])
   const [isPaymentsLoading, setIsPaymentsLoading] = useState(false)
   const [paymentsError, setPaymentsError] = useState<string | null>(null)
-  const [paymentsPage, setPaymentsPage] = useState(0)
-  const [paymentsPageSize, setPaymentsPageSize] = useState(10)
-  const [paymentsTotalPages, setPaymentsTotalPages] = useState(0)
-  const [paymentsTotalElements, setPaymentsTotalElements] = useState(0)
+
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequestItem[]>([])
+  const [isPaymentRequestsLoading, setIsPaymentRequestsLoading] = useState(false)
+  const [paymentRequestsError, setPaymentRequestsError] = useState<string | null>(null)
 
   const currencyFormatter = useMemo(() => createCurrencyFormatter(locale, 'MXN'), [locale])
-
-  useEffect(() => {
-    const handleResize = () => setIsDesktop(window.innerWidth >= 992)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   useEffect(() => {
     if (!token) return
@@ -153,22 +137,17 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
   }, [locale, t, token])
 
   useEffect(() => {
-    setPaymentsPage(0)
-  }, [isDesktop])
-
-  useEffect(() => {
     if (!token) return
     const controller = new AbortController()
 
-    const loadDesktopPayments = async () => {
+    const loadPayments = async () => {
       setIsPaymentsLoading(true)
       setPaymentsError(null)
-      setGroupedPayments([])
       try {
         const params = new URLSearchParams({
           lang: locale,
-          offset: String(paymentsPage * paymentsPageSize),
-          limit: String(paymentsPageSize),
+          offset: '0',
+          limit: '5',
         })
 
         const response = await fetch(`${API_BASE_URL}/reports/paymentsStudent?${params.toString()}`, {
@@ -180,13 +159,9 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
           throw new Error('failed_request')
         }
 
-        const payload = (await response.json()) as PaginatedResponse<PaymentResponse>
-        const content = payload.content ?? []
-        setPayments(content)
-        setPaymentsTotalElements(payload.totalElements ?? content.length)
-        setPaymentsTotalPages(payload.totalPages ?? 1)
-        setPaymentsPage(payload.page ?? paymentsPage)
-        setPaymentsPageSize(payload.size ?? paymentsPageSize)
+        const payload = (await response.json()) as PaymentResponse[] | { content?: PaymentResponse[] }
+        const data = Array.isArray(payload) ? payload : payload.content ?? []
+        setPayments(data)
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           setPaymentsError(t('defaultError'))
@@ -196,12 +171,20 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
       }
     }
 
-    const loadMobilePayments = async () => {
-      setIsPaymentsLoading(true)
-      setPaymentsError(null)
-      setPayments([])
+    loadPayments()
+
+    return () => controller.abort()
+  }, [locale, t, token])
+
+  useEffect(() => {
+    if (!token) return
+    const controller = new AbortController()
+
+    const loadPaymentRequests = async () => {
+      setIsPaymentRequestsLoading(true)
+      setPaymentRequestsError(null)
       try {
-        const response = await fetch(`${API_BASE_URL}/payments/grouped?lang=${locale}`, {
+        const response = await fetch(`${API_BASE_URL}/reports/paymentrequestsStudent?limit=5`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         })
@@ -210,40 +193,20 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
           throw new Error('failed_request')
         }
 
-        const payload = (await response.json()) as GroupedPaymentYear[]
-        setGroupedPayments(payload)
+        const payload = (await response.json()) as { content?: PaymentRequestItem[] }
+        setPaymentRequests(payload.content ?? [])
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
-          setPaymentsError(t('defaultError'))
+          setPaymentRequestsError(t('defaultError'))
         }
       } finally {
-        setIsPaymentsLoading(false)
+        setIsPaymentRequestsLoading(false)
       }
     }
 
-    if (isDesktop) {
-      loadDesktopPayments()
-    } else {
-      loadMobilePayments()
-    }
-
+    loadPaymentRequests()
     return () => controller.abort()
-  }, [isDesktop, locale, paymentsPage, paymentsPageSize, t, token])
-
-  const paymentsPagination: DataTablePagination = useMemo(
-    () => ({
-      page: paymentsPage,
-      size: paymentsPageSize,
-      totalPages: paymentsTotalPages,
-      totalElements: paymentsTotalElements,
-      onPageChange: (nextPage) => setPaymentsPage(Math.max(0, nextPage)),
-      onPageSizeChange: (nextSize) => {
-        setPaymentsPageSize(nextSize)
-        setPaymentsPage(0)
-      },
-    }),
-    [paymentsPage, paymentsPageSize, paymentsTotalElements, paymentsTotalPages],
-  )
+  }, [locale, t, token])
 
   const formatDate = useCallback((value?: string | null) => {
     if (!value) return 'Sin fecha'
@@ -255,45 +218,102 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
     })
   }, [locale])
 
-  const monthLabel = (month: number) => {
-    const targetLocale = locale === 'es' ? 'es-MX' : 'en-US'
-    return new Date(2000, month - 1, 1).toLocaleDateString(targetLocale, { month: 'long' })
+  const totalPendingAmount = (pendingTotals?.pendingTotal ?? 0) + (pendingTotals?.lateFeeTotal ?? 0)
+
+  const isRequestOverdue = (request: PaymentRequestItem) => {
+    const dueDate = new Date(request.pr_pay_by)
+    const now = new Date()
+    return dueDate.getTime() < now.getTime()
   }
 
-  const paymentsColumns: Array<DataTableColumn<PaymentResponse>> = useMemo(
-    () => [
-      {
-        key: 'payment_id',
-        label: 'ID',
-      },
-      {
-        key: 'pt_name',
-        label: 'Concepto',
-      },
-      {
-        key: 'amount',
-        label: 'Monto',
-        currency: 'MXN',
-      },
-      {
-        key: 'payment_status_name',
-        label: 'Estado',
-      },
-      {
-        key: 'payment_date',
-        label: 'Fecha de pago',
-        render: (row) => <span>{formatDate(row.payment_date ?? row.payment_created_at)}</span>,
-      },
-      {
-        key: 'payment_reference',
-        label: 'Referencia',
-        render: (row) => row.payment_reference ?? '—',
-      },
-    ],
-    [formatDate],
-  )
+  const renderPendingRequests = () => {
+    if (isPaymentRequestsLoading) {
+      return <p className="text-muted mb-0">Cargando solicitudes...</p>
+    }
 
-  const totalPendingAmount = (pendingTotals?.pendingTotal ?? 0) + (pendingTotals?.lateFeeTotal ?? 0)
+    if (paymentRequestsError) {
+      return <p className="text-danger mb-0">{paymentRequestsError}</p>
+    }
+
+    if (paymentRequests.length === 0) {
+      return <p className="text-muted mb-0">No hay solicitudes pendientes.</p>
+    }
+
+    return (
+      <div className="d-flex flex-column gap-3">
+        {paymentRequests.map((request) => {
+          const overdue = isRequestOverdue(request)
+          return (
+            <div
+              key={request.payment_request_id}
+              className="d-flex align-items-center justify-content-between rounded-4 px-3 py-3 border bg-white"
+            >
+              <div className="d-flex flex-column gap-1">
+                <div className="d-flex align-items-center gap-2">
+                  <div className="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
+                    <span className="fw-semibold" style={{ fontSize: '0.85rem' }}>#{request.payment_reference}</span>
+                  </div>
+                  <div>
+                    <h6 className="mb-0 fw-semibold" style={{ color: '#0F172A' }}>{request.pt_name}</h6>
+                    <small className="text-muted">{formatDate(request.pr_pay_by)}</small>
+                  </div>
+                </div>
+                <small className="text-muted">{request.scholar_level_name} · {request.grade_group}</small>
+              </div>
+              <div className="text-end">
+                <p className="fw-bold mb-1" style={{ color: overdue ? '#D92D20' : '#0F172A' }}>
+                  {currencyFormatter.format(request.pr_amount)}
+                </p>
+                <span
+                  className={`badge px-3 py-2 rounded-pill fw-semibold ${
+                    overdue ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning'
+                  }`}
+                >
+                  {overdue ? 'Vencido' : 'Pendiente'}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const renderRecentPayments = () => {
+    if (isPaymentsLoading) {
+      return <p className="text-muted mb-0">Cargando pagos recientes...</p>
+    }
+
+    if (paymentsError) {
+      return <p className="text-danger mb-0">{paymentsError}</p>
+    }
+
+    if (payments.length === 0) {
+      return <p className="text-muted mb-0">No hay pagos recientes.</p>
+    }
+
+    return (
+      <div className="d-flex flex-column gap-3">
+        {payments.map((payment) => (
+          <div key={payment.payment_id} className="d-flex align-items-center justify-content-between">
+            <div className="d-flex align-items-center gap-2">
+              <div className="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
+                <span style={{ fontSize: '0.9rem' }}>●</span>
+              </div>
+              <div>
+                <h6 className="mb-0 fw-semibold" style={{ color: '#0F172A' }}>{payment.pt_name}</h6>
+                <p className="text-muted mb-0 small">{formatDate(payment.payment_date ?? payment.payment_created_at)}</p>
+              </div>
+            </div>
+            <div className="text-end">
+              <p className="fw-bold mb-0">{currencyFormatter.format(payment.amount)}</p>
+              <small className="text-muted">{payment.payment_status_name}</small>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')}>
@@ -307,123 +327,124 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
       </div>
 
       <div className="row g-3 mb-4">
-        <div className="col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <p className="text-uppercase text-muted small mb-1">Total a pagar</p>
-              {isPendingLoading ? (
-                <p className="mb-0 text-muted">Cargando...</p>
-              ) : pendingError ? (
-                <p className="mb-0 text-danger">{pendingError}</p>
-              ) : (
-                <>
-                  <h4 className="fw-bold mb-2">{currencyFormatter.format(totalPendingAmount)}</h4>
-                  <p className="text-muted mb-0">
-                    Pendiente: {currencyFormatter.format(pendingTotals?.pendingTotal ?? 0)} · Recargos:{' '}
-                    {currencyFormatter.format(pendingTotals?.lateFeeTotal ?? 0)}
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <p className="text-uppercase text-muted small mb-1">Saldo actual</p>
-              {isStudentInfoLoading ? (
-                <p className="mb-0 text-muted">Cargando...</p>
-              ) : studentInfoError ? (
-                <p className="mb-0 text-danger">{studentInfoError}</p>
-              ) : (
-                <>
-                  <h4 className="fw-bold mb-2">{currencyFormatter.format(studentInfo?.balance ?? 0)}</h4>
-                  <p className="text-muted mb-0">{studentInfo?.fullName ?? 'Tu cuenta'}</p>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <p className="text-uppercase text-muted small mb-1">Pagos recientes</p>
-              <h6 className="fw-semibold">Gestiona tus comprobantes y estados</h6>
-              <p className="text-muted small mb-0">
-                Consulta el historial de pagos y verifica su estado en tiempo real desde este panel.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between mb-3">
-        <div>
-          <p className="text-uppercase text-muted small mb-1">Pagos</p>
-          <h5 className="fw-bold mb-0">Historial de pagos</h5>
-        </div>
-        {paymentsError && <span className="text-danger small">{paymentsError}</span>}
-      </div>
-
-      {isDesktop ? (
-        <DataTable
-          columns={paymentsColumns}
-          data={payments}
-          isLoading={isPaymentsLoading}
-          pagination={paymentsPagination}
-          emptyMessage="No hay pagos para mostrar"
-        />
-      ) : (
-        <div className="d-flex flex-column gap-3">
-          {isPaymentsLoading ? (
-            <div className="card shadow-sm">
-              <div className="card-body text-muted">Cargando pagos...</div>
-            </div>
-          ) : groupedPayments.length === 0 ? (
-            <div className="card shadow-sm">
-              <div className="card-body text-muted">No hay pagos para mostrar</div>
-            </div>
-          ) : (
-            groupedPayments.map((year) => (
-              <div className="card shadow-sm" key={year.year}>
-                <div className="card-header bg-white">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h6 className="mb-0">Pagos {year.year}</h6>
-                    <span className="badge bg-primary-subtle text-primary fw-semibold">{year.months.length} meses</span>
-                  </div>
-                </div>
-                <div className="list-group list-group-flush">
-                  {year.months.map((month) => (
-                    <div key={`${year.year}-${month.month}`} className="list-group-item">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <strong className="text-capitalize">{monthLabel(month.month)}</strong>
-                        <span className="fw-semibold">{currencyFormatter.format(month.total)}</span>
-                      </div>
-                      <div className="d-flex flex-column gap-2">
-                        {month.items.map((item) => (
-                          <div key={item.paymentId} className="p-2 rounded bg-light">
-                            <div className="d-flex justify-content-between align-items-center">
-                              <span className="fw-semibold">{item.partConceptName}</span>
-                              <span className="text-muted small">{currencyFormatter.format(item.amount)}</span>
-                            </div>
-                            <div className="d-flex justify-content-between text-muted small">
-                              <span>{item.paymentStatusName}</span>
-                              <span>{formatDate(item.paymentCreatedAt ?? item.paymentMonth)}</span>
-                            </div>
-                            <div className="text-muted small">Método: {item.paymentThroughName}</div>
-                          </div>
-                        ))}
-                      </div>
+        <div className="col-lg-8">
+          <div
+            className="card h-100 border-0 shadow-sm text-white position-relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #563BFF 0%, #7F5BFF 100%)', borderRadius: '16px' }}
+          >
+            <div className="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+              <div>
+                <p className="text-uppercase small mb-2" style={{ color: 'rgba(255,255,255,0.8)' }}>Total a pagar</p>
+                {isPendingLoading ? (
+                  <p className="mb-0" style={{ color: 'rgba(255,255,255,0.75)' }}>Cargando...</p>
+                ) : pendingError ? (
+                  <p className="mb-0 text-warning">{pendingError}</p>
+                ) : (
+                  <>
+                    <div className="d-flex align-items-end gap-2 mb-2">
+                      <h1 className="fw-bold mb-0" style={{ fontSize: '2.75rem' }}>
+                        {currencyFormatter.format(totalPendingAmount)}
+                      </h1>
+                      <span className="fw-semibold" style={{ color: 'rgba(255,255,255,0.75)' }}>MXN</span>
                     </div>
-                  ))}
-                </div>
+                    <p className="mb-0" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                      Incluye {currencyFormatter.format(pendingTotals?.lateFeeTotal ?? 0)} por cargos de mora.
+                    </p>
+                  </>
+                )}
               </div>
-            ))
-          )}
+              <div className="text-end d-flex flex-column align-items-end gap-2">
+                <div className="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center" style={{ width: 48, height: 48 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 1a7 7 0 1 0 7 7A7.008 7.008 0 0 0 8 1zm0 12.6A5.6 5.6 0 1 1 13.6 8 5.607 5.607 0 0 1 8 13.6z" />
+                    <path d="M8 4a.6.6 0 0 0-.6.6v2.2H5.6a.6.6 0 0 0 0 1.2h1.8v2.4a.6.6 0 1 0 1.2 0V8h1.8a.6.6 0 0 0 0-1.2H9.2V4.6A.6.6 0 0 0 8 4z" />
+                  </svg>
+                </div>
+                <button
+                  className="btn btn-light text-primary fw-semibold"
+                  onClick={() => onNavigate(`/${locale}/finance/request`)}
+                >
+                  Ver más
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+
+        <div className="col-lg-4">
+          <div className="card h-100 border-0 shadow-sm">
+            <div className="card-body d-flex flex-column justify-content-between">
+              <div>
+                <p className="text-uppercase text-muted small mb-2">Saldo disponible</p>
+                {isStudentInfoLoading ? (
+                  <p className="mb-0 text-muted">Cargando...</p>
+                ) : studentInfoError ? (
+                  <p className="mb-0 text-danger">{studentInfoError}</p>
+                ) : (
+                  <div className="d-flex align-items-center gap-2">
+                    <div className="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M13.485 1.929a1.5 1.5 0 0 0-2.12 0L6 7.293 4.636 5.93a1.5 1.5 0 1 0-2.122 2.12l2.5 2.5a1.5 1.5 0 0 0 2.122 0l6.35-6.35a1.5 1.5 0 0 0 0-2.12z" />
+                      </svg>
+                    </div>
+                    <h3 className="fw-bold mb-0">{currencyFormatter.format(studentInfo?.balance ?? 0)}</h3>
+                  </div>
+                )}
+              </div>
+              <p className="text-muted small mb-0">Úsalo para pagar cafetería o copias.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="row g-3">
+        <div className="col-lg-7">
+          <div className="card h-100 border-0 shadow-sm">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <p className="text-uppercase text-muted small mb-1">Solicitudes pendientes</p>
+                  <h5 className="fw-bold mb-0">Próximos pagos</h5>
+                </div>
+                <button
+                  className="btn btn-link text-primary text-decoration-none fw-semibold"
+                  onClick={() => onNavigate(`/${locale}/finance/request`)}
+                >
+                  Ver todo
+                </button>
+              </div>
+              {renderPendingRequests()}
+            </div>
+          </div>
+        </div>
+
+        <div className="col-lg-5">
+          <div className="card h-100 border-0 shadow-sm">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <p className="text-uppercase text-muted small mb-1">Pagos recientes</p>
+                  <h5 className="fw-bold mb-0">Últimos movimientos</h5>
+                </div>
+                <button
+                  className="btn btn-link text-primary text-decoration-none fw-semibold"
+                  onClick={() => onNavigate(`/${locale}/finance/payments`)}
+                >
+                  Ver más
+                </button>
+              </div>
+              {renderRecentPayments()}
+              <hr />
+              <button
+                className="btn btn-outline-primary w-100"
+                onClick={() => onNavigate(`/${locale}/finance/payments`)}
+              >
+                Ver historial completo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </Layout>
   )
 }
