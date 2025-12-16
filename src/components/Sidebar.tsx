@@ -163,7 +163,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
 
   const isActivePath = (path?: string) => {
     if (!path) return false
-    return currentPath === path || currentPath.startsWith(`${path}/`)
+    return currentPath === path
   }
 
   const handleNavigation = (event: MouseEvent<HTMLAnchorElement>, path?: string) => {

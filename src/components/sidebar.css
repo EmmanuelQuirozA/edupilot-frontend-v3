@@ -38,7 +38,8 @@
 
 .sidebar .nav-link.active,
 .sidebar .nav-link:hover {
-  background-color: rgba(59, 130, 246, 0.32);
+  background-color: rgba(225, 225, 225, 0.32) !important;
+  box-shadow: none !important;
   color: #fff;
 }
 
