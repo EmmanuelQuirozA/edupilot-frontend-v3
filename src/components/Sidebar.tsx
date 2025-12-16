@@ -29,7 +29,7 @@ interface MenuItem {
   key: string
   label: string
   path?: string
-  icon: string | TrustedHTML
+  icon?: string | TrustedHTML | null
 }
 
 interface MenuSection {
@@ -59,6 +59,25 @@ const menuIcons = {
       />
     </svg>
   ),
+  finance: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M4 6.5C4 5.12 5.12 4 6.5 4h11A1.5 1.5 0 0 1 19 5.5V7H4V6.5Z"
+        fill="currentColor"
+        opacity="0.2"
+      />
+      <path
+        d="M4 9h15v9.5A1.5 1.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5V9Z"
+        fill="currentColor"
+      />
+      <path
+        d="M12 10v6m0 0a2.5 2.5 0 0 1-2.5-2.5M12 16a2.5 2.5 0 0 0 2.5-2.5M9.5 13.5h5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  ),
   default: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="9" fill="currentColor" opacity="0.2" />
@@ -69,7 +88,7 @@ const menuIcons = {
 
 
 export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
-  const { user, token, logout } = useAuth()
+  const { user, token, logout, role } = useAuth()
   const { locale } = useLanguage()
   const [modules, setModules] = useState<ModuleAccess[]>([])
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname)
@@ -120,6 +139,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
     const modulePaths: Record<string, string> = {
       dashboard: `/${locale}`,
       settings: `/${locale}/settings`,
+      finance: `/${locale}/finance`,
     }
     if (!token) return []
 
@@ -130,7 +150,22 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
         if (orderA !== orderB) return orderA - orderB
         return a.module_name.localeCompare(b.module_name)
       })
-      
+
+    const moduleItems: MenuItem[] = visibleModules.map((m) => ({
+      key: m.module_key,
+      label: m.module_name,
+      path: modulePaths[m.module_key] ?? `/${locale}/${m.module_key}`,
+      icon: m.icon,
+    }))
+
+    if (role === 'STUDENT' && !moduleItems.some((item) => item.key === 'finance')) {
+      moduleItems.unshift({
+        key: 'finance',
+        label: 'Mis finanzas',
+        path: modulePaths.finance,
+      })
+    }
+
     return [
       {
         label: 'Dashboard',
@@ -140,12 +175,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
       },
       {
         label: 'Menú principal',
-        items: visibleModules.map((m) => ({
-          key: m.module_key,
-          label: m.module_name,
-          path: modulePaths[m.module_key] ?? `/${locale}/${m.module_key}`,
-          icon: m.icon,
-        })),
+        items: moduleItems,
       },
       {
         label: 'Ajustes',
@@ -154,7 +184,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
         ]
       }
     ]
-  }, [locale, modules, token])
+  }, [locale, modules, role, token])
 
   // Si no hay token → sidebar completamente oculto o vacío
   if (!token) {
@@ -207,15 +237,23 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
                 onClick={(event) => handleNavigation(event, item.path)}
                 aria-current={isActivePath(item.path) ? 'page' : undefined}
               >
-                {typeof item.icon === 'string' ? (
-                  <span className="sidebar-icon"
-                    dangerouslySetInnerHTML={{ __html: item.icon }}
-                  />
-                ) : (
-                  <span className="sidebar-icon">
-                    {menuIcons[item.key as keyof typeof menuIcons] || menuIcons.default}
-                  </span>
-                )}
+                {(() => {
+                  const iconHtml = typeof item.icon === 'string' ? item.icon : item.icon?.toString?.()
+                  if (iconHtml && iconHtml.trim().length > 0) {
+                    return (
+                      <span
+                        className="sidebar-icon"
+                        dangerouslySetInnerHTML={{ __html: iconHtml }}
+                      />
+                    )
+                  }
+
+                  return (
+                    <span className="sidebar-icon">
+                      {menuIcons[item.key as keyof typeof menuIcons] || menuIcons.default}
+                    </span>
+                  )
+                })()}
                 <span>{item.label}</span>
               </a>
             ))}
