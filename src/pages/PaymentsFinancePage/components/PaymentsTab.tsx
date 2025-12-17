@@ -64,9 +64,10 @@ interface DataResponse {
 
 interface PaymentsTabProps {
   onNavigate: (path: string) => void
+  isStudent?: boolean
 }
 
-export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
+export function PaymentsTab({ onNavigate, isStudent = false }: PaymentsTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
   const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('payments')
@@ -80,7 +81,15 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const canCreate = permissions?.c ?? false
+  const effectivePermissions = useMemo(
+    () => (isStudent ? { c: false, r: true, u: false, d: false } : permissions),
+    [isStudent, permissions],
+  )
+
+  const isLoadingPermissions = isStudent ? false : permissionsLoading
+  const permissionsErrorMessage = isStudent ? null : permissionsError
+  const hasReadAccess = effectivePermissions?.r ?? false
+  const canCreate = isStudent ? false : effectivePermissions?.c ?? false
 
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
@@ -345,7 +354,7 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
     [locale, onNavigate, t],
   )
   
-  if (permissionsLoading || !permissionsLoaded) {
+  if (isLoadingPermissions || !permissionsLoaded) {
     return (
       <>
         <LoadingSkeleton variant="table" rowCount={10} />
@@ -353,7 +362,7 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
     )
   }
 
-  if (permissionsError) {
+  if (permissionsErrorMessage) {
     return (
       <>
         <div className="alert alert-danger" role="alert">
@@ -362,8 +371,8 @@ export function PaymentsTab({ onNavigate }: PaymentsTabProps) {
       </>
     )
   }
-  
-  if (permissionsLoaded && permissions && !permissions.r) {
+
+  if (!isLoadingPermissions && permissionsLoaded && !hasReadAccess) {
     return (
       <>
         <NoPermission />

@@ -23,6 +23,7 @@ import { NoPermission } from '../../../components/NoPermission'
 
 interface PaymentRequestsTabProps {
   onNavigate: (path: string) => void
+  isStudent?: boolean
 }
 
 interface CreationResponse {
@@ -52,7 +53,7 @@ interface ScheduleCreationResponse {
   }
 }
 
-export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
+export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentRequestsTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
   const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('requests')
@@ -92,7 +93,15 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     [t],
   )
 
-  const canCreate = permissions?.c ?? false
+  const effectivePermissions = useMemo(
+    () => (isStudent ? { c: false, r: true, u: false, d: false } : permissions),
+    [isStudent, permissions],
+  )
+
+  const isLoadingPermissions = isStudent ? false : permissionsLoading
+  const permissionsErrorMessage = isStudent ? null : permissionsError
+  const hasReadAccess = effectivePermissions?.r ?? false
+  const canCreate = isStudent ? false : effectivePermissions?.c ?? false
 
   useEffect(() => {
     if (!token) return
@@ -484,7 +493,7 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
     })
   }
   
-  if (permissionsError) {
+  if (permissionsErrorMessage) {
     return (
       <>
         <div className="alert alert-danger" role="alert">
@@ -493,8 +502,8 @@ export function PaymentRequestsTab({ onNavigate }: PaymentRequestsTabProps) {
       </>
     )
   }
-    
-  if (permissionsLoaded && permissions && !permissions.r) {
+
+  if (!isLoadingPermissions && permissionsLoaded && !hasReadAccess) {
     return (
       <>
         <NoPermission />
