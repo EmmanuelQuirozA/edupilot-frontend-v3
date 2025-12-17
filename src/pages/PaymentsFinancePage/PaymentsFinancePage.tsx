@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Tabs from '../../components/ui/Tabs'
 import { Layout } from '../../layout/Layout'
-import { Role, useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 
 import { TuitionTab } from './components/TuitionTab'
@@ -19,21 +19,9 @@ interface PaymentsFinancePageProps {
   currentPath: string
 }
 
-function decodeRoleFromToken(token: string | null): Role {
-  try {
-    if (!token) return 'UNKNOWN'
-    const payload = token.split('.')[1]
-    const decoded = JSON.parse(atob(payload))
-    return (decoded.role as Role) || 'UNKNOWN'
-  } catch (error) {
-    console.error('Could not decode token', error)
-    return 'UNKNOWN'
-  }
-}
-
 export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinancePageProps) {
-  const { hydrated, token } = useAuth()
-  const isStudent = useMemo(() => decodeRoleFromToken(token) === 'STUDENT', [token])
+  const { hydrated, role } = useAuth()
+  const isStudent = useMemo(() => role === 'STUDENT', [role])
   const { locale, t } = useLanguage()
   const { permissions: tuitionsPermissions, loading: tuitionsPermissionsLoading, error: tuitionsPermissionsError, loaded: tuitionsPermissionsLoaded } = useModulePermissions('tuitions')
   const { permissions: requestsPermissions, loading: requestsPermissionsLoading, error: requestsPermissionsError, loaded: requestsPermissionsLoaded } = useModulePermissions('requests')
