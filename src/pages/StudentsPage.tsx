@@ -12,6 +12,7 @@ import StudentTableCell from '../components/ui/StudentTableCell';
 import './StudentsPage.css'
 import { useModulePermissions } from '../hooks/useModulePermissions'
 import { NoPermission } from '../components/NoPermission'
+import { StudentCreateModal } from '../components/StudentCreateModal'
 
 interface Student {
   student_id: number
@@ -80,6 +81,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const [orderDir, setOrderDir] = useState<OrderDirection>('ASC')
 
   const [isCreateStudentOpen, setIsCreateStudentOpen] = useState(false)
+  const [studentsReloadCounter, setStudentsReloadCounter] = useState(0)
 
   // Groups
   const [groups, setGroups] = useState<ClassGroup[]>([])
@@ -164,7 +166,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     fetchStudents()
 
     return () => controller.abort()
-  }, [appliedStudentSearch, locale, orderBy, orderDir, studentsPage, studentsPageSize, t, token])
+  }, [appliedStudentSearch, locale, orderBy, orderDir, studentsPage, studentsPageSize, t, token, studentsReloadCounter])
 
   const handleStudentSearchSubmit = () => {
     setAppliedSearch(studentSearchTerm)
@@ -181,6 +183,19 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     setStudentsPage(0)
     setOrderDir((prevDir) => (orderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
     setOrderBy(columnKey)
+  }
+
+  const handleOpenCreateStudentModal = () => {
+    setIsCreateStudentOpen(true)
+  }
+
+  const handleCloseCreateStudentModal = () => {
+    setIsCreateStudentOpen(false)
+  }
+
+  const handleStudentCreated = () => {
+    setStudentsPage(0)
+    setStudentsReloadCounter((prev) => prev + 1)
   }
 
   const studentsColumns: Array<DataTableColumn<Student>> = useMemo(
@@ -231,7 +246,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     ],
     [locale, onNavigate, t],
   )
-  
+
   // Groups
   useEffect(() => {
     if (!token || activeTab !== 'groups') return
@@ -332,7 +347,11 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     ],
     [],
   )
-  
+
+  const handleOpenCreateStudentModal = () => {
+    setIsCreateStudentOpen(true)
+  }
+
   if (studentsPermissionsLoading || !studentsPermissionsLoaded || groupsPermissionsLoading || !groupsPermissionsLoaded) {
     return (
       <>
@@ -372,25 +391,25 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   }
 
   return (
-    <Layout onNavigate={onNavigate} pageTitle={t('studentsGroups')} breadcrumbItems={breadcrumbItems}>
-      <div className="students-page d-flex flex-column gap-3">
-        {error ? (
-          <div className="alert alert-danger" role="alert">
-            {error}
-          </div>
-        ) : null}
+    <>
+      <Layout onNavigate={onNavigate} pageTitle={t('studentsGroups')} breadcrumbItems={breadcrumbItems}>
+        <div className="students-page d-flex flex-column gap-3">
+          {error ? (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          ) : null}
 
-        <div className="students-page__header  border-0">
-          <div className="card-body d-flex flex-column gap-3 flex-lg-row align-items-lg-center justify-content-lg-between">
-            
-            <Tabs
-              tabs={tabs}
-              activeKey={activeTab}
-              onSelect={(key) => setActiveTab(key as 'students' | 'groups')}
-            />
+          <div className="students-page__header  border-0">
+            <div className="card-body d-flex flex-column gap-3 flex-lg-row align-items-lg-center justify-content-lg-between">
+              <Tabs
+                tabs={tabs}
+                activeKey={activeTab}
+                onSelect={(key) => setActiveTab(key as 'students' | 'groups')}
+              />
+            </div>
           </div>
-        </div>
-        {activeTab === 'students' && (
+          {activeTab === 'students' && (
           <>
             <div className="card shadow-sm border-0">
               <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
@@ -421,7 +440,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
                         type="button"
                         data-bs-toggle="dropdown"
                         aria-expanded="false"
-                        onClick={() => setIsCreateStudentOpen(true)}
+                        onClick={handleOpenCreateStudentModal}
                       >
                         <span aria-hidden="true">
                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -491,7 +510,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
                       type="button"
                       data-bs-toggle="dropdown"
                       aria-expanded="false"
-                      onClick={() => setIsCreateStudentOpen(true)}
+                      onClick={handleOpenCreateStudentModal}
                     >
                       <span aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -530,7 +549,14 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
             />
           </>
         )}
-      </div>
-    </Layout>
+        </div>
+      </Layout>
+
+      <StudentCreateModal
+        isOpen={isCreateStudentOpen}
+        onClose={handleCloseCreateStudentModal}
+        onCreated={handleStudentCreated}
+      />
+    </>
   )
 }
