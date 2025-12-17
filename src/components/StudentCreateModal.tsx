@@ -111,28 +111,62 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
 
     const controller = new AbortController()
 
-    const fetchCatalogs = async () => {
+    const fetchSchoolsCatalog = async () => {
       try {
         setIsCatalogsLoading(true)
-        const [schoolsResponse, groupsResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/schools/list?lang=${locale}`, {
-            headers: { Authorization: `Bearer ${token}` },
-            signal: controller.signal,
-          }),
-          fetch(`${API_BASE_URL}/groups/catalog?lang=${locale}`, {
-            headers: { Authorization: `Bearer ${token}` },
-            signal: controller.signal,
-          }),
-        ])
+        const response = await fetch(`${API_BASE_URL}/schools/list?lang=${locale}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        })
 
-        if (!schoolsResponse.ok || !groupsResponse.ok) {
+        if (!response.ok) {
           throw new Error('failed_request')
         }
 
-        const schoolsData = (await schoolsResponse.json()) as SchoolCatalogItem[]
-        const groupsData = (await groupsResponse.json()) as GroupCatalogItem[]
-
+        const schoolsData = (await response.json()) as SchoolCatalogItem[]
         setSchoolsCatalog(schoolsData ?? [])
+      } catch (fetchError) {
+        if ((fetchError as Error).name !== 'AbortError') {
+          setCreateStudentError(t('defaultError'))
+        }
+      } finally {
+        setIsCatalogsLoading(false)
+      }
+    }
+
+    fetchSchoolsCatalog()
+
+    return () => controller.abort()
+  }, [isOpen, locale, t, token])
+
+  useEffect(() => {
+    if (!token || !isOpen) return
+
+    const controller = new AbortController()
+    const schoolId = createStudentForm.school_id
+
+    if (!schoolId) {
+      setGroupsCatalog([])
+      setIsCatalogsLoading(false)
+      return () => controller.abort()
+    }
+
+    const fetchGroupsCatalog = async () => {
+      try {
+        setIsCatalogsLoading(true)
+        const response = await fetch(
+          `${API_BASE_URL}/groups/catalog?lang=${locale}&school_id=${schoolId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          },
+        )
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const groupsData = (await response.json()) as GroupCatalogItem[]
         setGroupsCatalog(groupsData ?? [])
       } catch (fetchError) {
         if ((fetchError as Error).name !== 'AbortError') {
@@ -143,10 +177,10 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
       }
     }
 
-    fetchCatalogs()
+    fetchGroupsCatalog()
 
     return () => controller.abort()
-  }, [isOpen, locale, t, token])
+  }, [createStudentForm.school_id, isOpen, locale, t, token])
 
   const selectedGroup = useMemo(
     () =>
@@ -231,11 +265,29 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
     return null
   }
 
+  const handleSchoolChange = (value: string) => {
+    setCreateStudentForm((prev) => ({
+      ...prev,
+      school_id: value,
+      group_id: '',
+    }))
+    setGroupsCatalog([])
+  }
+
   return (
     <>
       <div className="modal-backdrop fade show" />
-      <div className="modal fade show d-block" tabIndex={-1} role="dialog">
-        <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div
+        className="modal fade show d-block"
+        tabIndex={-1}
+        role="dialog"
+        onClick={handleClose}
+      >
+        <div
+          className="modal-dialog modal-lg modal-dialog-centered"
+          role="document"
+          onClick={(event) => event.stopPropagation()}
+        >
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">{t('createStudent')}</h5>
@@ -282,7 +334,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.birth_date}
                     onChange={(event) => handleCreateStudentChange('birth_date', event.target.value)}
-                    required
                   />
                 </div>
                 <div className="col-md-4">
@@ -292,7 +343,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.phone_number}
                     onChange={(event) => handleCreateStudentChange('phone_number', event.target.value)}
-                    required
                   />
                 </div>
                 <div className="col-md-4">
@@ -302,7 +352,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.tax_id}
                     onChange={(event) => handleCreateStudentChange('tax_id', event.target.value)}
-                    required
                   />
                 </div>
 
@@ -313,7 +362,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.curp}
                     onChange={(event) => handleCreateStudentChange('curp', event.target.value)}
-                    required
                   />
                 </div>
 
@@ -342,7 +390,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   <select
                     className="form-select"
                     value={createStudentForm.school_id}
-                    onChange={(event) => handleCreateStudentChange('school_id', event.target.value)}
+                    onChange={(event) => handleSchoolChange(event.target.value)}
                     required
                   >
                     <option value="" disabled>
@@ -416,7 +464,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.personal_email}
                     onChange={(event) => handleCreateStudentChange('personal_email', event.target.value)}
-                    required
                   />
                 </div>
 
@@ -427,7 +474,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.street}
                     onChange={(event) => handleCreateStudentChange('street', event.target.value)}
-                    required
                   />
                 </div>
                 <div className="col-md-3">
@@ -437,7 +483,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.ext_number}
                     onChange={(event) => handleCreateStudentChange('ext_number', event.target.value)}
-                    required
                   />
                 </div>
                 <div className="col-md-3">
@@ -457,7 +502,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.suburb}
                     onChange={(event) => handleCreateStudentChange('suburb', event.target.value)}
-                    required
                   />
                 </div>
                 <div className="col-md-4">
@@ -467,7 +511,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.locality}
                     onChange={(event) => handleCreateStudentChange('locality', event.target.value)}
-                    required
                   />
                 </div>
                 <div className="col-md-4">
@@ -477,7 +520,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.municipality}
                     onChange={(event) => handleCreateStudentChange('municipality', event.target.value)}
-                    required
                   />
                 </div>
 
@@ -488,7 +530,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     className="form-control"
                     value={createStudentForm.state}
                     onChange={(event) => handleCreateStudentChange('state', event.target.value)}
-                    required
                   />
                 </div>
               </div>
@@ -520,5 +561,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
         </div>
       </div>
     </div>
+    </>
   )
 }
