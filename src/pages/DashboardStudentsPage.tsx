@@ -150,7 +150,7 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
           limit: '5',
         })
 
-        const response = await fetch(`${API_BASE_URL}/reports/paymentsStudent?${params.toString()}`, {
+        const response = await fetch(`${API_BASE_URL}/reports/payments?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         })
@@ -184,7 +184,13 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
       setIsPaymentRequestsLoading(true)
       setPaymentRequestsError(null)
       try {
-        const response = await fetch(`${API_BASE_URL}/reports/paymentrequestsStudent?limit=5`, {
+        const params = new URLSearchParams({
+          lang: locale,
+          offset: '0',
+          limit: '5',
+        })
+
+        const response = await fetch(`${API_BASE_URL}/reports/paymentrequests?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         })
@@ -250,22 +256,18 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
             >
               <div className="d-flex flex-column gap-1">
                 <div className="d-flex align-items-center gap-2">
-                  <div className="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
-                    <span className="fw-semibold" style={{ fontSize: '0.85rem' }}>#{request.payment_reference}</span>
-                  </div>
                   <div>
                     <h6 className="mb-0 fw-semibold" style={{ color: '#0F172A' }}>{request.pt_name}</h6>
                     <small className="text-muted">{formatDate(request.pr_pay_by)}</small>
                   </div>
                 </div>
-                <small className="text-muted">{request.scholar_level_name} · {request.grade_group}</small>
               </div>
               <div className="text-end">
                 <p className="fw-bold mb-1" style={{ color: overdue ? '#D92D20' : '#0F172A' }}>
-                  {currencyFormatter.format(request.pr_amount)}
+                  {currencyFormatter.format(request.pr_amount+request.late_fee_total)}
                 </p>
                 <span
-                  className={`badge px-3 py-2 rounded-pill fw-semibold ${
+                  className={`badge px-3 rounded-pill fw-semibold ${
                     overdue ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning'
                   }`}
                 >
@@ -293,18 +295,32 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
     }
 
     return (
-      <div className="d-flex flex-column gap-3">
-        {payments.map((payment) => (
-          <div key={payment.payment_id} className="d-flex align-items-center justify-content-between">
-            <div className="d-flex align-items-center gap-2">
-              <div className="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
-                <span style={{ fontSize: '0.9rem' }}>●</span>
+      <div className="d-flex flex-column gap-3 ">
+        {payments.map((payment, index) => (
+          <div key={payment.payment_id} className="d-flex justify-content-between rounded-4 px-3 py-3 border">
+            <div className='d-flex gap-3'>
+              {/* Timeline */}
+              <div className="d-flex flex-column align-items-center">
+                <span
+                  className="rounded-circle"
+                  style={{ width: 8, height: 8, backgroundColor: index === 0 ? '#22C55E' : '#6366F1', marginTop: 4 }}
+                />
+                {index !== payments.length - 1 && (
+                  <span style={{ width: 1, flex: 1, backgroundColor: '#E5E7EB', marginTop: 4 }} />
+                )}
               </div>
+
+              {/* Content */}
               <div>
-                <h6 className="mb-0 fw-semibold" style={{ color: '#0F172A' }}>{payment.pt_name}</h6>
-                <p className="text-muted mb-0 small">{formatDate(payment.payment_date ?? payment.payment_created_at)}</p>
+                <p className="mb-1 fw-medium" style={{ color: '#0F172A' }}>
+                  {payment.pt_name}
+                </p>
+                <p className="mb-0 text-muted small">
+                  {formatDate(payment.payment_date ?? payment.payment_created_at)}
+                </p>
               </div>
             </div>
+
             <div className="text-end">
               <p className="fw-bold mb-0">{currencyFormatter.format(payment.amount)}</p>
               <small className="text-muted">{payment.payment_status_name}</small>
@@ -330,7 +346,7 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
         <div className="col-lg-8">
           <div
             className="card h-100 border-0 shadow-sm text-white position-relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #563BFF 0%, #7F5BFF 100%)', borderRadius: '16px' }}
+            style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)'}}
           >
             <div className="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
               <div>
@@ -348,18 +364,13 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
                       <span className="fw-semibold" style={{ color: 'rgba(255,255,255,0.75)' }}>MXN</span>
                     </div>
                     <p className="mb-0" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                      <i className="bi bi-info-circle me-2"/>
                       Incluye {currencyFormatter.format(pendingTotals?.lateFeeTotal ?? 0)} por cargos de mora.
                     </p>
                   </>
                 )}
               </div>
               <div className="text-end d-flex flex-column align-items-end gap-2">
-                <div className="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center" style={{ width: 48, height: 48 }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 1a7 7 0 1 0 7 7A7.008 7.008 0 0 0 8 1zm0 12.6A5.6 5.6 0 1 1 13.6 8 5.607 5.607 0 0 1 8 13.6z" />
-                    <path d="M8 4a.6.6 0 0 0-.6.6v2.2H5.6a.6.6 0 0 0 0 1.2h1.8v2.4a.6.6 0 1 0 1.2 0V8h1.8a.6.6 0 0 0 0-1.2H9.2V4.6A.6.6 0 0 0 8 4z" />
-                  </svg>
-                </div>
                 <button
                   className="btn btn-light text-primary fw-semibold"
                   onClick={() => onNavigate(`/${locale}/finance/request`)}
@@ -383,15 +394,13 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
                 ) : (
                   <div className="d-flex align-items-center gap-2">
                     <div className="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M13.485 1.929a1.5 1.5 0 0 0-2.12 0L6 7.293 4.636 5.93a1.5 1.5 0 1 0-2.122 2.12l2.5 2.5a1.5 1.5 0 0 0 2.122 0l6.35-6.35a1.5 1.5 0 0 0 0-2.12z" />
-                      </svg>
+                      <i className="bi bi-credit-card"></i>
                     </div>
                     <h3 className="fw-bold mb-0">{currencyFormatter.format(studentInfo?.balance ?? 0)}</h3>
                   </div>
                 )}
               </div>
-              <p className="text-muted small mb-0">Úsalo para pagar cafetería o copias.</p>
+              <p className="text-muted small mb-0">Úsalo para pagar en cafetería.</p>
             </div>
           </div>
         </div>
@@ -414,6 +423,13 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
                 </button>
               </div>
               {renderPendingRequests()}
+              <hr />
+              <button
+                className="btn btn-outline-primary w-100"
+                onClick={() => onNavigate(`/${locale}/finance/payments`)}
+              >
+                Ver historial completo
+              </button>
             </div>
           </div>
         </div>
