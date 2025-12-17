@@ -13,6 +13,7 @@ import './StudentsPage.css'
 import { useModulePermissions } from '../hooks/useModulePermissions'
 import { NoPermission } from '../components/NoPermission'
 import { StudentCreateModal } from '../components/StudentCreateModal'
+import { GroupCreateModal } from '../components/GroupCreateModal'
 
 interface Student {
   student_id: number
@@ -82,6 +83,9 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
 
   const [isCreateStudentOpen, setIsCreateStudentOpen] = useState(false)
   const [studentsReloadCounter, setStudentsReloadCounter] = useState(0)
+
+  const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
+  const [groupsReloadCounter, setGroupsReloadCounter] = useState(0)
 
   // Groups
   const [groups, setGroups] = useState<ClassGroup[]>([])
@@ -298,7 +302,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     fetchClasses()
 
     return () => controller.abort()
-  }, [activeTab, appliedGroupSearch, groupsOrderBy, groupsOrderDir, groupsPage, groupsPageSize, locale, t, token])
+  }, [activeTab, appliedGroupSearch, groupsOrderBy, groupsOrderDir, groupsPage, groupsPageSize, groupsReloadCounter, locale, t, token])
 
   const handleGroupSearchSubmit = () => {
     setAppliedGroupSearch(groupSearchTerm)
@@ -310,6 +314,10 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     setAppliedGroupSearch('')
     setGroupsPage(0)
   }
+
+  const handleOpenCreateGroupModal = () => setIsCreateGroupOpen(true)
+  const handleCloseCreateGroupModal = () => setIsCreateGroupOpen(false)
+  const handleGroupCreated = () => setGroupsReloadCounter((value) => value + 1)
 
   const handleGroupSort = (columnKey: keyof ClassGroup) => {
     setGroupsPage(0)
@@ -503,14 +511,14 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
                   </svg>
                   <span className="fw-semibold">Filtros</span>
                 </button>
-                {canCreateStudents ? (
+                {canCreateGroups ? (
                   <>
                     <button
                       className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
                       type="button"
                       data-bs-toggle="dropdown"
                       aria-expanded="false"
-                      onClick={handleOpenCreateStudentModal}
+                      onClick={handleOpenCreateGroupModal}
                     >
                       <span aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -556,6 +564,11 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
         isOpen={isCreateStudentOpen}
         onClose={handleCloseCreateStudentModal}
         onCreated={handleStudentCreated}
+      />
+      <GroupCreateModal
+        isOpen={isCreateGroupOpen}
+        onClose={handleCloseCreateGroupModal}
+        onCreated={handleGroupCreated}
       />
     </>
   )

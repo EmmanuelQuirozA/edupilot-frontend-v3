@@ -3,6 +3,8 @@ import { API_BASE_URL } from '../config'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 
+declare const Swal: any
+
 interface SchoolCatalogItem {
   school_id?: number | string
   commercial_name?: string
@@ -190,8 +192,28 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
         body: JSON.stringify(payload),
       })
 
+      const responseData = await response.json().catch(() => null)
+
       if (!response.ok) {
+        Swal.fire({
+          icon: 'error',
+          title: responseData?.title ?? t('defaultError'),
+          text: responseData?.message ?? t('defaultError'),
+        })
         throw new Error('failed_request')
+      }
+
+      if (responseData) {
+        await Swal.fire({
+          icon: responseData.type === 'success' ? 'success' : 'info',
+          title: responseData.title ?? t('success'),
+          text: responseData.message ?? '',
+        })
+      } else {
+        await Swal.fire({
+          icon: 'success',
+          title: t('success'),
+        })
       }
 
       onCreated?.()
