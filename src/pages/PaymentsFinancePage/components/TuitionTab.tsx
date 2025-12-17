@@ -57,9 +57,15 @@ interface TuitionTabProps {
 }
 
 export function TuitionTab({ onNavigate }: TuitionTabProps) {
-  const { token } = useAuth()
+  const { token, role } = useAuth()
+  const isStudent = useMemo(() => role === 'STUDENT', [role])
   const { locale, t } = useLanguage()
   const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('tuitions')
+  const defaultStudentPermissions = useMemo(
+    () => (isStudent ? { c: false, r: true, u: false, d: false } : null),
+    [isStudent],
+  )
+  const effectiveTuitionsPermissions = defaultStudentPermissions ?? permissions
 
   // 
   const [rows, setRows] = useState<ResultsColumns[]>([])
@@ -412,7 +418,7 @@ export function TuitionTab({ onNavigate }: TuitionTabProps) {
     )
   }
     
-  if (permissionsLoaded && permissions && !permissions.r) {
+  if (permissionsLoaded && permissions && !effectiveTuitionsPermissions.r) {
     return (
       <>
         <NoPermission />

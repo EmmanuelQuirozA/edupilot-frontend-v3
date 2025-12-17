@@ -61,6 +61,8 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const { locale, t } = useLanguage()
   const { permissions: studentsPermissions, loading: studentsPermissionsLoading, error: studentsPermissionsError, loaded: studentsPermissionsLoaded } = useModulePermissions('students')
   const { permissions: groupsPermissions, loading: groupsPermissionsLoading, error: groupsPermissionsError, loaded: groupsPermissionsLoaded } = useModulePermissions('classes')
+  const canCreateStudents = studentsPermissions?.c ?? false
+  const canCreateGroups = groupsPermissions?.c ?? false
 
   // Students
   const [students, setStudents] = useState<Student[]>([])
@@ -76,6 +78,8 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   
   const [orderBy, setOrderBy] = useState('')
   const [orderDir, setOrderDir] = useState<OrderDirection>('ASC')
+
+  const [isCreateStudentOpen, setIsCreateStudentOpen] = useState(false)
 
   // Groups
   const [groups, setGroups] = useState<ClassGroup[]>([])
@@ -405,9 +409,35 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
                   </svg>
                   <span className="fw-semibold">Filtros</span>
                 </button>
-                <div className="d-flex align-items-center gap-3">
-                  <button type="button" className="btn btn-primary">Carga Masiva (CSV)</button>
-                  <button type="button" className="btn btn-outline-primary">Agregar alumno</button>
+                <div className="d-flex align-items-center gap-2">
+                  {canCreateStudents ? (
+                    <>
+                      <button type="button" className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium">
+                        <i className="bi bi-upload"/> 
+                        Carga Masiva
+                      </button>
+                      <button
+                        className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        onClick={() => setIsCreateStudentOpen(true)}
+                      >
+                        <span aria-hidden="true">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path
+                              d="M12 5v14M5 12h14"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </span>
+                        <span className="fw-semibold">{t('createStudent')}</span>
+                      </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -454,6 +484,30 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
                   </svg>
                   <span className="fw-semibold">Filtros</span>
                 </button>
+                {canCreateStudents ? (
+                  <>
+                    <button
+                      className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                      onClick={() => setIsCreateStudentOpen(true)}
+                    >
+                      <span aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M12 5v14M5 12h14"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                      <span className="fw-semibold">{t('createClass')}</span>
+                    </button>
+                  </>
+                ) : null}
               </div>
             </div>
 

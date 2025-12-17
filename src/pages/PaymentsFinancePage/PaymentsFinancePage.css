@@ -43,7 +43,7 @@
   border: none;
 }
 
-.payment-requests__create-icon {
+.create-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;

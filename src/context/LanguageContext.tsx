@@ -344,7 +344,9 @@ const translations: TranslationMap = {
     createSingleRequestDescription: 'Crea una solicitud de pago',
     updatePermissionTitle: '¿Estás seguro que deseas cambiar los permisos?',
     updatePermissionConfirmation: 'Puedes volver a cambiarlos en cualquier momento.',
-    
+    createClass: 'Crear Grupo', 
+    createStudent: 'Crear Estudiante',
+
   },
   en: {
     homeTitle: 'Welcome to EduPilot',
@@ -684,7 +686,8 @@ const translations: TranslationMap = {
     createSingleRequestDescription: 'Create a payment request',
     updatePermissionTitle: 'Are you sure you want to change the permissions?',
     updatePermissionConfirmation: 'You can restore the permissions at any time.',
-
+    createClass: 'Create Class', 
+    createStudent: 'Create Student',
 
   },
 }
