@@ -284,18 +284,23 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
         onClick={handleClose}
       >
         <div
-          className="modal-dialog modal-lg modal-dialog-centered"
+          className="modal-dialog modal-xl modal-dialog-centered"
           role="document"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">{t('createStudent')}</h5>
+              <div>
+                <h5 className="modal-title">{t('createStudent')}</h5>
+                <p id="student-modal-description" className="text-muted mb-0">Ingresa la información de un nuevo alumno.</p>
+              </div>
               <button type="button" className="btn-close" aria-label="Close" onClick={handleClose} />
             </div>
             <form onSubmit={handleCreateStudentSubmit}>
               <div className="modal-body">
               <div className="row g-3">
+                
+                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">Datos personales</h4>
                 <div className="col-md-4">
                   <label className="form-label fw-semibold">Nombre(s)</label>
                   <input
@@ -337,35 +342,6 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Teléfono</label>
-                  <input
-                    type="tel"
-                    className="form-control"
-                    value={createStudentForm.phone_number}
-                    onChange={(event) => handleCreateStudentChange('phone_number', event.target.value)}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">RFC</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={createStudentForm.tax_id}
-                    onChange={(event) => handleCreateStudentChange('tax_id', event.target.value)}
-                  />
-                </div>
-
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">CURP</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={createStudentForm.curp}
-                    onChange={(event) => handleCreateStudentChange('curp', event.target.value)}
-                  />
-                </div>
-
-                <div className="col-md-4">
                   <label className="form-label fw-semibold">Matrícula</label>
                   <input
                     type="text"
@@ -385,6 +361,39 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
 
+                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">Credenciales de acceso</h4>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold">Correo institucional</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    value={createStudentForm.email}
+                    onChange={(event) => handleCreateStudentChange('email', event.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold">Usuario</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={createStudentForm.username}
+                    onChange={(event) => handleCreateStudentChange('username', event.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold">Contraseña</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    value={createStudentForm.password}
+                    onChange={(event) => handleCreateStudentChange('password', event.target.value)}
+                    required
+                  />
+                </div>
+
+                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">Información escolar</h4>
                 <div className="col-md-6">
                   <label className="form-label fw-semibold">Escuela</label>
                   <select
@@ -426,34 +435,33 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   ) : null}
                 </div>
 
+                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">Información escolar</h4>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Usuario</label>
+                  <label className="form-label fw-semibold">Teléfono</label>
+                  <input
+                    type="tel"
+                    className="form-control"
+                    value={createStudentForm.phone_number}
+                    onChange={(event) => handleCreateStudentChange('phone_number', event.target.value)}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold">RFC</label>
                   <input
                     type="text"
                     className="form-control"
-                    value={createStudentForm.username}
-                    onChange={(event) => handleCreateStudentChange('username', event.target.value)}
-                    required
+                    value={createStudentForm.tax_id}
+                    onChange={(event) => handleCreateStudentChange('tax_id', event.target.value)}
                   />
                 </div>
+
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Correo institucional</label>
+                  <label className="form-label fw-semibold">CURP</label>
                   <input
-                    type="email"
+                    type="text"
                     className="form-control"
-                    value={createStudentForm.email}
-                    onChange={(event) => handleCreateStudentChange('email', event.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fw-semibold">Contraseña</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    value={createStudentForm.password}
-                    onChange={(event) => handleCreateStudentChange('password', event.target.value)}
-                    required
+                    value={createStudentForm.curp}
+                    onChange={(event) => handleCreateStudentChange('curp', event.target.value)}
                   />
                 </div>
 
@@ -467,7 +475,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
 
-                <div className="col-md-6">
+                <div className="col-md-4">
                   <label className="form-label fw-semibold">Calle</label>
                   <input
                     type="text"
@@ -476,7 +484,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     onChange={(event) => handleCreateStudentChange('street', event.target.value)}
                   />
                 </div>
-                <div className="col-md-3">
+                <div className="col-md-4">
                   <label className="form-label fw-semibold">Número ext.</label>
                   <input
                     type="text"
@@ -485,7 +493,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     onChange={(event) => handleCreateStudentChange('ext_number', event.target.value)}
                   />
                 </div>
-                <div className="col-md-3">
+                <div className="col-md-4">
                   <label className="form-label fw-semibold">Número int.</label>
                   <input
                     type="text"

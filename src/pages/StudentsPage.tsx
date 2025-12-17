@@ -356,10 +356,6 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     [],
   )
 
-  const handleOpenCreateStudentModal = () => {
-    setIsCreateStudentOpen(true)
-  }
-
   if (studentsPermissionsLoading || !studentsPermissionsLoaded || groupsPermissionsLoading || !groupsPermissionsLoaded) {
     return (
       <>

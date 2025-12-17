@@ -170,7 +170,10 @@ export function GroupCreateModal({ isOpen, onClose, onCreated }: GroupCreateModa
         <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">{t('createClass')}</h5>
+              <div>
+                <h5 className="modal-title">{t('createClass')}</h5>
+                <p id="group-modal-description" className="text-muted mb-0">Completa la información para registrar un nuevo grupo.</p>
+              </div>
               <button type="button" className="btn-close" aria-label="Close" onClick={handleClose} />
             </div>
             <form onSubmit={handleCreateGroupSubmit}>
@@ -212,7 +215,6 @@ export function GroupCreateModal({ isOpen, onClose, onCreated }: GroupCreateModa
                       className="form-control"
                       value={createGroupForm.name}
                       onChange={(event) => handleCreateGroupChange('name', event.target.value)}
-                      required
                     />
                   </div>
 
@@ -228,23 +230,24 @@ export function GroupCreateModal({ isOpen, onClose, onCreated }: GroupCreateModa
                   </div>
 
                   <div className="col-md-6">
+                    <label className="form-label fw-semibold">Grado</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className="form-control"
+                      value={createGroupForm.grade}
+                      onChange={(event) => handleCreateGroupChange('grade', event.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="col-md-6">
                     <label className="form-label fw-semibold">Grupo</label>
                     <input
                       type="text"
                       className="form-control"
                       value={createGroupForm.group}
                       onChange={(event) => handleCreateGroupChange('group', event.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">Grado</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={createGroupForm.grade}
-                      onChange={(event) => handleCreateGroupChange('grade', event.target.value)}
                       required
                     />
                   </div>
