@@ -76,8 +76,19 @@ interface PaymentLog {
 
 export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPageProps) {
   const { t, locale } = useLanguage()
-  const { token, hydrated } = useAuth()
+  const { token, hydrated, role } = useAuth()
   const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('payments')
+
+  const isStudent = useMemo(() => role === 'STUDENT', [role])
+  const effectivePermissions = useMemo(
+    () => (isStudent ? { c: false, r: true, u: false, d: false } : permissions),
+    [isStudent, permissions],
+  )
+
+  const isLoadingPermissions = isStudent ? false : permissionsLoading
+  const permissionsErrorMessage = isStudent ? null : permissionsError
+  const hasPermissionsLoaded = isStudent ? true : permissionsLoaded
+  const hasReadAccess = effectivePermissions?.r ?? false
 
   const [payment, setPayment] = useState<PaymentDetail | null>(null)
   const [logs, setLogs] = useState<PaymentLog[]>([])
@@ -177,7 +188,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
 
   const fetchPaymentDetails = useCallback(
     async (signal?: AbortSignal) => {
-      if (!token || !permissionsLoaded || !permissions?.r) return
+      if (!token || !hasPermissionsLoaded || !hasReadAccess) return
 
       setIsLoading(true)
       setError(null)
@@ -208,7 +219,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
         }
       }
     },
-    [locale, paymentId, permissions?.r, permissionsLoaded, t, token],
+    [hasPermissionsLoaded, hasReadAccess, locale, paymentId, t, token],
   )
 
   useEffect(() => {
@@ -218,7 +229,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
   }, [fetchPaymentDetails])
 
   useEffect(() => {
-    if (!token || !permissionsLoaded || !permissions?.r) return
+    if (!token || !hasPermissionsLoaded || !hasReadAccess) return
 
     const controller = new AbortController()
     const fetchLogs = async () => {
@@ -249,7 +260,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     fetchLogs()
 
     return () => controller.abort()
-  }, [locale, paymentId, permissions?.r, permissionsLoaded, t, token])
+  }, [hasPermissionsLoaded, hasReadAccess, locale, paymentId, t, token])
 
   const handleFileSelect = (file: File | null) => {
     setSelectedFile(file)
@@ -636,7 +647,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
 
   const isPaymentMonthRequired = paymentForm.payment_concept_id === 1
 
-  if (!hydrated || permissionsLoading || !permissionsLoaded) {
+  if (!hydrated || isLoadingPermissions || !hasPermissionsLoaded) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentsFinance')} breadcrumbItems={breadcrumbItems}>
         <LoadingSkeleton variant="table" rowCount={10} />
@@ -644,7 +655,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     )
   }
 
-  if (permissionsError) {
+  if (permissionsErrorMessage) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentDetail')} breadcrumbItems={breadcrumbItems}>
         <div className="alert alert-danger" role="alert">
@@ -654,7 +665,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     )
   }
 
-  if (permissionsLoaded && permissions && !permissions.r) {
+  if (!isLoadingPermissions && hasPermissionsLoaded && !hasReadAccess) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentDetail')} breadcrumbItems={breadcrumbItems}>
         <NoPermission />
@@ -685,7 +696,7 @@ export function PaymentDetailPage({ onNavigate, paymentId }: PaymentDetailPagePr
     .replace('{{level}}', payment.scholar_level_name || '-')
     .replace('{{generation}}', payment.generation || '-')
 
-  const canUpdatePayment = permissions?.u ?? false
+  const canUpdatePayment = effectivePermissions?.u ?? false
   const isFinalStatus = payment.payment_status_id === 3 || payment.payment_status_id === 4
 
   return (
