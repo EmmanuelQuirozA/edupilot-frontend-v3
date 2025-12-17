@@ -86,11 +86,16 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
   const today = useMemo(() => new Date().toISOString().split('T')[0], [isScheduleModalOpen])
 
   const paymentRequestTabs = useMemo(
-    () => [
-      { key: 'history', label: t('historyTab') },
-      { key: 'scheduled', label: t('scheduledTab') },
-    ],
-    [t],
+    () => {
+      const historyTab = { key: 'history', label: t('historyTab') }
+
+      if (isStudent) {
+        return [historyTab]
+      }
+
+      return [historyTab, { key: 'scheduled', label: t('scheduledTab') }]
+    },
+    [isStudent, t],
   )
 
   const effectivePermissions = useMemo(
@@ -102,6 +107,12 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
   const permissionsErrorMessage = isStudent ? null : permissionsError
   const hasReadAccess = effectivePermissions?.r ?? false
   const canCreate = isStudent ? false : effectivePermissions?.c ?? false
+
+  useEffect(() => {
+    if (isStudent && activeTab !== 'history') {
+      setActiveTab('history')
+    }
+  }, [activeTab, isStudent])
 
   useEffect(() => {
     if (!token) return
@@ -519,7 +530,16 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
           <Tabs
             tabs={paymentRequestTabs}
             activeKey={activeTab}
-            onSelect={(key) => setActiveTab(key as 'history' | 'scheduled')}
+            onSelect={(key) => {
+              const nextTab = key as 'history' | 'scheduled'
+
+              if (isStudent) {
+                setActiveTab('history')
+                return
+              }
+
+              setActiveTab(nextTab)
+            }}
           />
 
           {canCreate ? (
@@ -609,7 +629,7 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
             tabs={paymentRequestTabs}
             onTabChange={setActiveTab}
           />
-        ) : (
+        ) : !isStudent ? (
           <PaymentRequestsScheduled
             onNavigate={onNavigate}
             schoolOptions={schoolOptions}
@@ -618,7 +638,7 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
             tabs={paymentRequestTabs}
             onTabChange={setActiveTab}
           />
-        )}
+        ) : null}
       </div>
 
       <CreatePaymentScheduleModal

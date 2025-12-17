@@ -123,8 +123,19 @@ interface PaymentRequestForm {
 
 export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: PaymentRequestDetailPageProps) {
   const { t, locale } = useLanguage()
-  const { token, hydrated } = useAuth()
+  const { token, hydrated, role } = useAuth()
   const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('requests')
+
+  const isStudent = useMemo(() => role === 'STUDENT', [role])
+  const effectivePermissions = useMemo(
+    () => (isStudent ? { c: false, r: true, u: false, d: false } : permissions),
+    [isStudent, permissions],
+  )
+
+  const isLoadingPermissions = isStudent ? false : permissionsLoading
+  const permissionsErrorMessage = isStudent ? null : permissionsError
+  const hasPermissionsLoaded = isStudent ? true : permissionsLoaded
+  const hasReadAccess = effectivePermissions?.r ?? false
 
   const [paymentRequestDetail, setPaymentRequestDetail] = useState<PaymentRequestDetailResponse | null>(null)
   const [logs, setLogs] = useState<PaymentLog[]>([])
@@ -165,7 +176,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
 
   const loadPaymentRequest = useCallback(
     async (signal?: AbortSignal) => {
-      if (!token || !permissionsLoaded || !permissions?.r) return
+      if (!token || !hasPermissionsLoaded || !hasReadAccess) return
 
       setIsLoading(true)
       setError(null)
@@ -194,7 +205,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
         setIsLoading(false)
       }
     },
-    [locale, paymentRequestId, permissions?.r, permissionsLoaded, t, token],
+    [hasPermissionsLoaded, hasReadAccess, locale, paymentRequestId, t, token],
   )
 
   const handlePaymentSuccess = useCallback(() => {
@@ -233,7 +244,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
   }, [loadPaymentRequest])
 
   useEffect(() => {
-    if (!token || !permissionsLoaded || !permissions?.r) return
+    if (!token || !hasPermissionsLoaded || !hasReadAccess) return
 
     const controller = new AbortController()
     const fetchLogs = async () => {
@@ -264,7 +275,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     fetchLogs()
 
     return () => controller.abort()
-  }, [locale, paymentRequestId, permissions?.r, permissionsLoaded, t, token])
+  }, [hasPermissionsLoaded, hasReadAccess, locale, paymentRequestId, t, token])
 
   const handlePrint = () => {
     window.print()
@@ -453,7 +464,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     }
   }
 
-  if (!hydrated || permissionsLoading || !permissionsLoaded) {
+  if (!hydrated || isLoadingPermissions || !hasPermissionsLoaded) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentsFinance')} breadcrumbItems={breadcrumbItems}>
         <LoadingSkeleton variant="table" rowCount={10} />
@@ -461,7 +472,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     )
   }
 
-  if (permissionsError) {
+  if (permissionsErrorMessage) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentRequestDetail')} breadcrumbItems={breadcrumbItems}>
         <div className="alert alert-danger" role="alert">
@@ -471,7 +482,7 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
     )
   }
 
-  if (permissionsLoaded && permissions && !permissions.r) {
+  if (!isLoadingPermissions && hasPermissionsLoaded && !hasReadAccess) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('paymentRequestDetail')} breadcrumbItems={breadcrumbItems}>
         <NoPermission />
@@ -499,8 +510,8 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
 
   const { student, paymentRequest, paymentInfo, payments, breakdown } = paymentRequestDetail
 
-  const canCreatePayment = permissions?.c ?? false
-  const canUpdatePayment = permissions?.u ?? false
+  const canCreatePayment = effectivePermissions?.c ?? false
+  const canUpdatePayment = effectivePermissions?.u ?? false
   const isFinalStatus = paymentRequest.payment_status_id === 7 || paymentRequest.payment_status_id === 8
 
 
