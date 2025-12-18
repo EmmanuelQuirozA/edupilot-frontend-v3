@@ -118,10 +118,6 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [showToast, setShowToast] = useState(false)
 
-  const [serverValidationIssues, setServerValidationIssues] = useState<
-    Array<{ rowIndex: number; message: string }>
-  >([])
-
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingCreateRows, setPendingCreateRows] = useState<BulkStudentRow[]>([])
   const [isCreating, setIsCreating] = useState(false)
@@ -198,11 +194,14 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
       return
     }
 
+    setGroups([])
+    setSelectedGroupId('')
+
     const controller = new AbortController()
-    const fetchGroups = async () => {
+    const fetchGroups = async (schoolId: string) => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/groups/catalog?lang=${locale}&school_id=${selectedSchoolId}`,
+          `${API_BASE_URL}/groups/catalog?lang=${locale}&school_id=${schoolId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
@@ -222,7 +221,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
       }
     }
 
-    fetchGroups()
+    void fetchGroups(selectedSchoolId)
     return () => controller.abort()
   }, [locale, selectedSchoolId, t, token])
 
@@ -230,11 +229,15 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
     if (!selectedSchoolId || !rows.length) return
 
     setRows((prev) => {
-      const updated = prev.map((row) => ({ ...row, school_id: selectedSchoolId }))
+      const updated = prev.map((row) => ({
+        ...row,
+        school_id: selectedSchoolId,
+        group_id: selectedGroupId,
+      }))
       triggerValidation(updated, { immediate: true })
       return updated
     })
-  }, [rows.length, selectedSchoolId])
+  }, [rows.length, selectedGroupId, selectedSchoolId])
 
   useEffect(() => {
     return () => {
@@ -357,10 +360,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
   const validateRows = async (targetRows: BulkStudentRow[]) => {
     if (!token) return
     setIsValidating(true)
-    setServerValidationIssues([])
-
     const errors: ValidationResult = {}
-    const apiIssues: Array<{ rowIndex: number; message: string }> = []
 
     const duplicateTrackers: Record<string, Map<string, number>> = {}
     UNIQUE_FIELDS.forEach((field) => {
@@ -432,21 +432,31 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
           | Array<Record<string, unknown>>
 
         if (Array.isArray(result)) {
-          const fields = Object.entries(result[0] ?? {})
+          const issueEntries = Object.entries(result[0] ?? {})
+          const fields = issueEntries
             .filter(([, value]) => Boolean(value))
-            .map(([field]) => field)
-          const message = fields.length
-            ? `${t('studentsBulkUploadExists')}: ${fields.join(', ')}`
-            : t('studentsBulkUploadExists')
+            .map(([field]) =>
+              field === 'register_id'
+                ? t('register')
+                : field === 'payment_reference'
+                  ? t('paymentReference')
+                  : field === 'username'
+                    ? t('username')
+                    : field,
+            )
+
+          if (!fields.length) {
+            return
+          }
+
+          const message = `${t('studentsBulkUploadExists')}: ${fields.join(', ')}`
           errors[index] = [...(errors[index] ?? []), message]
-          apiIssues.push({ rowIndex: index, message })
           return
         }
 
         if (result.exists) {
           const message = result.message ?? t('studentsBulkUploadExists')
           errors[index] = [...(errors[index] ?? []), message]
-          apiIssues.push({ rowIndex: index, message })
         }
       } catch (error) {
         if ((error as DOMException).name !== 'AbortError') {
@@ -458,7 +468,6 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
     await Promise.all(validationPromises)
 
     setValidationErrors(errors)
-    setServerValidationIssues(apiIssues)
     setHasValidated(true)
     setIsValidating(false)
   }
@@ -910,25 +919,6 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                       </tbody>
                     </table>
                     </div>
-
-                  {serverValidationIssues.length > 0 && (
-                    <div className="alert alert-danger mt-3" role="alert">
-                      <p className="mb-2">{t('studentsBulkUploadExists')}</p>
-                      <ul className="mb-0 ps-3">
-                        {serverValidationIssues.map((issue, index) => (
-                          <li key={`${issue.rowIndex}-${index}`}>
-                            <button
-                              type="button"
-                              className="btn btn-link p-0"
-                              onClick={() => scrollToRow(issue.rowIndex)}
-                            >
-                              {formatMessage(t('studentsBulkUploadRow'), { row: issue.rowIndex + 1 })}: {issue.message}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
 
                   {invalidRowsLog.length > 0 && (
                     <div className="mt-3">
