@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { API_BASE_URL } from '../config'
 import { type BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import Swal from 'sweetalert2'
 
 interface SchoolCatalogItem {
   school_id: number
@@ -119,8 +120,10 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
   const [showToast, setShowToast] = useState(false)
 
   const [isCreating, setIsCreating] = useState(false)
+  const [fileInputKey, setFileInputKey] = useState(0)
+  const [focusedRowId, setFocusedRowId] = useState<number | null>(null)
 
-  const rowRefs = useRef<Record<number, HTMLTableRowElement | null>>({})
+  const rowRefs = useRef<Map<number, HTMLTableRowElement>>(new Map())
   const validationTimeoutRef = useRef<number | null>(null)
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
@@ -246,11 +249,15 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
   }, [])
 
   const scrollToRow = (rowIndex: number) => {
-    const ref = rowRefs.current[rowIndex]
+    const ref = rowRefs.current.get(rowIndex)
     if (ref) {
+      setFocusedRowId(rowIndex)
       ref.scrollIntoView({ behavior: 'smooth', block: 'center' })
       ref.classList.add('highlight-row')
-      window.setTimeout(() => ref.classList.remove('highlight-row'), 2000)
+      window.setTimeout(() => {
+        ref.classList.remove('highlight-row')
+        setFocusedRowId((prev) => (prev === rowIndex ? null : prev))
+      }, 2000)
     }
   }
 
@@ -470,6 +477,20 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
     setIsValidating(false)
   }
 
+  const resetUploadState = () => {
+    setRows([])
+    setValidationErrors({})
+    setHasValidated(false)
+    setFileError(null)
+    setSelectedSchoolId('')
+    setSelectedGroupId('')
+    setLogExpanded(true)
+    setShowToast(false)
+    setFileInputKey((prev) => prev + 1)
+    setFocusedRowId(null)
+    rowRefs.current.clear()
+  }
+
   const handleCreate = async () => {
     const validRows = rows.filter((_, index) => !(validationErrors[index]?.length))
 
@@ -522,8 +543,12 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
       }
 
       const result = (await response.json()) as { title?: string; message?: string }
-      setToastMessage(result.message ?? t('studentsBulkUploadCreateSuccess'))
-      setShowToast(true)
+      await Swal.fire({
+        icon: 'success',
+        title: result.title ?? t('studentsBulkUploadCreateSuccess'),
+        text: result.message ?? undefined,
+      })
+      resetUploadState()
     } catch (error) {
       if ((error as DOMException).name !== 'AbortError') {
         setToastMessage(t('studentsBulkUploadCreateError'))
@@ -578,6 +603,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
       <div className="upload-dropzone__text">{t('studentsBulkUploadDrag')}</div>
       <div className="upload-dropzone__helper">{t('studentsBulkUploadSelect')}</div>
       <input
+        key={fileInputKey}
         type="file"
         accept=".csv"
         className="upload-dropzone__input"
@@ -763,22 +789,29 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                         </tr>
                       </thead>
                       <tbody>
-                        {rows.map((row, rowIndex) => (
-                          <tr
-                            key={rowIndex}
-                            ref={(node) => {
-                              rowRefs.current[rowIndex] = node
-                            }}
-                            className={validationErrors[rowIndex]?.length ? 'row-error' : ''}
-                          >
-                            <td className="fw-semibold">{row.rowNumber}</td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.first_name ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'first_name', event.target.value)}
-                              />
-                            </td>
+                        {rows.map((row, rowIndex) => {
+                          const rowStatus = validationErrors[rowIndex]?.length ? 'invalid' : 'valid'
+
+                          return (
+                            <tr
+                              key={rowIndex}
+                              ref={(node) => {
+                                if (node) {
+                                  rowRefs.current.set(rowIndex, node)
+                                } else {
+                                  rowRefs.current.delete(rowIndex)
+                                }
+                              }}
+                              className={`bulk-upload__row bulk-upload__row--${rowStatus}${focusedRowId === rowIndex ? ' is-focused' : ''}`}
+                            >
+                              <td className="fw-semibold">{row.rowNumber}</td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.first_name ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'first_name', event.target.value)}
+                                />
+                              </td>
                             <td>
                               <input
                                 className="form-control form-control-sm"
