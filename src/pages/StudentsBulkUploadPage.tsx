@@ -15,6 +15,10 @@ interface SchoolCatalogItem {
 interface GroupCatalogItem {
   group_id?: number | string
   grade_group?: string
+  school_id?: number | string
+  generation?: string
+  generation_name?: string
+  scholar_level_name?: string
 }
 
 interface BulkStudentRow {
@@ -40,6 +44,7 @@ interface BulkStudentRow {
   register_id?: string
   payment_reference?: string
   group_id?: string
+  school_id?: string
   balance?: string
 }
 
@@ -91,7 +96,7 @@ const CSV_HEADERS: CsvFieldKey[] = [
 const CSV_HEADER_MAP = new Map(CSV_HEADERS.map((header) => [header.toLowerCase(), header]))
 
 const MAX_ROWS = 100
-const VALIDATION_DEBOUNCE_MS = 30000
+const VALIDATION_DEBOUNCE_MS = 800
 
 export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const { token } = useAuth()
@@ -112,6 +117,10 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
 
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [showToast, setShowToast] = useState(false)
+
+  const [serverValidationIssues, setServerValidationIssues] = useState<
+    Array<{ rowIndex: number; message: string }>
+  >([])
 
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pendingCreateRows, setPendingCreateRows] = useState<BulkStudentRow[]>([])
@@ -180,8 +189,9 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
         const updatedRows = prev.map((row) => ({
           ...row,
           group_id: '',
+          school_id: '',
         }))
-        triggerValidation(updatedRows)
+        triggerValidation(updatedRows, { immediate: true })
         return updatedRows
       })
       setHasValidated(false)
@@ -215,6 +225,16 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
     fetchGroups()
     return () => controller.abort()
   }, [locale, selectedSchoolId, t, token])
+
+  useEffect(() => {
+    if (!selectedSchoolId || !rows.length) return
+
+    setRows((prev) => {
+      const updated = prev.map((row) => ({ ...row, school_id: selectedSchoolId }))
+      triggerValidation(updated, { immediate: true })
+      return updated
+    })
+  }, [rows.length, selectedSchoolId])
 
   useEffect(() => {
     return () => {
@@ -282,9 +302,11 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
       return row
     })
 
-    const rowsWithGroup = selectedGroupId
-      ? parsedRows.map((row) => ({ ...row, group_id: selectedGroupId }))
-      : parsedRows
+    const rowsWithGroup = parsedRows.map((row) => ({
+      ...row,
+      group_id: selectedGroupId || row.group_id,
+      school_id: selectedSchoolId || row.school_id,
+    }))
 
     setRows(rowsWithGroup)
     triggerValidation(rowsWithGroup, { immediate: true })
@@ -335,8 +357,10 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
   const validateRows = async (targetRows: BulkStudentRow[]) => {
     if (!token) return
     setIsValidating(true)
+    setServerValidationIssues([])
 
     const errors: ValidationResult = {}
+    const apiIssues: Array<{ rowIndex: number; message: string }> = []
 
     const duplicateTrackers: Record<string, Map<string, number>> = {}
     UNIQUE_FIELDS.forEach((field) => {
@@ -403,10 +427,26 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
           return
         }
 
-        const result = (await response.json()) as { exists?: boolean; message?: string }
+        const result = (await response.json()) as
+          | { exists?: boolean; message?: string }
+          | Array<Record<string, unknown>>
+
+        if (Array.isArray(result)) {
+          const fields = Object.entries(result[0] ?? {})
+            .filter(([, value]) => Boolean(value))
+            .map(([field]) => field)
+          const message = fields.length
+            ? `${t('studentsBulkUploadExists')}: ${fields.join(', ')}`
+            : t('studentsBulkUploadExists')
+          errors[index] = [...(errors[index] ?? []), message]
+          apiIssues.push({ rowIndex: index, message })
+          return
+        }
+
         if (result.exists) {
           const message = result.message ?? t('studentsBulkUploadExists')
           errors[index] = [...(errors[index] ?? []), message]
+          apiIssues.push({ rowIndex: index, message })
         }
       } catch (error) {
         if ((error as DOMException).name !== 'AbortError') {
@@ -418,6 +458,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
     await Promise.all(validationPromises)
 
     setValidationErrors(errors)
+    setServerValidationIssues(apiIssues)
     setHasValidated(true)
     setIsValidating(false)
   }
@@ -455,6 +496,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
         body: JSON.stringify(payloadRows.map((row) => ({
           ...row,
           group_id: row.group_id ? Number(row.group_id) : null,
+          school_id: row.school_id ? Number(row.school_id) : null,
           balance: row.balance ? Number(row.balance) : '',
         }))),
       })
@@ -494,7 +536,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
       const status = messages ? 'invalid' : 'valid'
       const values = CSV_HEADERS.map((key) => `${row[key] ?? ''}`)
       return [String(index + 1), status, messages, ...values]
-        .map((value) => `"${String(value).replace(/\"/g, '""')}"`)
+        .map((value) => `"${String(value).replace(/"/g, '""')}"`)
         .join(',')
     })
 
@@ -529,6 +571,10 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
   )
 
   const hasData = rows.length > 0
+  const selectedGroup = useMemo(
+    () => groups.find((group) => String(group.group_id ?? '') === String(selectedGroupId)),
+    [groups, selectedGroupId],
+  )
 
   return (
     <Layout pageTitle={t('studentsBulkUploadTitle')} onNavigate={onNavigate} breadcrumbItems={breadcrumbItems}>
@@ -583,8 +629,12 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                       const value = event.target.value
                       setSelectedGroupId(value)
                       setRows((prev) => {
-                        const updated = prev.map((row) => ({ ...row, group_id: value }))
-                        triggerValidation(updated)
+                        const updated = prev.map((row) => ({
+                          ...row,
+                          group_id: value,
+                          school_id: selectedSchoolId,
+                        }))
+                        triggerValidation(updated, { immediate: true })
                         return updated
                       })
                       setHasValidated(false)
@@ -592,12 +642,27 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                     disabled={!selectedSchoolId}
                   >
                     <option value="">{t('selectPlaceholder')}</option>
-                    {groups.map((group) => (
-                      <option key={group.group_id ?? String(group.grade_group)} value={group.group_id ?? ''}>
-                        {group.grade_group}
-                      </option>
-                    ))}
+                    {groups
+                      .filter((group) =>
+                        group.school_id ? String(group.school_id) === selectedSchoolId : true,
+                      )
+                      .map((group) => (
+                        <option
+                          key={`${group.school_id ?? selectedSchoolId}-${group.group_id ?? String(group.grade_group)}`}
+                          value={group.group_id ?? ''}
+                          data-school-id={selectedSchoolId}
+                        >
+                          {group.grade_group}
+                        </option>
+                      ))}
                   </select>
+                  {selectedGroupId && (
+                    <p className="text-muted mt-2 mb-0">
+                      Generación: {selectedGroup?.generation ?? selectedGroup?.generation_name ?? '2023-2024'} · Grupo: {selectedGroup?.grade_group ?? '6-A'} · Nivel: {
+                        selectedGroup?.scholar_level_name ?? 'Primaria'
+                      }
+                    </p>
+                  )}
                 </div>
                 <div className="col-lg-12">
                   <div>
@@ -678,13 +743,18 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                           <th>{t('password')}</th>
                           <th>{t('register')}</th>
                           <th>{t('paymentReference')}</th>
-                          <th>{t('group')}</th>
                           <th>{t('balance')}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {rows.map((row, rowIndex) => (
-                          <tr key={rowIndex} ref={(node) => { rowRefs.current[rowIndex] = node }}>
+                          <tr
+                            key={rowIndex}
+                            ref={(node) => {
+                              rowRefs.current[rowIndex] = node
+                            }}
+                            className={validationErrors[rowIndex]?.length ? 'row-error' : ''}
+                          >
                             <td className="fw-semibold">{row.rowNumber}</td>
                             <td>
                               <input
@@ -828,21 +898,6 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                               />
                             </td>
                             <td>
-                              <select
-                                className="form-select form-select-sm"
-                                value={row.group_id ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'group_id', event.target.value)}
-                                disabled={!selectedSchoolId}
-                              >
-                                <option value="">{t('selectPlaceholder')}</option>
-                                {groups.map((group) => (
-                                  <option key={group.group_id ?? String(group.grade_group)} value={group.group_id ?? ''}>
-                                    {group.grade_group}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                            <td>
                               <input
                                 type="number"
                                 className="form-control form-control-sm"
@@ -854,7 +909,26 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                         ))}
                       </tbody>
                     </table>
-                  </div>
+                    </div>
+
+                  {serverValidationIssues.length > 0 && (
+                    <div className="alert alert-danger mt-3" role="alert">
+                      <p className="mb-2">{t('studentsBulkUploadExists')}</p>
+                      <ul className="mb-0 ps-3">
+                        {serverValidationIssues.map((issue, index) => (
+                          <li key={`${issue.rowIndex}-${index}`}>
+                            <button
+                              type="button"
+                              className="btn btn-link p-0"
+                              onClick={() => scrollToRow(issue.rowIndex)}
+                            >
+                              {formatMessage(t('studentsBulkUploadRow'), { row: issue.rowIndex + 1 })}: {issue.message}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   {invalidRowsLog.length > 0 && (
                     <div className="mt-3">
