@@ -76,6 +76,10 @@
   animation: highlight 2s ease;
 }
 
+.row-error {
+  background-color: #fff1f2;
+}
+
 @keyframes highlight {
   0% {
     background-color: #fef9c3;
