@@ -4,7 +4,7 @@ import { Layout } from '../layout/Layout'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 import { API_BASE_URL } from '../config'
-import { Breadcrumb, type BreadcrumbItem } from '../components/Breadcrumb'
+import { type BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 
 interface SchoolCatalogItem {
@@ -100,6 +100,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
   const [isLoading, setIsLoading] = useState(false)
   const [schools, setSchools] = useState<SchoolCatalogItem[]>([])
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>('')
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
   const [groups, setGroups] = useState<GroupCatalogItem[]>([])
 
   const [rows, setRows] = useState<BulkStudentRow[]>([])
@@ -174,6 +175,16 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
   useEffect(() => {
     if (!token || !selectedSchoolId) {
       setGroups([])
+      setSelectedGroupId('')
+      setRows((prev) => {
+        const updatedRows = prev.map((row) => ({
+          ...row,
+          group_id: '',
+        }))
+        triggerValidation(updatedRows)
+        return updatedRows
+      })
+      setHasValidated(false)
       return
     }
 
@@ -271,8 +282,12 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
       return row
     })
 
-    setRows(parsedRows)
-    triggerValidation(parsedRows, { immediate: true })
+    const rowsWithGroup = selectedGroupId
+      ? parsedRows.map((row) => ({ ...row, group_id: selectedGroupId }))
+      : parsedRows
+
+    setRows(rowsWithGroup)
+    triggerValidation(rowsWithGroup, { immediate: true })
   }
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
@@ -364,12 +379,11 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
     })
 
     const validationPromises = targetRows.map(async (row, index) => {
-      const hasBlockingError = errors[index]?.length
       const registerId = String(row.register_id ?? '').trim()
       const paymentReference = String(row.payment_reference ?? '').trim()
       const username = String(row.username ?? '').trim()
 
-      if (!registerId || !paymentReference || !username || hasBlockingError) {
+      if (!registerId || !paymentReference || !username) {
         return
       }
 
@@ -441,7 +455,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
         body: JSON.stringify(payloadRows.map((row) => ({
           ...row,
           group_id: row.group_id ? Number(row.group_id) : null,
-          balance: row.balance ? Number(row.balance) : null,
+          balance: row.balance ? Number(row.balance) : '',
         }))),
       })
 
@@ -533,10 +547,10 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
 
               <div className="row g-3">
                 <div className="col-lg-12">
-                  <h2>Pasos para la carga</h2>
+                  <h2>{t('studentsBulkUploadStepsTitle')}</h2>
                   <div>
-                    <span className='fw-bold'>Selecciona la escuela</span>
-                    <p>Elige la escuela para obtener la lista de grupos disponibles.</p>
+                    <span className='fw-bold'>{t('studentsBulkUploadStepSchoolTitle')}</span>
+                    <p>{t('studentsBulkUploadStepSchoolDescription')}</p>
                   </div>
                   <label className="form-label fw-semibold" htmlFor="schoolSelector">
                     {t('selectSchoolLabel')}
@@ -554,11 +568,41 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                       </option>
                     ))}
                   </select>
+                  <div className="mt-3">
+                    <span className='fw-bold'>{t('studentsBulkUploadStepGroupTitle')}</span>
+                    <p>{t('studentsBulkUploadStepGroupDescription')}</p>
+                  </div>
+                  <label className="form-label fw-semibold" htmlFor="groupSelector">
+                    {t('selectGroupLabel')}
+                  </label>
+                  <select
+                    id="groupSelector"
+                    className="form-select"
+                    value={selectedGroupId}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      setSelectedGroupId(value)
+                      setRows((prev) => {
+                        const updated = prev.map((row) => ({ ...row, group_id: value }))
+                        triggerValidation(updated)
+                        return updated
+                      })
+                      setHasValidated(false)
+                    }}
+                    disabled={!selectedSchoolId}
+                  >
+                    <option value="">{t('selectPlaceholder')}</option>
+                    {groups.map((group) => (
+                      <option key={group.group_id ?? String(group.grade_group)} value={group.group_id ?? ''}>
+                        {group.grade_group}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="col-lg-12">
                   <div>
-                    <span className='fw-bold'>Descarga el formato</span>
-                    <p>Utiliza el archivo CSV de referencia para respetar el formato correcto.</p>
+                    <span className='fw-bold'>{t('studentsBulkUploadStepTemplateTitle')}</span>
+                    <p>{t('studentsBulkUploadStepTemplateDescription')}</p>
                     <div className="d-flex gap-2">
                       <a
                         className="btn btn-outline-secondary"
@@ -574,11 +618,11 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                     </div>
                   </div>
                   <div>
-                    <span className='fw-bold'>Sube el archivo CSV</span>
-                    <p>Arrastra o selecciona un archivo con máximo 100 registros.</p>
+                    <span className='fw-bold'>{t('studentsBulkUploadStepUploadTitle')}</span>
+                    <p>{t('studentsBulkUploadStepUploadDescription')}</p>
                   </div>
                   {dropContent}
-                  <p className="bulk-upload__helper">Recuerda completar todos los campos obligatorios marcados con *.</p>
+                  <p className="bulk-upload__helper">{t('studentsBulkUploadHelper')}</p>
                   {fileError ? <p className="text-danger mt-2 mb-0">{fileError}</p> : null}
                 </div>
               </div>
@@ -614,28 +658,28 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                       <thead>
                         <tr>
                           <th>#</th>
-                          <th>Nombre</th>
-                          <th>Apellido Paterno</th>
-                          <th>Apellido Materno</th>
-                          <th>Fecha Nac.</th>
-                          <th>Teléfono</th>
-                          <th>RFC</th>
-                          <th>CURP</th>
-                          <th>Calle</th>
-                          <th>No. Ext</th>
-                          <th>No. Int</th>
-                          <th>Colonia</th>
-                          <th>Localidad</th>
-                          <th>Municipio</th>
-                          <th>Estado</th>
-                          <th>Correo Personal</th>
-                          <th>Correo</th>
-                          <th>Usuario</th>
-                          <th>Contraseña</th>
-                          <th>Matrícula</th>
-                          <th>Referencia Pago</th>
-                          <th>Grupo</th>
-                          <th>Balance</th>
+                          <th>{t('firstName')}</th>
+                          <th>{t('lastNameFather')}</th>
+                          <th>{t('lastNameMother')}</th>
+                          <th>{t('birthDate')}</th>
+                          <th>{t('phoneNumber')}</th>
+                          <th>{t('taxId')}</th>
+                          <th>{t('curp')}</th>
+                          <th>{t('street')}</th>
+                          <th>{t('extNumber')}</th>
+                          <th>{t('intNumber')}</th>
+                          <th>{t('suburb')}</th>
+                          <th>{t('locality')}</th>
+                          <th>{t('municipality')}</th>
+                          <th>{t('state')}</th>
+                          <th>{t('personalEmail')}</th>
+                          <th>{t('institutionalEmail')}</th>
+                          <th>{t('username')}</th>
+                          <th>{t('password')}</th>
+                          <th>{t('register')}</th>
+                          <th>{t('paymentReference')}</th>
+                          <th>{t('group')}</th>
+                          <th>{t('balance')}</th>
                         </tr>
                       </thead>
                       <tbody>
