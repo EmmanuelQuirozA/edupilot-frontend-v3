@@ -20,6 +20,7 @@ import { KitchenPage } from "./pages/KitchenPage";
 import { SchoolsPage } from "./pages/SchoolsPage";
 import { SchoolDetailsPage } from "./pages/SchoolDetailsPage";
 import { StudentsPage } from "./pages/StudentsPage";
+import { StudentsBulkUploadPage } from "./pages/StudentsBulkUploadPage";
 import { StudentDetailPage } from "./pages/StudentDetailPage";
 import { PaymentsFinancePage } from "./pages/PaymentsFinancePage/PaymentsFinancePage";
 import { PaymentDetailPage } from "./pages/PaymentsFinancePage/PaymentDetailPage";
@@ -115,6 +116,7 @@ function Router() {
   const schoolDetailMatch = path.match(/^\/(es|en)\/schools\/(\d+)$/);
   const isSchoolDetailPath = Boolean(schoolDetailMatch);
   const isStudentsPath = /^\/(es|en)\/students&Classes$/.test(path);
+  const isStudentsBulkPath = /^\/(es|en)\/students&Classes\/bulk-upload$/.test(path);
   const studentDetailMatch = path.match(/^\/(es|en)\/students&Classes\/students\/(\d+)$/);
   const isStudentDetailPath = Boolean(studentDetailMatch);
   const isControlAccessPath = /^\/(es|en)\/control-access$/.test(path);
@@ -151,6 +153,10 @@ function Router() {
           schoolId={Number(schoolDetailMatch[2])}
         />
       );
+    }
+
+    if (isStudentsBulkPath) {
+      return <StudentsBulkUploadPage onNavigate={navigate} />;
     }
 
     if (isStudentDetailPath && studentDetailMatch) {
