@@ -118,8 +118,6 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [showToast, setShowToast] = useState(false)
 
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [pendingCreateRows, setPendingCreateRows] = useState<BulkStudentRow[]>([])
   const [isCreating, setIsCreating] = useState(false)
 
   const rowRefs = useRef<Record<number, HTMLTableRowElement | null>>({})
@@ -472,7 +470,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
     setIsValidating(false)
   }
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const validRows = rows.filter((_, index) => !(validationErrors[index]?.length))
 
     if (!validRows.length) {
@@ -483,9 +481,19 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
 
     const invalidRows = rows.length - validRows.length
     if (invalidRows > 0) {
-      setPendingCreateRows(validRows)
-      setConfirmOpen(true)
-      return
+      const confirmation = await Swal.fire({
+        icon: 'question',
+        title: t('studentsBulkUploadMixedTitle'),
+        text: t('studentsBulkUploadMixedMessage'),
+        showCancelButton: true,
+        confirmButtonText: t('confirm') ?? 'Confirmar',
+        cancelButtonText: t('cancel'),
+        focusCancel: true,
+      })
+
+      if (!confirmation.isConfirmed) {
+        return
+      }
     }
 
     void sendCreateRequest(validRows)
@@ -494,7 +502,6 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
   const sendCreateRequest = async (payloadRows: BulkStudentRow[]) => {
     if (!token || !payloadRows.length) return
     setIsCreating(true)
-    setConfirmOpen(false)
     try {
       const response = await fetch(`${API_BASE_URL}/students/create?lang=${locale}`, {
         method: 'POST',
@@ -962,29 +969,6 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
         </div>
       )}
 
-      {confirmOpen && (
-        <div className="sweet-alert-overlay">
-          <div className="sweet-alert">
-            <div className="sweet-alert__icon sweet-alert__icon--info">i</div>
-            <div>
-              <h3 className="sweet-alert__title">{t('studentsBulkUploadMixedTitle')}</h3>
-              <p className="sweet-alert__text">{t('studentsBulkUploadMixedMessage')}</p>
-            </div>
-            <div className="sweet-alert__actions">
-              <button type="button" className="btn btn-secondary" onClick={() => setConfirmOpen(false)}>
-                {t('cancel')}
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => void sendCreateRequest(pendingCreateRows)}
-              >
-                {t('confirm')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </Layout>
   )
 }
