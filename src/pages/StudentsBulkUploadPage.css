@@ -76,8 +76,17 @@
   animation: highlight 2s ease;
 }
 
-.row-error {
-  background-color: #fff1f2;
+.bulk-upload__row {
+  transition: background-color 0.2s ease, outline 0.2s ease;
+}
+
+.bulk-upload__row--invalid {
+  background: rgba(251, 191, 36, 0.12);
+}
+
+.bulk-upload__row.is-focused {
+  outline: 2px solid #f59e0b;
+  outline-offset: -2px;
 }
 
 @keyframes highlight {
