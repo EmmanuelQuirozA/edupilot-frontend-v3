@@ -435,9 +435,13 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
                 <div className="d-flex align-items-center gap-2">
                   {canCreateStudents ? (
                     <>
-                      <button type="button" className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium">
-                        <i className="bi bi-upload"/> 
-                        Carga Masiva
+                      <button
+                        type="button"
+                        className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
+                        onClick={() => onNavigate(`/${locale}/students&Classes/bulk-upload`)}
+                      >
+                        <i className="bi bi-upload"/>
+                        {t('studentsBulkUploadTitle')}
                       </button>
                       <button
                         className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
