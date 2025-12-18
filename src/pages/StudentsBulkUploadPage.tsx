@@ -6,7 +6,6 @@ import { useLanguage } from '../context/LanguageContext'
 import { API_BASE_URL } from '../config'
 import { type BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
-import Swal from 'sweetalert2'
 
 interface SchoolCatalogItem {
   school_id: number
@@ -14,6 +13,7 @@ interface SchoolCatalogItem {
 }
 
 interface GroupCatalogItem {
+  content: []
   group_id?: number | string
   grade_group?: string
   school_id?: number | string
@@ -202,7 +202,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
     const fetchGroups = async (schoolId: string) => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/groups/catalog?lang=${locale}&school_id=${schoolId}`,
+          `${API_BASE_URL}/classes?lang=${locale}&school_id=${schoolId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
@@ -214,7 +214,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
         }
 
         const json = (await response.json()) as GroupCatalogItem[]
-        setGroups(json ?? [])
+        setGroups(json.content ?? [])
       } catch (error) {
         if ((error as DOMException).name !== 'AbortError') {
           setFileError(t('defaultError'))
@@ -637,12 +637,9 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                 <div className="col-lg-12">
                   <h2>{t('studentsBulkUploadStepsTitle')}</h2>
                   <div>
-                    <span className='fw-bold'>{t('studentsBulkUploadStepSchoolTitle')}</span>
+                    <span className='fw-bold'>1.- {t('studentsBulkUploadStepSchoolTitle')}</span>
                     <p>{t('studentsBulkUploadStepSchoolDescription')}</p>
                   </div>
-                  <label className="form-label fw-semibold" htmlFor="schoolSelector">
-                    {t('selectSchoolLabel')}
-                  </label>
                   <select
                     id="schoolSelector"
                     className="form-select"
@@ -657,12 +654,9 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                     ))}
                   </select>
                   <div className="mt-3">
-                    <span className='fw-bold'>{t('studentsBulkUploadStepGroupTitle')}</span>
+                    <span className='fw-bold'>2.- {t('studentsBulkUploadStepGroupTitle')}</span>
                     <p>{t('studentsBulkUploadStepGroupDescription')}</p>
                   </div>
-                  <label className="form-label fw-semibold" htmlFor="groupSelector">
-                    {t('selectGroupLabel')}
-                  </label>
                   <select
                     id="groupSelector"
                     className="form-select"
@@ -708,24 +702,20 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                 </div>
                 <div className="col-lg-12">
                   <div>
-                    <span className='fw-bold'>{t('studentsBulkUploadStepTemplateTitle')}</span>
+                    <span className='fw-bold'>3.- {t('studentsBulkUploadStepTemplateTitle')}</span>
                     <p>{t('studentsBulkUploadStepTemplateDescription')}</p>
                     <div className="d-flex gap-2">
                       <a
-                        className="btn btn-outline-secondary"
+                        className="btn btn-primary"
                         href={`${API_BASE_URL}/bulkfile/students_bulk_upload.csv`}
                         download
                       >
                         <i className="bi bi-filetype-csv" /> {t('studentsBulkUploadDownload')}
                       </a>
-                      <button className="btn btn-outline-primary" type="button" onClick={downloadReport} disabled={!hasData}>
-                        <i className="bi bi-download" />
-                        <span className="ms-1">{t('studentsBulkUploadReport')}</span>
-                      </button>
                     </div>
                   </div>
                   <div>
-                    <span className='fw-bold'>{t('studentsBulkUploadStepUploadTitle')}</span>
+                    <span className='fw-bold'>4.- {t('studentsBulkUploadStepUploadTitle')}</span>
                     <p>{t('studentsBulkUploadStepUploadDescription')}</p>
                   </div>
                   {dropContent}
@@ -746,6 +736,10 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                       <span className="badge bg-danger-subtle text-danger">
                         {formatMessage(t('studentsBulkUploadInvalid'), { count: invalidRowsLog.length })}
                       </span>
+                      <button className="btn btn-outline-primary" type="button" onClick={downloadReport} disabled={!hasData}>
+                        <i className="bi bi-download" />
+                        <span className="ms-1">{t('studentsBulkUploadReport')}</span>
+                      </button>
                       {isValidating && <span className="text-muted small">{t('studentsBulkUploadValidating')}</span>}
                     </div>
                     <div className="d-flex gap-2">
@@ -812,150 +806,151 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
                                   onChange={(event) => handleCellChange(rowIndex, 'first_name', event.target.value)}
                                 />
                               </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.last_name_father ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'last_name_father', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.last_name_mother ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'last_name_mother', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="date"
-                                className="form-control form-control-sm"
-                                value={row.birth_date ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'birth_date', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.phone_number ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'phone_number', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.tax_id ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'tax_id', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.curp ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'curp', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.street ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'street', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.ext_number ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'ext_number', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.int_number ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'int_number', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.suburb ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'suburb', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.locality ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'locality', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.municipality ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'municipality', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.state ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'state', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.personal_email ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'personal_email', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.email ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'email', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.username ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'username', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.password ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'password', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.register_id ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'register_id', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={row.payment_reference ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'payment_reference', event.target.value)}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                className="form-control form-control-sm"
-                                value={row.balance ?? ''}
-                                onChange={(event) => handleCellChange(rowIndex, 'balance', event.target.value)}
-                              />
-                            </td>
-                          </tr>
-                        ))}
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.last_name_father ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'last_name_father', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.last_name_mother ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'last_name_mother', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="date"
+                                  className="form-control form-control-sm"
+                                  value={row.birth_date ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'birth_date', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.phone_number ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'phone_number', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.tax_id ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'tax_id', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.curp ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'curp', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.street ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'street', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.ext_number ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'ext_number', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.int_number ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'int_number', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.suburb ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'suburb', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.locality ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'locality', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.municipality ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'municipality', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.state ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'state', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.personal_email ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'personal_email', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.email ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'email', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.username ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'username', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.password ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'password', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.register_id ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'register_id', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  value={row.payment_reference ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'payment_reference', event.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  className="form-control form-control-sm"
+                                  value={row.balance ?? ''}
+                                  onChange={(event) => handleCellChange(rowIndex, 'balance', event.target.value)}
+                                />
+                              </td>
+                            </tr>
+                          )
+                      })}
                       </tbody>
                     </table>
                     </div>

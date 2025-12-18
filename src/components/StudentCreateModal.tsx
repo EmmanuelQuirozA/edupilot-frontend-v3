@@ -155,7 +155,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
       try {
         setIsCatalogsLoading(true)
         const response = await fetch(
-          `${API_BASE_URL}/groups/catalog?lang=${locale}&school_id=${schoolId}`,
+          `${API_BASE_URL}/classes?lang=${locale}&school_id=${schoolId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
@@ -167,7 +167,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
         }
 
         const groupsData = (await response.json()) as GroupCatalogItem[]
-        setGroupsCatalog(groupsData ?? [])
+        setGroupsCatalog(groupsData.content ?? [])
       } catch (fetchError) {
         if ((fetchError as Error).name !== 'AbortError') {
           setCreateStudentError(t('defaultError'))
