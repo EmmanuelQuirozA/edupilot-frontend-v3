@@ -50,11 +50,19 @@ export function Layout({ children, onNavigate, pageTitle, breadcrumbItems = [] }
       <div className="layout-grid flex-grow-1 position-relative">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} onNavigate={onNavigate} />
         {!shouldHideContent ? (
-          <div className="d-flex flex-column">
-            <div className="layout-main  p-5">
+          <div
+            className="d-flex flex-column"
+            style={{
+              width: '100%',
+              overflow: 'hidden',
+            }}
+          >
+            <div className="layout-main p-5 d-flex flex-column" style={{ overflow: 'hidden' }}>
               <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} pageTitle={pageTitle} />
               {breadcrumbItems.length ? <Breadcrumb items={breadcrumbItems} /> : null}
-              <main className="flex-grow-1">{children}</main>
+              <main className="flex-grow-1" style={{ overflowY: 'auto' }}>
+                {children}
+              </main>
             </div>
             <Footer />
           </div>
