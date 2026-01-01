@@ -60,7 +60,7 @@ export function Layout({ children, onNavigate, pageTitle, breadcrumbItems = [] }
             <div className="layout-main p-5 d-flex flex-column" style={{ overflow: 'hidden' }}>
               <Header onNavigate={onNavigate} onToggleSidebar={toggleSidebar} pageTitle={pageTitle} />
               {breadcrumbItems.length ? <Breadcrumb items={breadcrumbItems} /> : null}
-              <main className="flex-grow-1" style={{ overflowY: 'auto' }}>
+              <main className="flex-grow-1" >
                 {children}
               </main>
             </div>

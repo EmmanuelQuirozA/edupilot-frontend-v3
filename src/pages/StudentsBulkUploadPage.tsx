@@ -631,98 +631,92 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
         </div>
         <div className="d-flex flex-column gap-3">
           <div className="card shadow-sm">
-            <div className="card-body d-flex flex-column gap-3">
+            <div className="card-body d-flex flex-column gap-4">
 
-              <div className="row g-3">
-                <div className="col-lg-12">
-                  <h2>{t('studentsBulkUploadStepsTitle')}</h2>
-                  <div>
-                    <span className='fw-bold'>1.- {t('studentsBulkUploadStepSchoolTitle')}</span>
-                    <p>{t('studentsBulkUploadStepSchoolDescription')}</p>
-                  </div>
-                  <select
-                    id="schoolSelector"
-                    className="form-select"
-                    value={selectedSchoolId}
-                    onChange={(event) => setSelectedSchoolId(event.target.value)}
+              <h2 className='m-0'>{t('studentsBulkUploadStepsTitle')}</h2>
+              <div>
+                <span className='fw-bold'>1.- {t('studentsBulkUploadStepTemplateTitle')}</span>
+                <p className='m-0'>{t('studentsBulkUploadStepTemplateDescription')}</p>
+                <div className="d-flex gap-2">
+                  <a
+                    className="btn btn-primary"
+                    href={`${API_BASE_URL}/bulkfile/students_bulk_upload.csv`}
+                    download
                   >
-                    <option value="">{isLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
-                    {schools.map((school) => (
-                      <option key={school.school_id} value={school.school_id}>
-                        {school.description}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="mt-3">
-                    <span className='fw-bold'>2.- {t('studentsBulkUploadStepGroupTitle')}</span>
-                    <p>{t('studentsBulkUploadStepGroupDescription')}</p>
-                  </div>
-                  <select
-                    id="groupSelector"
-                    className="form-select"
-                    value={selectedGroupId}
-                    onChange={(event) => {
-                      const value = event.target.value
-                      setSelectedGroupId(value)
-                      setRows((prev) => {
-                        const updated = prev.map((row) => ({
-                          ...row,
-                          group_id: value,
-                          school_id: selectedSchoolId,
-                        }))
-                        triggerValidation(updated, { immediate: true })
-                        return updated
-                      })
-                      setHasValidated(false)
-                    }}
-                    disabled={!selectedSchoolId}
-                  >
-                    <option value="">{t('selectPlaceholder')}</option>
-                    {groups
-                      .filter((group) =>
-                        group.school_id ? String(group.school_id) === selectedSchoolId : true,
-                      )
-                      .map((group) => (
-                        <option
-                          key={`${group.school_id ?? selectedSchoolId}-${group.group_id ?? String(group.grade_group)}`}
-                          value={group.group_id ?? ''}
-                          data-school-id={selectedSchoolId}
-                        >
-                          {group.grade_group}
-                        </option>
-                      ))}
-                  </select>
-                  {selectedGroupId && (
-                    <p className="text-muted mt-2 mb-0">
-                      Generación: {selectedGroup?.generation ?? selectedGroup?.generation_name ?? '2023-2024'} · Grupo: {selectedGroup?.grade_group ?? '6-A'} · Nivel: {
-                        selectedGroup?.scholar_level_name ?? 'Primaria'
-                      }
-                    </p>
-                  )}
-                </div>
-                <div className="col-lg-12">
-                  <div>
-                    <span className='fw-bold'>3.- {t('studentsBulkUploadStepTemplateTitle')}</span>
-                    <p>{t('studentsBulkUploadStepTemplateDescription')}</p>
-                    <div className="d-flex gap-2">
-                      <a
-                        className="btn btn-primary"
-                        href={`${API_BASE_URL}/bulkfile/students_bulk_upload.csv`}
-                        download
-                      >
-                        <i className="bi bi-filetype-csv" /> {t('studentsBulkUploadDownload')}
-                      </a>
-                    </div>
-                  </div>
-                  <div>
-                    <span className='fw-bold'>4.- {t('studentsBulkUploadStepUploadTitle')}</span>
-                    <p>{t('studentsBulkUploadStepUploadDescription')}</p>
-                  </div>
-                  {dropContent}
-                  <p className="bulk-upload__helper">{t('studentsBulkUploadHelper')}</p>
-                  {fileError ? <p className="text-danger mt-2 mb-0">{fileError}</p> : null}
+                    <i className="bi bi-filetype-csv" /> {t('studentsBulkUploadDownload')}
+                  </a>
                 </div>
               </div>
+              <div>
+                <span className='fw-bold'>2.- {t('studentsBulkUploadStepUploadTitle')}</span>
+                <p className='m-0'>{t('studentsBulkUploadStepUploadDescription')}</p>
+                {dropContent}
+              </div>
+              <div>
+                <span className='fw-bold'>3.- {t('studentsBulkUploadStepSchoolTitle')}</span>
+                <p className='m-0'>{t('studentsBulkUploadStepSchoolDescription')}</p>
+                <select
+                  id="schoolSelector"
+                  className="form-select"
+                  value={selectedSchoolId}
+                  onChange={(event) => setSelectedSchoolId(event.target.value)}
+                >
+                  <option value="">{isLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
+                  {schools.map((school) => (
+                    <option key={school.school_id} value={school.school_id}>
+                      {school.description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mt-3">
+                <span className='fw-bold'>4.- {t('studentsBulkUploadStepGroupTitle')}</span>
+                <p className='m-0'>{t('studentsBulkUploadStepGroupDescription')}</p>
+                <select
+                  id="groupSelector"
+                  className="form-select"
+                  value={selectedGroupId}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    setSelectedGroupId(value)
+                    setRows((prev) => {
+                      const updated = prev.map((row) => ({
+                        ...row,
+                        group_id: value,
+                        school_id: selectedSchoolId,
+                      }))
+                      triggerValidation(updated, { immediate: true })
+                      return updated
+                    })
+                    setHasValidated(false)
+                  }}
+                  disabled={!selectedSchoolId}
+                >
+                  <option value="">{t('selectPlaceholder')}</option>
+                  {groups
+                    .filter((group) =>
+                      group.school_id ? String(group.school_id) === selectedSchoolId : true,
+                    )
+                    .map((group) => (
+                      <option
+                        key={`${group.school_id ?? selectedSchoolId}-${group.group_id ?? String(group.grade_group)}`}
+                        value={group.group_id ?? ''}
+                        data-school-id={selectedSchoolId}
+                      >
+                        {group.grade_group}
+                      </option>
+                    ))}
+                </select>
+                {selectedGroupId && (
+                  <p className="text-muted mt-2 mb-0">
+                    Generación: {selectedGroup?.generation ?? selectedGroup?.generation_name ?? '2023-2024'} · Grupo: {selectedGroup?.grade_group ?? '6-A'} · Nivel: {
+                      selectedGroup?.scholar_level_name ?? 'Primaria'
+                    }
+                  </p>
+                )}
+              </div>
+              <p className="bulk-upload__helper">{t('studentsBulkUploadHelper')}</p>
+              {fileError ? <p className="text-danger mt-2 mb-0">{fileError}</p> : null}
 
               {isLoading && <LoadingSkeleton cardCount={2} />}
 
