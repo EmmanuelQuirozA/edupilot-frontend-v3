@@ -1,0 +1,121 @@
+import { useMemo } from 'react'
+import { useLanguage } from '../context/LanguageContext'
+import { usePrinterSettings } from '../hooks/usePrinterSettings'
+
+const AvailabilityMessage: Record<string, (fallback: string) => string> = {
+  browser: (fallback) => fallback,
+  'capability-disabled': (fallback) => fallback,
+  'no-permission': (fallback) => fallback,
+  'missing-methods': (fallback) => fallback,
+}
+
+export function PrinterSettingsSection() {
+  const { t } = useLanguage()
+  const {
+    available,
+    availabilityReason,
+    printers,
+    selected,
+    setSelected,
+    loading,
+    saving,
+    testing,
+    error,
+    success,
+    save,
+    testPrint,
+  } = usePrinterSettings()
+
+  const availabilityText = useMemo(() => {
+    if (!availabilityReason) return ''
+
+    const fallback = t('printerNotAvailableDesktop')
+    const resolver = AvailabilityMessage[availabilityReason]
+
+    if (availabilityReason === 'browser') return t('printerNotAvailableBrowser')
+    if (availabilityReason === 'no-permission') return t('printerPermissionRequired')
+    if (availabilityReason === 'missing-methods') return t('printerBridgeMissingFeatures')
+
+    return resolver ? resolver(fallback) : fallback
+  }, [availabilityReason, t])
+
+  const disabled = loading || !available || saving || testing || printers.length === 0
+
+  return (
+    <div className="card shadow-sm">
+      <div className="card-header bg-white border-bottom-0">
+        <h3 className="h6 mb-0">{t('printerSettingsTitle')}</h3>
+        <small className="text-muted">{t('printerSettingsDescription')}</small>
+      </div>
+      <div className="card-body">
+        {loading ? (
+          <div className="d-flex align-items-center gap-2">
+            <div className="spinner-border text-primary spinner-border-sm" role="status" aria-label={t('printerLoading')} />
+            <span className="text-muted">{t('printerLoading')}</span>
+          </div>
+        ) : null}
+
+        {!loading && !available ? (
+          <div className="alert alert-secondary mb-0">{availabilityText || t('printerNotAvailableDesktop')}</div>
+        ) : null}
+
+        {!loading && available ? (
+          <div className="d-flex flex-column gap-3">
+            {printers.length === 0 ? (
+              <div className="alert alert-warning mb-0">{t('printerEmptyList')}</div>
+            ) : (
+              <div>
+                <label className="form-label fw-semibold" htmlFor="printerSelect">
+                  {t('printerDropdownLabel')}
+                </label>
+                <select
+                  id="printerSelect"
+                  className="form-select"
+                  value={selected ?? ''}
+                  onChange={(event) => setSelected(event.target.value || null)}
+                  disabled={disabled}
+                >
+                  <option value="">{t('selectPlaceholder')}</option>
+                  {printers.map((printer) => (
+                    <option key={printer.name} value={printer.name}>
+                      {printer.label}
+                      {printer.isDefault ? ` (${t('printerDefaultSuffix')})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {error ? <div className="alert alert-danger mb-0">{error}</div> : null}
+            {success ? <div className="alert alert-success mb-0">{success}</div> : null}
+
+            <div className="d-flex flex-wrap gap-2">
+              <button type="button" className="btn btn-primary" onClick={save} disabled={disabled || !selected || saving}>
+                {saving ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden />
+                    {t('saving')}
+                  </>
+                ) : (
+                  t('printerSaveButton')
+                )}
+              </button>
+              <button type="button" className="btn btn-outline-primary" onClick={testPrint} disabled={disabled || testing}>
+                {testing ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden />
+                    {t('printerTesting')}
+                  </>
+                ) : (
+                  t('printerTestButton')
+                )}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+export default PrinterSettingsSection
