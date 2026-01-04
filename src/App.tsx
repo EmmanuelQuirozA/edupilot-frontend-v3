@@ -31,6 +31,7 @@ import { GlobalSettingsPage } from "./pages/GlobalSettingsPage";
 
 import { LoadingSkeleton } from "./components/LoadingSkeleton";
 import { Layout } from "./layout/Layout";
+import { isDesktopEnvironment } from "./utils/desktopEnvironment";
 
 function getPathLocale(path: string): Locale | null {
   const match = path.match(/^\/(es|en)(?:\/|$)/);
@@ -237,6 +238,11 @@ function Router() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const isDesktop = isDesktopEnvironment();
+    console.log(isDesktop ? "from desktop" : "from web");
+  }, []);
+
   return (
     <LanguageProvider>
       <AuthProvider>
