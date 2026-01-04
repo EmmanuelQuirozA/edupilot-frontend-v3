@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { PosBridge, PosCapabilities, PosPrinterDescriptor, PosPrinterSettings } from '../types/pos'
-import { isDesktopPrintingAvailable } from '../utils/pos'
-
-type AvailabilityReason = 'browser' | 'capability-disabled' | 'no-permission' | 'missing-methods'
+import { getPrintingAvailability } from '../utils/pos'
 
 export interface PrinterOption {
   name: string
@@ -12,7 +10,7 @@ export interface PrinterOption {
 
 export interface UsePrinterSettingsResult {
   available: boolean
-  availabilityReason: AvailabilityReason | null
+  availabilityReason: string | null
   printers: PrinterOption[]
   selected: string | null
   setSelected: (name: string | null) => void
@@ -62,7 +60,7 @@ const normalizePrinters = (printers: PosPrinterDescriptor[] | string[]): Printer
     .filter((printer): printer is PrinterOption => Boolean(printer))
 }
 
-const extractPrintingCapabilityReason = (capabilities?: PosCapabilities | null): AvailabilityReason | null => {
+const extractPrintingCapabilityReason = (capabilities?: PosCapabilities | null): string | null => {
   if (!capabilities || capabilities.printing == null) return null
 
   if (capabilities.printing === false) return 'capability-disabled'
@@ -81,7 +79,7 @@ const extractPrintingCapabilityReason = (capabilities?: PosCapabilities | null):
 
 export const usePrinterSettings = (): UsePrinterSettingsResult => {
   const [available, setAvailable] = useState(false)
-  const [availabilityReason, setAvailabilityReason] = useState<AvailabilityReason | null>(null)
+  const [availabilityReason, setAvailabilityReason] = useState<string | null>(null)
   const [printers, setPrinters] = useState<PrinterOption[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -109,10 +107,11 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
       setLoading(true)
       resetStatus()
 
+      const availability = await getPrintingAvailability()
       const bridge = getBridge()
-      if (!bridge) {
+      if (!availability.available || !bridge) {
         setAvailable(false)
-        setAvailabilityReason('browser')
+        setAvailabilityReason(availability.reason ?? 'browser')
         setPrinters([])
         setSelected(null)
         setLoading(false)
@@ -131,10 +130,10 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
       }
 
       const capabilityReason = extractPrintingCapabilityReason(capabilities ?? null)
-      const printingAvailable = isDesktopPrintingAvailable(capabilities ?? null)
+      const printingAvailable = availability.available
 
       setAvailable(printingAvailable)
-      setAvailabilityReason(capabilityReason)
+      setAvailabilityReason(capabilityReason ?? availability.reason ?? null)
 
       if (!printingAvailable) {
         setPrinters([])
@@ -184,7 +183,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     resetStatus()
     const bridge = getBridge()
 
-    if (!bridge || !isDesktopPrintingAvailable()) {
+    if (!bridge || !available) {
       setError('Printing is not available in this environment.')
       return
     }
@@ -209,13 +208,13 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     } finally {
       setSaving(false)
     }
-  }, [resetStatus, selected])
+  }, [available, resetStatus, selected])
 
   const testPrint = useCallback(async () => {
     resetStatus()
     const bridge = getBridge()
 
-    if (!bridge || !isDesktopPrintingAvailable()) {
+    if (!bridge || !available) {
       setError('Printing is not available in this environment.')
       return
     }
@@ -237,7 +236,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     } finally {
       setTesting(false)
     }
-  }, [resetStatus, selected])
+  }, [available, resetStatus, selected])
 
   return {
     available,

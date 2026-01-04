@@ -36,7 +36,7 @@ export function PrinterSettingsSection() {
     if (availabilityReason === 'no-permission') return t('printerPermissionRequired')
     if (availabilityReason === 'missing-methods') return t('printerBridgeMissingFeatures')
 
-    return resolver ? resolver(fallback) : fallback
+    return resolver ? resolver(fallback) : availabilityReason || fallback
   }, [availabilityReason, t])
 
   const disabled = loading || !available || saving || testing || printers.length === 0
