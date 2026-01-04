@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { Layout } from '../layout/Layout'
 import { API_BASE_URL } from '../config'
 import { RolesPermissionsPage } from './RolesPermissionsPage'
+import { PrinterSettingsSection } from '../components/PrinterSettingsSection'
 
 interface ModuleAccess {
   moduleId: number
@@ -168,6 +169,10 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'modules' }: Globa
               <h3 className="h5 mb-1">{t('modulesCatalogTab')}</h3>
             </div>
             <div className="card-body">
+              <div className="mb-4">
+                <PrinterSettingsSection />
+              </div>
+
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <div className='d-flex flex-column gap-3'>
                   <div>
