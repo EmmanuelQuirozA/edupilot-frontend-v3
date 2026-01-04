@@ -216,9 +216,6 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
           <h2 className="fw-bold mb-2">{t('welcome')}</h2>
           <p className="text-muted mb-0">Gestiona cobros, matrículas y metas del ciclo en tiempo real.</p>
         </div>
-        <div className="scholar-dashboard__header-actions">
-          <button className="btn btn-outline-primary" onClick={() => onNavigate('/')}>Home</button>
-        </div>
       </div>
 
       {error ? (
@@ -233,8 +230,68 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
         </div>
       ) : null}
 
-      <div className="row g-4">
-        <div className="col-lg-8">
+      <div className="row">
+        <div className="col">
+          <div className="row g-3 mb-3">
+            <div className="col-md-4">
+              <div className="scholar-dashboard__stat-card scholar-dashboard__stat-card--income">
+                <div className="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <p className="text-uppercase text-muted fw-semibold mb-1">Ingresos del mes</p>
+                    <h3 className="fw-bold mb-0">{currencyFormatter.format(monthIncome)}</h3>
+                  </div>
+                  <span className="scholar-dashboard__stat-pill scholar-dashboard__stat-pill--success">{monthProgress}% de la meta mensual</span>
+                </div>
+                <p className="text-muted small mb-3">Meta: {currencyFormatter.format(monthGoal)}</p>
+                <div className="scholar-dashboard__progress">
+                  <div className="scholar-dashboard__progress-bar" style={{ width: `${monthProgress}%` }} />
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-4">
+              <div className="scholar-dashboard__stat-card scholar-dashboard__stat-card--pending">
+                <div className="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <p className="text-uppercase text-muted fw-semibold mb-1">Por cobrar (vencido)</p>
+                    <h3 className="fw-bold mb-0">{currencyFormatter.format(pendingAmount)}</h3>
+                  </div>
+                  <span className="scholar-dashboard__stat-icon" aria-hidden>
+                    <i className="bi bi-exclamation-octagon" />
+                  </span>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <span className="scholar-dashboard__chip scholar-dashboard__chip--danger">{pendingStudents} Alumnos</span>
+                  <span className="text-muted small">con deuda activa</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-4">
+              <div className="scholar-dashboard__population-card">
+                <div className="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <p className="text-uppercase text-light mb-1">Población escolar</p>
+                    <h5 className="text-white mb-0">Alumnos Activos</h5>
+                    <p className="text-white-50 mb-0">Ciclo 2025-2026</p>
+                  </div>
+                  <div className="scholar-dashboard__population-badge">
+                    <span>{totalStudents}</span>
+                  </div>
+                </div>
+
+                <div className="scholar-dashboard__population-levels">
+                  {scholarLevels.map((level) => (
+                    <div key={level.name} className="scholar-dashboard__population-row">
+                      <span>{level.name}</span>
+                      <strong>{level.count}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="card scholar-dashboard__actions-card">
             <div className="card-body">
               <div className="d-flex align-items-center gap-2 mb-3">
@@ -260,66 +317,6 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
                   </button>
                 ))}
               </div>
-            </div>
-          </div>
-
-          <div className="row g-3 mt-3">
-            <div className="col-md-6">
-              <div className="scholar-dashboard__stat-card scholar-dashboard__stat-card--income">
-                <div className="d-flex justify-content-between align-items-start mb-3">
-                  <div>
-                    <p className="text-uppercase text-muted fw-semibold mb-1">Ingresos del mes</p>
-                    <h3 className="fw-bold mb-0">{currencyFormatter.format(monthIncome)}</h3>
-                  </div>
-                  <span className="scholar-dashboard__stat-pill scholar-dashboard__stat-pill--success">{monthProgress}% de la meta mensual</span>
-                </div>
-                <p className="text-muted small mb-3">Meta: {currencyFormatter.format(monthGoal)}</p>
-                <div className="scholar-dashboard__progress">
-                  <div className="scholar-dashboard__progress-bar" style={{ width: `${monthProgress}%` }} />
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <div className="scholar-dashboard__stat-card scholar-dashboard__stat-card--pending">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <div>
-                    <p className="text-uppercase text-muted fw-semibold mb-1">Por cobrar (vencido)</p>
-                    <h3 className="fw-bold mb-0">{currencyFormatter.format(pendingAmount)}</h3>
-                  </div>
-                  <span className="scholar-dashboard__stat-icon" aria-hidden>
-                    <i className="bi bi-exclamation-octagon" />
-                  </span>
-                </div>
-                <div className="d-flex align-items-center gap-2">
-                  <span className="scholar-dashboard__chip scholar-dashboard__chip--danger">{pendingStudents} Alumnos</span>
-                  <span className="text-muted small">con deuda activa</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-lg-4">
-          <div className="scholar-dashboard__population-card">
-            <div className="d-flex justify-content-between align-items-start mb-3">
-              <div>
-                <p className="text-uppercase text-light mb-1">Población escolar</p>
-                <h5 className="text-white mb-0">Alumnos Activos</h5>
-                <p className="text-white-50 mb-0">Ciclo 2025-2026</p>
-              </div>
-              <div className="scholar-dashboard__population-badge">
-                <span>{totalStudents}</span>
-              </div>
-            </div>
-
-            <div className="scholar-dashboard__population-levels">
-              {scholarLevels.map((level) => (
-                <div key={level.name} className="scholar-dashboard__population-row">
-                  <span>{level.name}</span>
-                  <strong>{level.count}</strong>
-                </div>
-              ))}
             </div>
           </div>
         </div>
