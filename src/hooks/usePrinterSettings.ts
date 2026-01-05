@@ -40,14 +40,16 @@ const parsePrinterSettings = (settings: PosPrinterSettings | string | null | und
 
 const normalizePrinters = (printers: PosPrinterDescriptor[] | string[]): PrinterOption[] => {
   return printers
-    .map((printer, index) => {
+    .map((printer) => {
       if (typeof printer === 'string') {
-        return { name: printer, label: printer }
+        const name = printer.trim()
+        if (!name) return null
+        return { name, label: name }
       }
 
       if (typeof printer === 'object' && printer) {
-        const fallbackName = `Printer ${index + 1}`
-        const name = typeof printer.name === 'string' && printer.name.trim().length ? printer.name : fallbackName
+        const name = typeof printer.name === 'string' ? printer.name.trim() : ''
+        if (!name) return null
         const label =
           typeof printer.displayName === 'string' && printer.displayName.trim().length
             ? printer.displayName
@@ -64,6 +66,18 @@ const normalizePrinters = (printers: PosPrinterDescriptor[] | string[]): Printer
       return null
     })
     .filter((printer): printer is PrinterOption => Boolean(printer))
+}
+
+const findPrinterSelection = (printerList: PrinterOption[], savedPrinterName: string | null): string | null => {
+  if (savedPrinterName) {
+    const matched = printerList.find((printer) => printer.name === savedPrinterName)
+    if (matched) return matched.name
+  }
+
+  const defaultPrinter = printerList.find((printer) => printer.isDefault)
+  if (defaultPrinter) return defaultPrinter.name
+
+  return null
 }
 
 const extractPrintingCapabilityReason = (capabilities?: PosCapabilities | null): string | null => {
@@ -164,15 +178,12 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         ])
 
         const normalizedPrinters = normalizePrinters(Array.isArray(printerListRaw) ? printerListRaw : [])
-        const savedPrinterName = parsePrinterSettings(printerSettingsRaw)
+        const savedPrinterName = parsePrinterSettings(printerSettingsRaw)?.trim() || null
 
         setPrinters(normalizedPrinters)
 
-        const fallbackPrinter =
-          savedPrinterName ??
-          normalizedPrinters.find((printer) => printer.isDefault)?.name ??
-          null
-        setSelected(fallbackPrinter)
+        const initialSelection = findPrinterSelection(normalizedPrinters, savedPrinterName)
+        setSelected(initialSelection)
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Unknown error')
         setPrinters([])
@@ -225,6 +236,11 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
       return
     }
 
+    if (!selected) {
+      setError('Please select a printer before sending a test print.')
+      return
+    }
+
     if (typeof bridge.testPrint !== 'function') {
       setError('Test print is not supported in this app.')
       return
@@ -233,7 +249,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     setTesting(true)
 
     try {
-      const result = await bridge.testPrint(selected ?? undefined)
+      const result = await bridge.testPrint(selected)
 
       const isValidResult = (value: unknown): value is PosTestPrintResult =>
         Boolean(value && typeof value === 'object' && 'ok' in value)
