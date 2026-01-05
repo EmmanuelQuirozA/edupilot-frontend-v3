@@ -6,7 +6,12 @@ import type {
   PosPrinterSettings,
   PosTestPrintResult,
 } from '../types/pos'
-import { getPrintingAvailability } from '../utils/pos'
+import {
+  DEFAULT_PAPER_WIDTH_MM,
+  extractPaperWidthFromSettings,
+  getPrintingAvailability,
+  persistPaperWidthToBridge,
+} from '../utils/pos'
 
 export interface PrinterOption {
   name: string
@@ -28,6 +33,9 @@ export interface UsePrinterSettingsResult {
   refresh: () => void
   save: () => Promise<void>
   testPrint: () => Promise<void>
+  paperWidthMm: number
+  updatePaperWidthMm: (paperWidthMm: number) => Promise<void>
+  paperWidthUpdating: boolean
 }
 
 const getBridge = (): PosBridge | undefined => (typeof window === 'undefined' ? undefined : window.pos)
@@ -108,6 +116,8 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
+  const [paperWidthMm, setPaperWidthMm] = useState<number>(DEFAULT_PAPER_WIDTH_MM)
+  const [paperWidthUpdating, setPaperWidthUpdating] = useState(false)
 
   const resetStatus = useCallback(() => {
     setError(null)
@@ -134,6 +144,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         setAvailabilityReason(availability.reason ?? 'browser')
         setPrinters([])
         setSelected(null)
+        setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
         setLoading(false)
         return
       }
@@ -158,6 +169,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
       if (!printingAvailable) {
         setPrinters([])
         setSelected(null)
+        setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
         setLoading(false)
         return
       }
@@ -179,8 +191,10 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
 
         const normalizedPrinters = normalizePrinters(Array.isArray(printerListRaw) ? printerListRaw : [])
         const savedPrinterName = parsePrinterSettings(printerSettingsRaw)?.trim() || null
+        const savedPaperWidth = extractPaperWidthFromSettings(printerSettingsRaw)
 
         setPrinters(normalizedPrinters)
+        setPaperWidthMm(savedPaperWidth ?? DEFAULT_PAPER_WIDTH_MM)
 
         const initialSelection = findPrinterSelection(normalizedPrinters, savedPrinterName)
         setSelected(initialSelection)
@@ -188,6 +202,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         setError(loadError instanceof Error ? loadError.message : 'Unknown error')
         setPrinters([])
         setSelected(null)
+        setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
       } finally {
         setLoading(false)
       }
@@ -278,6 +293,36 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     }
   }, [available, resetStatus, selected])
 
+  const updatePaperWidthMm = useCallback(
+    async (nextWidth: number) => {
+      resetStatus()
+      setPaperWidthMm(nextWidth)
+      const bridge = getBridge()
+
+      if (!bridge || !available) {
+        setError('Printing is not available in this environment.')
+        return
+      }
+
+      if (typeof bridge.setPaperWidthMm !== 'function') {
+        setError('Updating paper width is not supported in this app.')
+        return
+      }
+
+      setPaperWidthUpdating(true)
+
+      try {
+        await persistPaperWidthToBridge(nextWidth)
+        setSuccess('Paper width saved.')
+      } catch (persistError) {
+        setError(persistError instanceof Error ? persistError.message : 'Failed to save paper width.')
+      } finally {
+        setPaperWidthUpdating(false)
+      }
+    },
+    [available, resetStatus],
+  )
+
   return {
     available,
     availabilityReason,
@@ -292,6 +337,9 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     refresh,
     save,
     testPrint,
+    paperWidthMm,
+    updatePaperWidthMm,
+    paperWidthUpdating,
   }
 }
 

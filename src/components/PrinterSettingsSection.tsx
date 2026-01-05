@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { usePrinterSettings } from '../hooks/usePrinterSettings'
+import { DEFAULT_PAPER_WIDTH_MM, PAPER_WIDTH_OPTIONS_MM } from '../utils/pos'
 
 const AvailabilityMessage: Record<string, (fallback: string) => string> = {
   browser: (fallback) => fallback,
@@ -24,6 +25,9 @@ export function PrinterSettingsSection() {
     success,
     save,
     testPrint,
+    paperWidthMm,
+    updatePaperWidthMm,
+    paperWidthUpdating,
   } = usePrinterSettings()
 
   const availabilityText = useMemo(() => {
@@ -39,7 +43,18 @@ export function PrinterSettingsSection() {
     return resolver ? resolver(fallback) : availabilityReason || fallback
   }, [availabilityReason, t])
 
-  const disabled = loading || !available || saving || testing || printers.length === 0
+  const disabled = loading || !available || saving || testing || paperWidthUpdating || printers.length === 0
+
+  const paperWidthOptions = PAPER_WIDTH_OPTIONS_MM.map((value) => {
+    const labelMap: Record<number, string> = {
+      58: t('paperWidthOption58'),
+      80: t('paperWidthOption80'),
+      57: t('paperWidthOption57'),
+      76: t('paperWidthOption76'),
+      112: t('paperWidthOption112'),
+    }
+    return { value, label: labelMap[value] ?? `${value} mm` }
+  })
 
   return (
     <div className="card shadow-sm">
@@ -85,6 +100,29 @@ export function PrinterSettingsSection() {
                 </select>
               </div>
             )}
+
+            <div>
+              <label className="form-label fw-semibold" htmlFor="paperWidthSelect">
+                {t('paperWidthLabel')}
+              </label>
+              <select
+                id="paperWidthSelect"
+                className="form-select"
+                value={paperWidthMm}
+                onChange={(event) => {
+                  const parsed = Number.parseInt(event.target.value, 10)
+                  void updatePaperWidthMm(Number.isNaN(parsed) ? DEFAULT_PAPER_WIDTH_MM : parsed)
+                }}
+                disabled={disabled}
+              >
+                {paperWidthOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="form-text">{t('paperWidthHelper')}</div>
+            </div>
 
             {error ? <div className="alert alert-danger mb-0">{error}</div> : null}
             {success ? <div className="alert alert-success mb-0">{success}</div> : null}
