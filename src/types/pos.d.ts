@@ -16,12 +16,20 @@ export interface PosPrinterSettings {
   [key: string]: unknown
 }
 
+export interface PosTestPrintResult {
+  ok: boolean
+  printerName?: string | null
+  error?: string | null
+  method?: string | null
+  details?: unknown
+}
+
 export interface PosBridge {
   getCapabilities?: () => PosCapabilities | Promise<PosCapabilities>
   listPrinters?: () => PosPrinterDescriptor[] | string[] | Promise<PosPrinterDescriptor[] | string[]>
   getPrinterSettings?: () => PosPrinterSettings | string | null | Promise<PosPrinterSettings | string | null>
   setSelectedPrinter?: (printerName: string) => unknown | Promise<unknown>
-  testPrint?: (printerName?: string) => unknown | Promise<unknown>
+  testPrint?: (printerName?: string) => PosTestPrintResult | Promise<PosTestPrintResult>
 }
 
 declare global {

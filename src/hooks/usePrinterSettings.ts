@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { PosBridge, PosCapabilities, PosPrinterDescriptor, PosPrinterSettings } from '../types/pos'
+import type {
+  PosBridge,
+  PosCapabilities,
+  PosPrinterDescriptor,
+  PosPrinterSettings,
+  PosTestPrintResult,
+} from '../types/pos'
 import { getPrintingAvailability } from '../utils/pos'
 
 export interface PrinterOption {
@@ -227,12 +233,30 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     setTesting(true)
 
     try {
-      await bridge.testPrint(selected ?? undefined)
-      setSuccess(
-        selected ? `Test ticket sent to ${selected}.` : 'Test ticket sent using the default printer.',
-      )
+      const result = await bridge.testPrint(selected ?? undefined)
+
+      const isValidResult = (value: unknown): value is PosTestPrintResult =>
+        Boolean(value && typeof value === 'object' && 'ok' in value)
+
+      if (!isValidResult(result)) {
+        setError('Test print failed: Unknown error')
+        return
+      }
+
+      if (result.ok === true) {
+        const printerName = result.printerName ?? selected ?? 'the default printer'
+        setSuccess(`Test ticket sent to ${printerName}.`)
+        return
+      }
+
+      const errorMessage =
+        typeof result.error === 'string' && result.error.trim().length ? result.error : 'Unknown error'
+      const methodDetails =
+        typeof result.method === 'string' && result.method.trim().length ? ` (method: ${result.method})` : ''
+      setError(`Test print failed: ${errorMessage}${methodDetails}`)
     } catch (printError) {
-      setError(printError instanceof Error ? printError.message : 'Failed to send test print.')
+      const message = printError instanceof Error ? printError.message : 'Failed to send test print.'
+      setError(`Test print failed: ${message}`)
     } finally {
       setTesting(false)
     }
