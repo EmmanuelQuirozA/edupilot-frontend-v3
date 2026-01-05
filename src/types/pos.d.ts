@@ -13,6 +13,7 @@ export interface PosPrinterDescriptor {
 export interface PosPrinterSettings {
   selectedPrinterName?: string | null
   printerName?: string | null
+  paperWidthMm?: number | string | null
   [key: string]: unknown
 }
 
@@ -28,6 +29,7 @@ export interface PosTicketPayload {
   title: string
   lines: string[]
   footer?: string
+  paperWidthMm?: number
 }
 
 export interface PosBridge {
@@ -35,6 +37,8 @@ export interface PosBridge {
   listPrinters?: () => PosPrinterDescriptor[] | string[] | Promise<PosPrinterDescriptor[] | string[]>
   getPrinterSettings?: () => PosPrinterSettings | string | null | Promise<PosPrinterSettings | string | null>
   setSelectedPrinter?: (printerName: string) => unknown | Promise<unknown>
+  getPaperWidthMm?: () => number | Promise<number>
+  setPaperWidthMm?: (paperWidthMm: number) => unknown | Promise<unknown>
   testPrint?: (printerName?: string) => PosTestPrintResult | Promise<PosTestPrintResult>
   printTicket?: (payload: PosTicketPayload) =>
     | { success?: boolean; ok?: boolean; error?: string | null; message?: string | null }

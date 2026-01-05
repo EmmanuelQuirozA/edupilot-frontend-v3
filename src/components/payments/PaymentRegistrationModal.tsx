@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { PosTicketPayload } from '../../types/pos'
 import PaymentConceptSelect from '../catalog/PaymentConceptSelect'
 import PaymentThroughSelect from '../catalog/PaymentThroughSelect'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE_URL } from '../../config'
 import { createCurrencyFormatter } from '../../utils/currencyFormatter'
-import { getPrintingAvailability } from '../../utils/pos'
+import { getPrintingAvailability, readPaperWidthFromBridge } from '../../utils/pos'
 import { useCatalogOptions } from '../../hooks/useCatalogOptions'
 import './payment-registration-modal.css'
 
@@ -267,15 +268,17 @@ export function PaymentRegistrationModal({
     return false
   }, [])
 
-  const sendTicketToBridge = useCallback(async (payload: { title: string; lines: string[]; footer?: string }) => {
+  const sendTicketToBridge = useCallback(async (payload: PosTicketPayload) => {
     if (typeof window === 'undefined' || !window.pos) {
       return { ok: false, message: 'POS bridge not available' }
     }
 
     const bridge = window.pos
+    const paperWidthMm = await readPaperWidthFromBridge()
+    const payloadWithWidth: PosTicketPayload = { ...payload, paperWidthMm }
 
     if (typeof bridge.printTicket === 'function') {
-      const response = await bridge.printTicket(payload)
+      const response = await bridge.printTicket(payloadWithWidth)
       const normalized =
         typeof response === 'boolean'
           ? { success: response }
@@ -286,7 +289,7 @@ export function PaymentRegistrationModal({
 
     if (typeof (bridge as Record<string, unknown>).send === 'function') {
       try {
-        await (bridge as unknown as { send: (channel: string, data: unknown) => void }).send('print-ticket', payload)
+        await (bridge as unknown as { send: (channel: string, data: unknown) => void }).send('print-ticket', payloadWithWidth)
         return { ok: true }
       } catch (sendError) {
         const message = sendError instanceof Error ? sendError.message : 'Unknown print error'
