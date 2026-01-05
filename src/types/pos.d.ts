@@ -30,6 +30,7 @@ export interface PosBridge {
   getPrinterSettings?: () => PosPrinterSettings | string | null | Promise<PosPrinterSettings | string | null>
   setSelectedPrinter?: (printerName: string) => unknown | Promise<unknown>
   testPrint?: (printerName?: string) => PosTestPrintResult | Promise<PosTestPrintResult>
+  printTicket?: (payload: string | { text: string }) => unknown | Promise<unknown>
 }
 
 declare global {
