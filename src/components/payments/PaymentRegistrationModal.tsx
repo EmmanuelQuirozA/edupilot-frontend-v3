@@ -5,8 +5,6 @@ import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE_URL } from '../../config'
 import { createCurrencyFormatter } from '../../utils/currencyFormatter'
-import useCatalogOptions from '../../hooks/useCatalogOptions'
-import { isDesktopEnvironment } from '../../utils/desktopEnvironment'
 import './payment-registration-modal.css'
 
 declare const Swal: any
@@ -42,22 +40,6 @@ interface PaymentFormState {
   receipt: File | null
 }
 
-interface TicketStudentInfo {
-  fullName: string
-  gradeGroup?: string
-  scholarLevel?: string
-  generation?: string
-  paymentReference?: string
-  registerId?: string
-  schoolId?: number | null
-}
-
-interface TicketSchoolInfo {
-  name?: string
-  phone?: string
-  address?: string
-}
-
 const PENDING_COMPARISON_DELTA = 0.01
 
 const formatMonthLabel = (value?: string) => {
@@ -84,7 +66,7 @@ export function PaymentRegistrationModal({
   title,
   description,
 }: PaymentRegistrationModalProps) {
-  const { token, user } = useAuth()
+  const { token } = useAuth()
   const { t } = useLanguage()
   const [form, setForm] = useState<PaymentFormState>({
     amount: '',
@@ -97,12 +79,6 @@ export function PaymentRegistrationModal({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [studentInfo, setStudentInfo] = useState<TicketStudentInfo | null>(null)
-  const [schoolInfo, setSchoolInfo] = useState<TicketSchoolInfo | null>(null)
-  const [isDesktop, setIsDesktop] = useState(false)
-
-  const { options: conceptOptions } = useCatalogOptions('catalog/payment-concepts', lang)
-  const { options: paymentThroughOptions } = useCatalogOptions('catalog/payment-through', lang)
 
   const currencyFormatter = useMemo(
     () => createCurrencyFormatter('es-MX', 'MXN'),
@@ -131,7 +107,6 @@ export function PaymentRegistrationModal({
     })
     setError(null)
     setSuccessMessage(null)
-    setIsDesktop(isDesktopEnvironment())
   }, [
     defaultPaymentConceptId,
     defaultPaymentMonth,
@@ -148,119 +123,6 @@ export function PaymentRegistrationModal({
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const normalizeStudentTicketInfo = (payload: unknown): TicketStudentInfo | null => {
-    const raw =
-      (payload as { content?: unknown; student?: unknown; data?: unknown })?.content ??
-      (payload as { student?: unknown; data?: unknown })?.student ??
-      (payload as { data?: unknown })?.data ??
-      payload
-
-    const student = Array.isArray(raw) ? raw[0] : raw
-    if (!student || typeof student !== 'object') return null
-
-    const record = student as Record<string, unknown>
-    const parseNumber = (value: unknown): number | null => {
-      if (typeof value === 'number') return value
-      if (typeof value === 'string' && value.trim().length && !Number.isNaN(Number(value))) {
-        return Number(value)
-      }
-      return null
-    }
-
-    return {
-      fullName: (record.full_name ?? record.name ?? '') as string,
-      gradeGroup: (record.grade_group ?? record.group_name ?? '') as string,
-      scholarLevel: (record.scholar_level_name ?? record.scholar_level ?? '') as string,
-      generation: (record.generation ?? '') as string,
-      paymentReference: (record.payment_reference ?? '') as string,
-      registerId: (record.register_id ?? '') as string,
-      schoolId: parseNumber(record.school_id),
-    }
-  }
-
-  const normalizeSchoolTicketInfo = (payload: unknown): TicketSchoolInfo | null => {
-    const rawDetails =
-      (payload as { school_details?: unknown })?.school_details ??
-      (payload as { data?: { school_details?: unknown } })?.data?.school_details ??
-      null
-
-    if (!rawDetails || typeof rawDetails !== 'object') return null
-    const details = rawDetails as Record<string, unknown>
-    const addressParts = [
-      details.street as string | undefined,
-      details.ext_number as string | undefined,
-      details.int_number as string | undefined,
-      details.suburb as string | undefined,
-      details.locality as string | undefined,
-      details.municipality as string | undefined,
-      details.state as string | undefined,
-    ].filter((part) => typeof part === 'string' && part.trim().length) as string[]
-
-    return {
-      name: (details.commercial_name ?? details.school_name ?? '') as string,
-      phone: (details.phone_number ?? '') as string,
-      address: addressParts.join(', '),
-    }
-  }
-
-  useEffect(() => {
-    if (!isOpen || !studentId || !token) return
-    const controller = new AbortController()
-
-    const loadStudentInfo = async () => {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/students/student-details/${encodeURIComponent(studentId)}?lang=${lang}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            signal: controller.signal,
-          },
-        )
-
-        if (!response.ok) throw new Error('failed_request')
-        const payload = await response.json()
-        const parsed = normalizeStudentTicketInfo(payload)
-        setStudentInfo(parsed)
-      } catch (loadError) {
-        if (controller.signal.aborted) return
-        console.error('Unable to load student info for ticket', loadError)
-        setStudentInfo(null)
-      }
-    }
-
-    loadStudentInfo()
-    return () => controller.abort()
-  }, [isOpen, studentId, token, lang])
-
-  useEffect(() => {
-    const schoolId = studentInfo?.schoolId
-    if (!isOpen || !schoolId || !token) return
-
-    const controller = new AbortController()
-
-    const loadSchoolInfo = async () => {
-      try {
-        const params = new URLSearchParams({ school_id: String(schoolId), lang })
-        const response = await fetch(`${API_BASE_URL}/schools/details?${params.toString()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        })
-
-        if (!response.ok) throw new Error('failed_request')
-        const payload = await response.json()
-        const parsed = normalizeSchoolTicketInfo(payload)
-        setSchoolInfo(parsed)
-      } catch (loadError) {
-        if (controller.signal.aborted) return
-        console.error('Unable to load school info for ticket', loadError)
-        setSchoolInfo(null)
-      }
-    }
-
-    loadSchoolInfo()
-    return () => controller.abort()
-  }, [isOpen, lang, studentInfo?.schoolId, token])
-
   const validateAmount = (amountValue: number) => {
     if (!amountValue || Number.isNaN(amountValue)) {
       return t('enterValidAmount')
@@ -274,106 +136,6 @@ export function PaymentRegistrationModal({
     }
 
     return null
-  }
-
-  const resolveConceptLabel = () => {
-    if (requestSummary?.conceptName) return requestSummary.conceptName
-    const conceptId = form.paymentConceptId || defaultPaymentConceptId
-    const found = conceptOptions.find((option) => option.id === conceptId)
-    return found?.name || (conceptId ? String(conceptId) : t('noInformation'))
-  }
-
-  const resolvePaymentThroughLabel = () => {
-    const throughId = form.paymentThroughId || defaultPaymentThroughId
-    const found = paymentThroughOptions.find((option) => option.id === throughId)
-    return found?.name || (throughId ? String(throughId) : t('noInformation'))
-  }
-
-  const resolveMonthLabel = () => {
-    if (form.paymentMonth) return formatMonthLabel(form.paymentMonth)
-    if (defaultPaymentMonth) return formatMonthLabel(defaultPaymentMonth)
-    if (requestSummary?.tuitionLabel) return requestSummary.tuitionLabel
-    return '-'
-  }
-
-  const buildTicketText = () => {
-    const conceptLabel = resolveConceptLabel()
-    const paymentThroughLabel = resolvePaymentThroughLabel()
-    const monthLabel = resolveMonthLabel()
-    const now = new Date()
-    const dateText = now.toLocaleString('es-MX')
-    const studentName = studentInfo?.fullName ?? '-'
-    const scholarLevel = studentInfo?.scholarLevel ?? '-'
-    const gradeGroup = studentInfo?.gradeGroup ?? '-'
-    const reference =
-      studentInfo?.paymentReference ||
-      studentInfo?.registerId ||
-      (paymentRequestId ? `PR-${paymentRequestId}` : `ST-${studentId}`)
-    const amountValue = Number(form.amount) || 0
-    const commentsText = form.comments?.trim().length ? form.comments : t('noInformation')
-
-    const lines = [
-      '',
-      schoolInfo?.name ?? '',
-      schoolInfo?.address ? `Direccion: ${schoolInfo.address}` : '',
-      schoolInfo?.phone ? `Tel: ${schoolInfo.phone}` : '',
-      dateText,
-      '-----------------------------',
-      '',
-      conceptLabel,
-      `Alumno: ${studentName}`,
-      `Nivel escolar: ${scholarLevel}`,
-      `Grado y grupo: ${gradeGroup}`,
-      `Forma de pago: ${paymentThroughLabel}`,
-      `Fecha de pago: ${dateText}`,
-      reference ? `Referencia: ${reference}` : '',
-      `Mes: ${monthLabel}`,
-      `Ciclo escolar: ${studentInfo?.generation || '-'}`,
-      `Monto: ${currencyFormatter.format(amountValue)}`,
-      `ID usuario: ${user?.user_id ?? '-'}`,
-      `ID alumno: ${studentId}`,
-      '-----------------------------',
-      `Comentarios: ${commentsText}`,
-    ].filter(Boolean)
-
-    return lines.join('\n')
-  }
-
-  const promptAndPrintTicket = async () => {
-    if (!isDesktop) return
-
-    const decision = await Swal.fire({
-      icon: 'question',
-      title: t('printTicketPromptTitle'),
-      text: t('printTicketPromptText'),
-      showCancelButton: true,
-      confirmButtonText: t('printTicketConfirm'),
-      cancelButtonText: t('printTicketSkip'),
-    })
-
-    if (!decision.isConfirmed) return
-
-    try {
-      const bridge = typeof window === 'undefined' ? undefined : window.pos
-      if (!bridge || typeof bridge.printTicket !== 'function') {
-        throw new Error(t('printTicketUnavailable'))
-      }
-
-      const ticketText = buildTicketText()
-      await bridge.printTicket(ticketText)
-      await Swal.fire({
-        icon: 'success',
-        title: t('printTicketSuccessTitle'),
-        text: t('printTicketSuccess'),
-      })
-    } catch (printError) {
-      console.error('Ticket print failed', printError)
-      await Swal.fire({
-        icon: 'error',
-        title: t('printTicketErrorTitle'),
-        text: t('printTicketError'),
-      })
-    }
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -448,7 +210,6 @@ export function PaymentRegistrationModal({
       })
 
       setSuccessMessage(t('paymentRegisterSuccess'))
-      await promptAndPrintTicket()
       onSuccess?.()
     } catch (submitError) {
       const message =
