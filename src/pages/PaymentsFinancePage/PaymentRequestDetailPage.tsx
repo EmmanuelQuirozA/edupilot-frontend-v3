@@ -556,6 +556,13 @@ export function PaymentRequestDetailPage({ onNavigate, paymentRequestId }: Payme
         requestSummary={paymentRequestSummary}
         lang={locale}
         onSuccess={handlePaymentSuccess}
+        studentInfo={{
+          fullName: student.full_name,
+          gradeGroup: student.grade_group,
+          scholarLevel: student.scholar_level_name,
+          generation: student.generation,
+          reference: student.payment_reference ?? student.register_id ?? null,
+        }}
       />
       <div className="d-flex flex-column gap-3">
         <div className="card shadow-sm border-0">

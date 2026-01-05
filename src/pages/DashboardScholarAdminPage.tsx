@@ -327,6 +327,13 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
         onClose={() => setPaymentModalOpen(false)}
         studentId={Number(selectedStudent?.student_id ?? 0)}
         onSuccess={() => setPaymentModalOpen(false)}
+        studentInfo={{
+          fullName: selectedStudent?.full_name ?? null,
+          gradeGroup: selectedStudent?.grade_group ?? null,
+          scholarLevel: selectedStudent?.scholar_level_name ?? null,
+          generation: selectedStudent?.generation ?? null,
+          reference: selectedStudent?.register_id ?? null,
+        }}
       />
 
       <BalanceRechargeModal
