@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import PaymentConceptSelect from '../catalog/PaymentConceptSelect'
 import PaymentThroughSelect from '../catalog/PaymentThroughSelect'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE_URL } from '../../config'
 import { createCurrencyFormatter } from '../../utils/currencyFormatter'
+import { getPrintingAvailability } from '../../utils/pos'
+import { useCatalogOptions } from '../../hooks/useCatalogOptions'
 import './payment-registration-modal.css'
 
 declare const Swal: any
@@ -29,6 +31,25 @@ export interface PaymentRegistrationModalProps {
   onSuccess?: () => void
   title?: string
   description?: string
+  studentInfo?: {
+    fullName?: string | null
+    gradeGroup?: string | null
+    scholarLevel?: string | null
+    generation?: string | null
+    reference?: string | null
+  }
+  schoolInfo?: {
+    name?: string | null
+    street?: string | null
+    ext_number?: string | null
+    int_number?: string | null
+    suburb?: string | null
+    locality?: string | null
+    municipality?: string | null
+    state?: string | null
+    phone_number?: string | null
+    commercial_name?: string | null
+  }
 }
 
 interface PaymentFormState {
@@ -52,6 +73,42 @@ const formatMonthLabel = (value?: string) => {
 const buildJsonPart = (payload: Record<string, unknown>) =>
   new Blob([JSON.stringify(payload)], { type: 'application/json' })
 
+const centerText = (text: string, width = 32) => {
+  if (!text) return ''.padStart(Math.max(0, width / 2))
+  if (text.length >= width) return text
+  const padTotal = width - text.length
+  const padStart = Math.floor(padTotal / 2)
+  const padEnd = padTotal - padStart
+  return `${' '.repeat(padStart)}${text}${' '.repeat(padEnd)}`
+}
+
+const formatMexicoCityDateTime = (date = new Date()) => {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  })
+
+  const parts = formatter.formatToParts(date).reduce<Record<string, string>>((acc, part) => {
+    if (part.type !== 'literal') acc[part.type] = part.value
+    return acc
+  }, {})
+
+  const year = parts.year ?? '0000'
+  const month = parts.month ?? '00'
+  const day = parts.day ?? '00'
+  const hour = parts.hour ?? '00'
+  const minute = parts.minute ?? '00'
+  const second = parts.second ?? '00'
+
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+}
+
 export function PaymentRegistrationModal({
   isOpen,
   onClose,
@@ -65,8 +122,10 @@ export function PaymentRegistrationModal({
   onSuccess,
   title,
   description,
+  studentInfo,
+  schoolInfo,
 }: PaymentRegistrationModalProps) {
-  const { token } = useAuth()
+  const { token, user } = useAuth()
   const { t } = useLanguage()
   const [form, setForm] = useState<PaymentFormState>({
     amount: '',
@@ -79,6 +138,7 @@ export function PaymentRegistrationModal({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [schoolDetails, setSchoolDetails] = useState<typeof schoolInfo | null>(schoolInfo ?? null)
 
   const currencyFormatter = useMemo(
     () => createCurrencyFormatter('es-MX', 'MXN'),
@@ -89,6 +149,9 @@ export function PaymentRegistrationModal({
   const requireFullPendingPayment = !!requestSummary && !requestSummary.isPartialPayment
   const resolvedTitle = title ?? t('registerPaymentTitle')
   const resolvedDescription = description ?? t('registerPaymentDescription')
+
+  const { options: paymentThroughOptions } = useCatalogOptions('catalog/payment-through', lang)
+  const { options: paymentConceptOptions } = useCatalogOptions('catalog/payment-concepts', lang)
 
   useEffect(() => {
     if (!isOpen) return
@@ -114,6 +177,231 @@ export function PaymentRegistrationModal({
     isOpen,
     requestSummary,
     requireFullPendingPayment,
+  ])
+
+  const ensureSchoolDetails = useCallback(async () => {
+    if (schoolDetails) return schoolDetails
+
+    if (!user?.school_id || !token) return null
+
+    try {
+      const params = new URLSearchParams({
+        school_id: String(user.school_id),
+        lang,
+      })
+      const response = await fetch(`${API_BASE_URL}/schools/details?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('failed_request')
+      }
+
+      const payload = await response.json()
+      const fetchedSchoolDetails = payload?.school_details ?? null
+      setSchoolDetails(fetchedSchoolDetails)
+      return fetchedSchoolDetails
+    } catch (fetchError) {
+      console.error('Failed to fetch school details', fetchError)
+      return null
+    }
+  }, [lang, schoolDetails, token, user?.school_id])
+
+  const resolveCatalogName = useCallback(
+    (id: number | '', options: { id: number; name: string }[]) => {
+      if (!id) return ''
+      const match = options.find((option) => option.id === id)
+      return match?.name ?? ''
+    },
+    [],
+  )
+
+  const resolvePaymentThroughName = useCallback(
+    () => resolveCatalogName(form.paymentThroughId || defaultPaymentThroughId || '', paymentThroughOptions),
+    [defaultPaymentThroughId, form.paymentThroughId, paymentThroughOptions, resolveCatalogName],
+  )
+
+  const resolveConceptName = useCallback(
+    () => {
+      if (requestSummary?.conceptName) return requestSummary.conceptName
+      return resolveCatalogName(form.paymentConceptId || defaultPaymentConceptId || '', paymentConceptOptions)
+    },
+    [defaultPaymentConceptId, form.paymentConceptId, paymentConceptOptions, requestSummary?.conceptName, resolveCatalogName],
+  )
+
+  const buildSchoolAddress = useCallback(
+    (details: typeof schoolInfo | null) => {
+      if (!details) return ''
+      const streetLine = [details.street, details.ext_number, details.int_number].filter(Boolean).join(' ')
+      const localityLine = [details.suburb, details.locality, details.municipality, details.state].filter(Boolean).join(', ')
+      return [streetLine, localityLine].filter(Boolean).join(' · ')
+    },
+    [],
+  )
+
+  const resolveCycleLabel = useCallback(() => {
+    const cycle = studentInfo?.generation || ''
+    if (typeof cycle === 'string' && cycle.trim()) {
+      const trimmed = cycle.trim()
+      return trimmed.length > 12 ? trimmed.slice(-12) : trimmed
+    }
+
+    if (typeof requestSummary?.tuitionLabel === 'string' && requestSummary.tuitionLabel.trim()) {
+      const label = requestSummary.tuitionLabel.trim()
+      return label.length > 12 ? label.slice(-12) : label
+    }
+
+    return ''
+  }, [requestSummary?.tuitionLabel, studentInfo?.generation])
+
+  const isDesktopEnvironment = useCallback(async () => {
+    const availability = await getPrintingAvailability()
+    if (availability.available) return true
+
+    if (typeof window !== 'undefined' && typeof window.pos === 'object' && window.pos) {
+      return true
+    }
+
+    return false
+  }, [])
+
+  const sendTicketToBridge = useCallback(async (payload: { title: string; lines: string[]; footer?: string }) => {
+    if (typeof window === 'undefined' || !window.pos) {
+      return { ok: false, message: 'POS bridge not available' }
+    }
+
+    const bridge = window.pos
+
+    if (typeof bridge.printTicket === 'function') {
+      const response = await bridge.printTicket(payload)
+      const normalized =
+        typeof response === 'boolean'
+          ? { success: response }
+          : response ?? { success: false }
+      const ok = normalized.success ?? normalized.ok ?? false
+      return { ok, message: normalized.error || normalized.message || null }
+    }
+
+    if (typeof (bridge as Record<string, unknown>).send === 'function') {
+      try {
+        await (bridge as unknown as { send: (channel: string, data: unknown) => void }).send('print-ticket', payload)
+        return { ok: true }
+      } catch (sendError) {
+        const message = sendError instanceof Error ? sendError.message : 'Unknown print error'
+        return { ok: false, message }
+      }
+    }
+
+    return { ok: false, message: 'Print ticket is not supported in this environment.' }
+  }, [])
+
+  const promptAndPrintTicket = useCallback(async () => {
+    const desktop = await isDesktopEnvironment()
+    if (!desktop) return
+
+    const confirmation = await Swal.fire({
+      icon: 'question',
+      title: 'Print receipt?',
+      text: 'Do you want to print the payment receipt?',
+      showCancelButton: true,
+      confirmButtonText: 'Print',
+      cancelButtonText: 'Not now',
+      reverseButtons: true,
+    })
+
+    if (!confirmation.isConfirmed) return
+
+    const [resolvedSchoolDetails, availability] = await Promise.all([
+      ensureSchoolDetails(),
+      getPrintingAvailability(),
+    ])
+
+    if (!availability.available && !window.pos) {
+      Swal.fire({
+        icon: 'error',
+        title: t('defaultError'),
+        text: 'Printing is not available in this environment.',
+      })
+      return
+    }
+
+    const conceptName = resolveConceptName() || '-'
+    const paymentThroughName = resolvePaymentThroughName() || '-'
+    const tuitionLabel = requestSummary?.tuitionLabel ?? formatMonthLabel(form.paymentMonth || defaultPaymentMonth)
+    const amountValue = Number(form.amount || 0)
+    const amountText = currencyFormatter.format(amountValue || 0)
+    const schoolName = resolvedSchoolDetails?.commercial_name || resolvedSchoolDetails?.name || schoolDetails?.commercial_name || schoolDetails?.name || user?.school_name || '-'
+    const address = buildSchoolAddress(resolvedSchoolDetails ?? schoolDetails ?? null) || '-'
+    const phone = (resolvedSchoolDetails?.phone_number ?? schoolDetails?.phone_number) || '-'
+    const dateTime = formatMexicoCityDateTime()
+    const studentName = studentInfo?.fullName || '-'
+    const scholarLevel = studentInfo?.scholarLevel || '-'
+    const gradeGroup = studentInfo?.gradeGroup || '-'
+    const reference = studentInfo?.reference || '-'
+    const cycleLabel = resolveCycleLabel() || '-'
+    const comments = (form.comments || '').trim() || '-'
+    const monthLabel = tuitionLabel || '-'
+    const paymentDateLabel = formatMexicoCityDateTime()
+    const formattedAmountLine = amountText.padStart(32)
+
+    const lines = [
+      centerText(schoolName),
+      `Address: ${address}`,
+      `Tel: ${phone}`,
+      `Datetime: ${dateTime}`,
+      '--------------------------------',
+      centerText(conceptName),
+      `Alumno: ${studentName}`,
+      `Nivel: ${scholarLevel}`,
+      `Grado/Grupo: ${gradeGroup}`,
+      `Forma de pago: ${paymentThroughName}`,
+      `Fecha de pago: ${paymentDateLabel}`,
+      `Referencia: ${reference}`,
+      `Mes: ${monthLabel}`,
+      `Ciclo escolar: ${cycleLabel}`,
+      formattedAmountLine,
+      '--------------------------------',
+      `Comentarios: ${comments}`,
+    ]
+
+    const ticketPayload = {
+      title: schoolName,
+      lines,
+      footer: ' ',
+    }
+
+    const result = await sendTicketToBridge(ticketPayload)
+
+    if (!result.ok) {
+      Swal.fire({
+        icon: 'error',
+        title: t('defaultError'),
+        text: result.message || 'Could not send print job.',
+      })
+    }
+  }, [
+    buildSchoolAddress,
+    currencyFormatter,
+    defaultPaymentMonth,
+    ensureSchoolDetails,
+    form.amount,
+    form.comments,
+    form.paymentMonth,
+    isDesktopEnvironment,
+    requestSummary?.tuitionLabel,
+    resolveConceptName,
+    resolveCycleLabel,
+    resolvePaymentThroughName,
+    schoolDetails,
+    sendTicketToBridge,
+    studentInfo?.fullName,
+    studentInfo?.gradeGroup,
+    studentInfo?.reference,
+    studentInfo?.scholarLevel,
+    t,
+    user?.school_name,
   ])
 
   const handleChange = <K extends keyof PaymentFormState>(
@@ -211,6 +499,7 @@ export function PaymentRegistrationModal({
 
       setSuccessMessage(t('paymentRegisterSuccess'))
       onSuccess?.()
+      await promptAndPrintTicket()
     } catch (submitError) {
       const message =
         submitError instanceof Error

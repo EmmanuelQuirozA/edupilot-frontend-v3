@@ -24,12 +24,22 @@ export interface PosTestPrintResult {
   details?: unknown
 }
 
+export interface PosTicketPayload {
+  title: string
+  lines: string[]
+  footer?: string
+}
+
 export interface PosBridge {
   getCapabilities?: () => PosCapabilities | Promise<PosCapabilities>
   listPrinters?: () => PosPrinterDescriptor[] | string[] | Promise<PosPrinterDescriptor[] | string[]>
   getPrinterSettings?: () => PosPrinterSettings | string | null | Promise<PosPrinterSettings | string | null>
   setSelectedPrinter?: (printerName: string) => unknown | Promise<unknown>
   testPrint?: (printerName?: string) => PosTestPrintResult | Promise<PosTestPrintResult>
+  printTicket?: (payload: PosTicketPayload) =>
+    | { success?: boolean; ok?: boolean; error?: string | null; message?: string | null }
+    | boolean
+    | Promise<{ success?: boolean; ok?: boolean; error?: string | null; message?: string | null } | boolean>
 }
 
 declare global {
