@@ -31,6 +31,9 @@ export function PrinterSettingsSection() {
     cutPaddingMm,
     updateCutPaddingMm,
     cutPaddingUpdating,
+    normalizeAccents,
+    updateNormalizeAccents,
+    normalizeAccentsUpdating,
   } = usePrinterSettings()
 
   const availabilityText = useMemo(() => {
@@ -47,7 +50,14 @@ export function PrinterSettingsSection() {
   }, [availabilityReason, t])
 
   const disabled =
-    loading || !available || saving || testing || paperWidthUpdating || cutPaddingUpdating || printers.length === 0
+    loading ||
+    !available ||
+    saving ||
+    testing ||
+    paperWidthUpdating ||
+    cutPaddingUpdating ||
+    normalizeAccentsUpdating ||
+    printers.length === 0
 
   const paperWidthOptions = PAPER_WIDTH_OPTIONS_MM.map((value) => {
     const labelMap: Record<number, string> = {
@@ -148,6 +158,25 @@ export function PrinterSettingsSection() {
                 disabled={disabled}
               />
               <div className="form-text">{t('cutPaddingHelper')}</div>
+            </div>
+
+            <div className="form-check form-switch">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="normalizeAccentsToggle"
+                checked={normalizeAccents}
+                onChange={(event) => {
+                  const nextValue = event.target.checked
+                  void updateNormalizeAccents(nextValue)
+                }}
+                disabled={disabled}
+              />
+              <label className="form-check-label fw-semibold" htmlFor="normalizeAccentsToggle">
+                {t('normalizeAccentsLabel')}
+              </label>
+              <div className="form-text">{t('normalizeAccentsHelper')}</div>
             </div>
 
             {error ? <div className="alert alert-danger mb-0">{error}</div> : null}

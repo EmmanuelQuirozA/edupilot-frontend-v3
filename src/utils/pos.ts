@@ -4,6 +4,7 @@ const POS_DEBUG_LOGGING_ENABLED = true // Toggle to disable POS bridge debug log
 export const PAPER_WIDTH_OPTIONS_MM = [58, 80, 57, 76, 112] as const
 export const DEFAULT_PAPER_WIDTH_MM = 58
 export const DEFAULT_CUT_PADDING_MM = 8
+export const DEFAULT_NORMALIZE_ACCENTS = false
 
 const debugPosLog = (...args: unknown[]) => {
   if (!POS_DEBUG_LOGGING_ENABLED) return
@@ -15,6 +16,16 @@ export const parsePaperWidthMm = (value: unknown): number | null => {
   if (typeof value === 'string') {
     const parsed = Number.parseFloat(value)
     if (Number.isFinite(parsed)) return parsed
+  }
+  return null
+}
+
+export const parseNormalizeAccents = (value: unknown): boolean | null => {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (['true', '1', 'yes', 'y'].includes(normalized)) return true
+    if (['false', '0', 'no', 'n'].includes(normalized)) return false
   }
   return null
 }
@@ -38,6 +49,18 @@ export const extractPaperWidthFromSettings = (settings: unknown): number | null 
 
     const widthFromAlias = parsePaperWidthMm((settings as { paperWidth?: unknown }).paperWidth)
     if (widthFromAlias !== null) return widthFromAlias
+  }
+
+  return null
+}
+
+export const extractNormalizeAccentsFromSettings = (settings: unknown): boolean | null => {
+  if (!settings) return null
+  if (typeof settings === 'string') return parseNormalizeAccents(settings)
+
+  if (typeof settings === 'object') {
+    const normalizeValue = parseNormalizeAccents((settings as { normalizeAccents?: unknown }).normalizeAccents)
+    if (normalizeValue !== null) return normalizeValue
   }
 
   return null
@@ -107,6 +130,17 @@ export async function persistCutPaddingToBridge(cutPaddingMm: number): Promise<v
     throw new Error('Updating cut padding is not supported in this environment.')
 
   await bridge.setCutPaddingMm(cutPaddingMm)
+}
+
+export async function persistNormalizeAccentsToBridge(normalizeAccents: boolean): Promise<void> {
+  if (typeof window === 'undefined' || !window.pos) throw new Error('POS bridge is not available on window.')
+
+  const bridge = window.pos
+
+  if (typeof bridge.setNormalizeAccents !== 'function')
+    throw new Error('Updating normalize accents is not supported in this environment.')
+
+  await bridge.setNormalizeAccents(normalizeAccents)
 }
 
 const extractPrintingAvailability = (capabilities?: PosCapabilities | null): boolean | null => {

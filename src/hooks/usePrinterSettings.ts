@@ -8,10 +8,13 @@ import type {
 } from '../types/pos'
 import {
   DEFAULT_CUT_PADDING_MM,
+  DEFAULT_NORMALIZE_ACCENTS,
   DEFAULT_PAPER_WIDTH_MM,
+  extractNormalizeAccentsFromSettings,
   extractCutPaddingFromSettings,
   extractPaperWidthFromSettings,
   getPrintingAvailability,
+  persistNormalizeAccentsToBridge,
   persistCutPaddingToBridge,
   persistPaperWidthToBridge,
 } from '../utils/pos'
@@ -42,6 +45,9 @@ export interface UsePrinterSettingsResult {
   cutPaddingMm: number
   updateCutPaddingMm: (cutPaddingMm: number) => Promise<void>
   cutPaddingUpdating: boolean
+  normalizeAccents: boolean
+  updateNormalizeAccents: (normalizeAccents: boolean) => Promise<void>
+  normalizeAccentsUpdating: boolean
 }
 
 const getBridge = (): PosBridge | undefined => (typeof window === 'undefined' ? undefined : window.pos)
@@ -126,6 +132,8 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
   const [paperWidthUpdating, setPaperWidthUpdating] = useState(false)
   const [cutPaddingMm, setCutPaddingMm] = useState<number>(DEFAULT_CUT_PADDING_MM)
   const [cutPaddingUpdating, setCutPaddingUpdating] = useState(false)
+  const [normalizeAccents, setNormalizeAccents] = useState<boolean>(DEFAULT_NORMALIZE_ACCENTS)
+  const [normalizeAccentsUpdating, setNormalizeAccentsUpdating] = useState(false)
 
   const resetStatus = useCallback(() => {
     setError(null)
@@ -154,6 +162,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         setSelected(null)
         setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
         setCutPaddingMm(DEFAULT_CUT_PADDING_MM)
+        setNormalizeAccents(DEFAULT_NORMALIZE_ACCENTS)
         setLoading(false)
         return
       }
@@ -180,6 +189,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         setSelected(null)
         setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
         setCutPaddingMm(DEFAULT_CUT_PADDING_MM)
+        setNormalizeAccents(DEFAULT_NORMALIZE_ACCENTS)
         setLoading(false)
         return
       }
@@ -203,10 +213,12 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         const savedPrinterName = parsePrinterSettings(printerSettingsRaw)?.trim() || null
         const savedPaperWidth = extractPaperWidthFromSettings(printerSettingsRaw)
         const savedCutPadding = extractCutPaddingFromSettings(printerSettingsRaw)
+        const savedNormalizeAccents = extractNormalizeAccentsFromSettings(printerSettingsRaw)
 
         setPrinters(normalizedPrinters)
         setPaperWidthMm(savedPaperWidth ?? DEFAULT_PAPER_WIDTH_MM)
         setCutPaddingMm(savedCutPadding ?? DEFAULT_CUT_PADDING_MM)
+        setNormalizeAccents(savedNormalizeAccents ?? DEFAULT_NORMALIZE_ACCENTS)
 
         const initialSelection = findPrinterSelection(normalizedPrinters, savedPrinterName)
         setSelected(initialSelection)
@@ -216,6 +228,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         setSelected(null)
         setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
         setCutPaddingMm(DEFAULT_CUT_PADDING_MM)
+        setNormalizeAccents(DEFAULT_NORMALIZE_ACCENTS)
       } finally {
         setLoading(false)
       }
@@ -366,6 +379,36 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     [available, resetStatus],
   )
 
+  const updateNormalizeAccents = useCallback(
+    async (nextValue: boolean) => {
+      resetStatus()
+      setNormalizeAccents(nextValue)
+      const bridge = getBridge()
+
+      if (!bridge || !available) {
+        setError('Printing is not available in this environment.')
+        return
+      }
+
+      if (typeof bridge.setNormalizeAccents !== 'function') {
+        setError('Updating normalize accents is not supported in this app.')
+        return
+      }
+
+      setNormalizeAccentsUpdating(true)
+
+      try {
+        await persistNormalizeAccentsToBridge(nextValue)
+        setSuccess('Normalize accents saved.')
+      } catch (persistError) {
+        setError(persistError instanceof Error ? persistError.message : 'Failed to save normalize accents.')
+      } finally {
+        setNormalizeAccentsUpdating(false)
+      }
+    },
+    [available, resetStatus],
+  )
+
   return {
     available,
     availabilityReason,
@@ -386,6 +429,9 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     cutPaddingMm,
     updateCutPaddingMm,
     cutPaddingUpdating,
+    normalizeAccents,
+    updateNormalizeAccents,
+    normalizeAccentsUpdating,
   }
 }
 
