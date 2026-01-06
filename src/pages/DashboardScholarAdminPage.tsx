@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE_URL } from '../config'
 import { createCurrencyFormatter } from '../utils/currencyFormatter'
-import { BalanceRechargeModal } from '../components/payments/BalanceRechargeModal'
+import UsersBalanceRechargeModal, { type UsersBalanceSearchItem } from '../components/payments/UsersBalanceRechargeModal'
 import { ManualPaymentModal } from './PaymentsFinancePage/components/ManualPaymentModal'
 import {
   CreatePaymentRequestModal,
@@ -59,6 +59,7 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
   const [paymentRequestForm, setPaymentRequestForm] = useState({ ...initialPaymentRequestFormState })
   const [applyScope, setApplyScope] = useState<ApplyScope>('school')
   const [selectedStudent, setSelectedStudent] = useState<SelectedStudent | null>(null)
+  const [selectedRechargeUser, setSelectedRechargeUser] = useState<UsersBalanceSearchItem | null>(null)
   const [paymentRequestError, setPaymentRequestError] = useState<string | null>(null)
   const [isSavingRequest, setIsSavingRequest] = useState(false)
 
@@ -139,6 +140,19 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
   const pendingAmount = pendingTotals?.pendingTotalAmount ?? 0
   const pendingStudents = pendingTotals?.studentsWithPendingCount ?? 0
 
+  const buildRechargeUserFromStudent = (student: SelectedStudent | null): UsersBalanceSearchItem | null => {
+    if (!student) return null
+    return {
+      user_id: Number(student.student_id),
+      full_name: student.full_name,
+      role_name: 'Student',
+      generation: student.generation || null,
+      scholar_level_name: student.scholar_level_name || null,
+      grade_group: student.grade_group || null,
+      balance: 0,
+    }
+  }
+
   const frequentActions = [
     {
       title: 'Registrar Pago',
@@ -152,7 +166,10 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
       description: 'Abono a cuenta',
       icon: 'bi-wallet2',
       variant: 'success',
-      onClick: () => setRechargeModalOpen(true),
+      onClick: () => {
+        setSelectedRechargeUser(buildRechargeUserFromStudent(selectedStudent))
+        setRechargeModalOpen(true)
+      },
     },
     {
       title: 'Nueva Solicitud',
@@ -199,14 +216,6 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
       handlePaymentRequestClose()
     }, 400)
   }
-
-  const rechargeUser = useMemo(() => ({
-    userId: selectedStudent?.student_id ?? '0',
-    fullName: selectedStudent?.full_name ?? 'Alumno seleccionado',
-    group: selectedStudent?.grade_group,
-    level: selectedStudent?.scholar_level_name,
-    balance: 0,
-  }), [selectedStudent])
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')}>
@@ -329,12 +338,15 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
         onSuccess={() => setPaymentModalOpen(false)}
       />
 
-      <BalanceRechargeModal
+      <UsersBalanceRechargeModal
         isOpen={isRechargeModalOpen}
-        close={() => setRechargeModalOpen(false)}
-        onClose={() => setRechargeModalOpen(false)}
-        user={rechargeUser}
+        onClose={() => {
+          setRechargeModalOpen(false)
+          setSelectedRechargeUser(null)
+        }}
+        user={selectedRechargeUser}
         onSuccess={() => setRechargeModalOpen(false)}
+        lang={locale}
       />
 
       <CreatePaymentRequestModal
