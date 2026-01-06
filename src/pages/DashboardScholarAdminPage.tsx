@@ -4,8 +4,8 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE_URL } from '../config'
 import { createCurrencyFormatter } from '../utils/currencyFormatter'
-import { PaymentRegistrationModal } from '../components/payments/PaymentRegistrationModal'
 import { BalanceRechargeModal } from '../components/payments/BalanceRechargeModal'
+import { ManualPaymentModal } from './PaymentsFinancePage/components/ManualPaymentModal'
 import {
   CreatePaymentRequestModal,
   type ApplyScope,
@@ -322,18 +322,11 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
         </div>
       </div>
 
-      <PaymentRegistrationModal
+      <ManualPaymentModal
         isOpen={isPaymentModalOpen}
+        lang={locale}
         onClose={() => setPaymentModalOpen(false)}
-        studentId={Number(selectedStudent?.student_id ?? 0)}
         onSuccess={() => setPaymentModalOpen(false)}
-        studentInfo={{
-          fullName: selectedStudent?.full_name ?? null,
-          gradeGroup: selectedStudent?.grade_group ?? null,
-          scholarLevel: selectedStudent?.scholar_level_name ?? null,
-          generation: selectedStudent?.generation ?? null,
-          reference: selectedStudent?.register_id ?? null,
-        }}
       />
 
       <BalanceRechargeModal
