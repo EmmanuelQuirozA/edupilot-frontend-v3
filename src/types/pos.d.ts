@@ -14,6 +14,8 @@ export interface PosPrinterSettings {
   selectedPrinterName?: string | null
   printerName?: string | null
   paperWidthMm?: number | string | null
+  cutPaddingMm?: number | string | null
+  normalizeAccents?: boolean | string | null
   [key: string]: unknown
 }
 
@@ -39,6 +41,8 @@ export interface PosBridge {
   setSelectedPrinter?: (printerName: string) => unknown | Promise<unknown>
   getPaperWidthMm?: () => number | Promise<number>
   setPaperWidthMm?: (paperWidthMm: number) => unknown | Promise<unknown>
+  setCutPaddingMm?: (cutPaddingMm: number) => unknown | Promise<unknown>
+  setNormalizeAccents?: (normalizeAccents: boolean) => unknown | Promise<unknown>
   testPrint?: (printerName?: string) => PosTestPrintResult | Promise<PosTestPrintResult>
   printTicket?: (payload: PosTicketPayload) =>
     | { success?: boolean; ok?: boolean; error?: string | null; message?: string | null }

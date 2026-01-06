@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { usePrinterSettings } from '../hooks/usePrinterSettings'
-import { DEFAULT_PAPER_WIDTH_MM, PAPER_WIDTH_OPTIONS_MM } from '../utils/pos'
+import { DEFAULT_CUT_PADDING_MM, DEFAULT_PAPER_WIDTH_MM, PAPER_WIDTH_OPTIONS_MM } from '../utils/pos'
 
 const AvailabilityMessage: Record<string, (fallback: string) => string> = {
   browser: (fallback) => fallback,
@@ -28,6 +28,12 @@ export function PrinterSettingsSection() {
     paperWidthMm,
     updatePaperWidthMm,
     paperWidthUpdating,
+    cutPaddingMm,
+    updateCutPaddingMm,
+    cutPaddingUpdating,
+    normalizeAccents,
+    updateNormalizeAccents,
+    normalizeAccentsUpdating,
   } = usePrinterSettings()
 
   const availabilityText = useMemo(() => {
@@ -43,7 +49,15 @@ export function PrinterSettingsSection() {
     return resolver ? resolver(fallback) : availabilityReason || fallback
   }, [availabilityReason, t])
 
-  const disabled = loading || !available || saving || testing || paperWidthUpdating || printers.length === 0
+  const disabled =
+    loading ||
+    !available ||
+    saving ||
+    testing ||
+    paperWidthUpdating ||
+    cutPaddingUpdating ||
+    normalizeAccentsUpdating ||
+    printers.length === 0
 
   const paperWidthOptions = PAPER_WIDTH_OPTIONS_MM.map((value) => {
     const labelMap: Record<number, string> = {
@@ -122,6 +136,47 @@ export function PrinterSettingsSection() {
                 ))}
               </select>
               <div className="form-text">{t('paperWidthHelper')}</div>
+            </div>
+
+            <div>
+              <label className="form-label fw-semibold" htmlFor="cutPaddingInput">
+                {t('cutPaddingLabel')}
+              </label>
+              <input
+                id="cutPaddingInput"
+                type="number"
+                min={0}
+                max={20}
+                step={1}
+                className="form-control"
+                value={cutPaddingMm}
+                onChange={(event) => {
+                  const parsed = Number.parseFloat(event.target.value)
+                  const nextValue = Number.isFinite(parsed) ? Math.min(20, Math.max(0, parsed)) : DEFAULT_CUT_PADDING_MM
+                  void updateCutPaddingMm(nextValue)
+                }}
+                disabled={disabled}
+              />
+              <div className="form-text">{t('cutPaddingHelper')}</div>
+            </div>
+
+            <div className="form-check form-switch">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="normalizeAccentsToggle"
+                checked={normalizeAccents}
+                onChange={(event) => {
+                  const nextValue = event.target.checked
+                  void updateNormalizeAccents(nextValue)
+                }}
+                disabled={disabled}
+              />
+              <label className="form-check-label fw-semibold" htmlFor="normalizeAccentsToggle">
+                {t('normalizeAccentsLabel')}
+              </label>
+              <div className="form-text">{t('normalizeAccentsHelper')}</div>
             </div>
 
             {error ? <div className="alert alert-danger mb-0">{error}</div> : null}
