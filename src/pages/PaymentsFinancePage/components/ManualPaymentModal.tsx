@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import PaymentConceptSelect from '../../../components/catalog/PaymentConceptSelect'
 import PaymentThroughSelect from '../../../components/catalog/PaymentThroughSelect'
 import StudentSearchDropdown, { type StudentSearchItem } from '../../../components/StudentSearchDropdown'
 import { API_BASE_URL } from '../../../config'
 import { useAuth } from '../../../context/AuthContext'
 import { useLanguage } from '../../../context/LanguageContext'
+import { createCurrencyFormatter } from '../../../utils/currencyFormatter'
+import { useCatalogOptions } from '../../../hooks/useCatalogOptions'
+import { usePaymentReceiptPrinter } from '../../../hooks/usePaymentReceiptPrinter'
+import { buildSchoolAddress, fetchSchoolDetails, resolveSchoolName } from '../../../utils/schoolDetails'
+import { formatMexicoCityDateTime, formatMonthLabel } from '../../../utils/receipt/buildPaymentReceipt'
 
-declare const Swal: any
+declare const Swal: {
+  fire: (options: Record<string, unknown>) => Promise<{ isConfirmed?: boolean }>
+}
 
 interface ManualPaymentModalProps {
   isOpen: boolean
@@ -29,7 +36,7 @@ const buildJsonPart = (payload: Record<string, unknown>) =>
   new Blob([JSON.stringify(payload)], { type: 'application/json' })
 
 export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: ManualPaymentModalProps) {
-  const { token } = useAuth()
+  const { token, user } = useAuth()
   const { t, locale } = useLanguage()
   const [form, setForm] = useState<ManualPaymentFormState>({
     student: null,
@@ -44,6 +51,15 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const shouldShowPaymentMonth = form.paymentConceptId === 1
+  const [schoolDetails, setSchoolDetails] = useState<Awaited<ReturnType<typeof fetchSchoolDetails>> | null>(null)
+  const { options: paymentThroughOptions } = useCatalogOptions('catalog/payment-through', lang)
+  const { options: paymentConceptOptions } = useCatalogOptions('catalog/payment-concepts', lang)
+  const { promptAndPrintReceipt } = usePaymentReceiptPrinter()
+
+  const currencyFormatter = useMemo(
+    () => createCurrencyFormatter('es-MX', 'MXN'),
+    [],
+  )
 
   useEffect(() => {
     if (!isOpen) return
@@ -72,6 +88,43 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
       paymentMonth: value === 1 ? prev.paymentMonth : '',
     }))
   }
+
+  const ensureSchoolDetails = useCallback(async () => {
+    if (schoolDetails) return schoolDetails
+    if (!user?.school_id || !token) return null
+
+    try {
+      const fetched = await fetchSchoolDetails({
+        schoolId: user.school_id,
+        token,
+        lang,
+      })
+      setSchoolDetails(fetched)
+      return fetched
+    } catch (fetchError) {
+      console.error('Failed to fetch school details', fetchError)
+      return null
+    }
+  }, [lang, schoolDetails, token, user?.school_id])
+
+  const resolveCatalogName = useCallback(
+    (id: number | '', options: { id: number; name: string }[]) => {
+      if (!id) return ''
+      const match = options.find((option) => option.id === id)
+      return match?.name ?? ''
+    },
+    [],
+  )
+
+  const resolvePaymentThroughName = useCallback(
+    () => resolveCatalogName(form.paymentThroughId, paymentThroughOptions),
+    [form.paymentThroughId, paymentThroughOptions, resolveCatalogName],
+  )
+
+  const resolveConceptName = useCallback(
+    () => resolveCatalogName(form.paymentConceptId, paymentConceptOptions),
+    [form.paymentConceptId, paymentConceptOptions, resolveCatalogName],
+  )
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -157,6 +210,43 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
 
       setSuccessMessage(t('paymentRegisterSuccess'))
       onSuccess?.()
+      const resolvedSchoolDetails = await ensureSchoolDetails()
+      const schoolName = resolveSchoolName(resolvedSchoolDetails, user?.school_name || '-')
+      const address = buildSchoolAddress(resolvedSchoolDetails) || '-'
+      const phone = resolvedSchoolDetails?.phone_number || '-'
+      const conceptName = resolveConceptName() || '-'
+      const paymentThroughName = resolvePaymentThroughName() || '-'
+      const studentName = form.student?.full_name || '-'
+      const scholarLevel = form.student?.scholar_level_name || '-'
+      const gradeGroup = form.student?.grade_group || '-'
+      const reference = form.student?.payment_reference || '-'
+      const monthLabel = shouldShowPaymentMonth ? formatMonthLabel(form.paymentMonth) || '-' : '-'
+      const cycleLabel = form.student?.generation ? form.student.generation.slice(-12) : '-'
+      const comments = (form.comments || '').trim() || '-'
+      const paymentDateLabel = formatMexicoCityDateTime()
+      const amountText = currencyFormatter.format(amountValue)
+
+      await promptAndPrintReceipt({
+        school: {
+          name: schoolName,
+          address,
+          phone,
+        },
+        payment: {
+          conceptLabel: conceptName,
+          studentName,
+          scholarLevel,
+          gradeGroup,
+          paymentMethodLabel: paymentThroughName,
+          paymentDateLabel,
+          reference,
+          monthLabel,
+          cycleLabel,
+          comments,
+          amountText,
+        },
+        now: new Date(),
+      })
     } catch (submitError) {
       const message =
         submitError instanceof Error ? submitError.message : t('paymentRegisterUnexpected')
