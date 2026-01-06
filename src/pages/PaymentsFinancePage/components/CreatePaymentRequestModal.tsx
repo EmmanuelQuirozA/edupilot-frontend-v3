@@ -66,10 +66,8 @@ export function CreatePaymentRequestModal({
           <div className="modal-content" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <div>
+                <h5 className="modal-title fw-semibold">{t('addPaymentRequest')}</h5>
                 <p className="text-muted mb-1">{t('paymentRequestModalDescription')}</p>
-                <h5 className="modal-title">{t('addPaymentRequest')}</h5>
-                <h5 className="modal-title fw-semibold">Agregar solicitud de pago</h5>
-                <p className="text-muted mb-1">Agrega solicitudes de pago para tus estudiantes.</p>
               </div>
               <button type="button" className="btn-close" aria-label={t('close')} onClick={onClose}></button>
             </div>
