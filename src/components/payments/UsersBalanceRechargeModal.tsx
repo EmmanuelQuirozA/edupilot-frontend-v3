@@ -57,8 +57,8 @@ export function UsersBalanceRechargeModal({
   }, [close, onClose, submitting])
 
   const currencyFormatter = useMemo(
-    () => createCurrencyFormatter('es-MX', currency),
-    [currency],
+    () => createCurrencyFormatter(locale, currency),
+    [currency, locale],
   )
 
   useEffect(() => {
@@ -80,18 +80,18 @@ export function UsersBalanceRechargeModal({
     setError(null)
 
     if (!selectedUser?.user_id) {
-      setError('Selecciona un usuario para recargar.')
+      setError(t('selectRechargeUser'))
       return
     }
 
     if (!token) {
-      setError('No hay sesión activa.')
+      setError(t('noActiveSession'))
       return
     }
 
     const amountValue = Number(amount)
     if (!Number.isFinite(amountValue) || amountValue <= 0) {
-      setError('Ingresa un monto válido.')
+      setError(t('enterValidAmount'))
       return
     }
 
@@ -112,7 +112,7 @@ export function UsersBalanceRechargeModal({
       const payload: RechargeResponse = await result.json()
 
       if (!result.ok || payload?.success === false) {
-        throw new Error(payload?.message || 'No se pudo procesar la recarga.')
+        throw new Error(payload?.message || t('rechargeError'))
       }
 
       if (!payload?.success) {
@@ -136,7 +136,7 @@ export function UsersBalanceRechargeModal({
         onClose()
       }
     } catch (submitError) {
-      setError((submitError as Error)?.message || 'No se pudo procesar la recarga.')
+      setError((submitError as Error)?.message || t('rechargeError'))
     } finally {
       setSubmitting(false)
     }
@@ -158,8 +158,9 @@ export function UsersBalanceRechargeModal({
           className="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="modal-content balance-modal">
+            <div className="modal-content balance-modal">
             <div className="modal-header">
+              <h5 className="modal-title">{t('addBalance')}</h5>
               <div>
                 <h5 className="modal-title fw-semibold">Añadir saldo a favor</h5>
                 <p className="mb-0 text-muted">{t('createManualPaymentDescription')}</p>
@@ -167,12 +168,12 @@ export function UsersBalanceRechargeModal({
               <button type="button" className="btn-close" aria-label="Close" onClick={handleClose} />
             </div>
             <div className="modal-body">
-              <p className="text-muted mb-3">Ingresa el monto que deseas abonar al saldo del usuario.</p>
+              <p className="text-muted mb-3">{t('addBalanceDescription')}</p>
 
               <div className="mb-4">
                 <UsersBalanceSearchDropdown
-                  label="Buscar usuario o estudiante"
-                  placeholder="Escribe el nombre para buscar"
+                  label={t('searchUserOrStudent')}
+                  placeholder={t('searchByName')}
                   onSelect={(selected) => {
                     setSelectedUser(selected as UsersBalanceSearchItem)
                     setError(null)
@@ -183,13 +184,13 @@ export function UsersBalanceRechargeModal({
                 />
               </div>
 
-              {selectedUser ? (
-                <div className="balance-modal__user-card mb-4">
-                  <h6 className="text-uppercase text-muted fw-semibold mb-3">Datos del usuario</h6>
+                {selectedUser ? (
+                  <div className="balance-modal__user-card mb-4">
+                  <h6 className="text-uppercase text-muted fw-semibold mb-3">{t('userData')}</h6>
                   <div className="row g-3">
                     <div className="col-6">
-                      <p className="balance-modal__label">Nombre</p>
-                      <p className="balance-modal__value">{selectedUser?.full_name || 'N/D'}</p>
+                      <p className="balance-modal__label">{t('name')}</p>
+                      <p className="balance-modal__value">{selectedUser?.full_name || t('noInformation')}</p>
                     </div>
                     <div className="col-6 text-end">
                       <p className="balance-modal__label">{t('balance')}</p>
@@ -200,22 +201,22 @@ export function UsersBalanceRechargeModal({
                     {student ? (
                       <>
                         <div className="col-6">
-                          <p className="balance-modal__label">Generación</p>
-                          <p className="balance-modal__value">{selectedUser?.generation || 'N/D'}</p>
+                          <p className="balance-modal__label">{t('generation')}</p>
+                          <p className="balance-modal__value">{selectedUser?.generation || t('noInformation')}</p>
                         </div>
                         <div className="col-6">
-                          <p className="balance-modal__label">Nivel escolar</p>
-                          <p className="balance-modal__value">{selectedUser?.scholar_level_name || 'N/D'}</p>
+                          <p className="balance-modal__label">{t('scholarLevel')}</p>
+                          <p className="balance-modal__value">{selectedUser?.scholar_level_name || t('noInformation')}</p>
                         </div>
                         <div className="col-6">
-                          <p className="balance-modal__label">Grupo</p>
-                          <p className="balance-modal__value">{selectedUser?.grade_group || 'N/D'}</p>
+                          <p className="balance-modal__label">{t('class')}</p>
+                          <p className="balance-modal__value">{selectedUser?.grade_group || t('noInformation')}</p>
                         </div>
                       </>
                     ) : (
                       <div className="col-6">
-                        <p className="balance-modal__label">Rol</p>
-                        <p className="balance-modal__value">{selectedUser?.role_name || 'N/D'}</p>
+                        <p className="balance-modal__label">{t('role')}</p>
+                        <p className="balance-modal__value">{selectedUser?.role_name || t('noInformation')}</p>
                       </div>
                     )}
                   </div>
@@ -226,7 +227,7 @@ export function UsersBalanceRechargeModal({
                 <div className="balance-modal__user-card">
                   <div>
                     <label htmlFor="rechargeAmount" className="form-label fw-semibold">
-                      Monto a abonar
+                      {t('topUpAmount')}
                     </label>
                     <div className="balance-recharge-modal__input">
                       <span>$</span>
@@ -271,7 +272,7 @@ export function UsersBalanceRechargeModal({
                     {t('cancel')}
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={submitting || !selectedUser}>
-                    {submitting ? 'Procesando...' : 'Confirmar recarga'}
+                    {submitting ? t('processing') : t('confirmRecharge')}
                   </button>
                 </div>
               </form>

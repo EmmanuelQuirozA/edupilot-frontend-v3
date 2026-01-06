@@ -197,8 +197,8 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
     const gradeGroup = selectedGroup.grade_group ?? ''
     const scholarLevel = selectedGroup.scholar_level_name ?? ''
 
-    return `Generación: ${generation} · Grupo: ${gradeGroup} · Nivel: ${scholarLevel}`
-  }, [selectedGroup])
+    return `${t('generation')}: ${generation} · ${t('class')}: ${gradeGroup} · ${t('level')}: ${scholarLevel}`
+  }, [selectedGroup, t])
 
   const handleCreateStudentSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -292,17 +292,17 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
             <div className="modal-header">
               <div>
                 <h5 className="modal-title">{t('createStudent')}</h5>
-                <p id="student-modal-description" className="text-muted mb-0">Ingresa la información de un nuevo alumno.</p>
+                <p id="student-modal-description" className="text-muted mb-0">{t('studentModalDescription')}</p>
               </div>
-              <button type="button" className="btn-close" aria-label="Close" onClick={handleClose} />
+              <button type="button" className="btn-close" aria-label={t('close')} onClick={handleClose} />
             </div>
             <form onSubmit={handleCreateStudentSubmit}>
               <div className="modal-body">
               <div className="row g-3">
                 
-                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">Datos personales</h4>
+                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">{t('personalData')}</h4>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Nombre(s)</label>
+                  <label className="form-label fw-semibold">{t('firstName')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -312,7 +312,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Apellido paterno</label>
+                  <label className="form-label fw-semibold">{t('lastNameFather')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -322,7 +322,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Apellido materno</label>
+                  <label className="form-label fw-semibold">{t('lastNameMother')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -333,7 +333,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Fecha de nacimiento</label>
+                  <label className="form-label fw-semibold">{t('birthDate')}</label>
                   <input
                     type="date"
                     className="form-control"
@@ -342,7 +342,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Matrícula</label>
+                  <label className="form-label fw-semibold">{t('enrollment')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -352,7 +352,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Referencia de pago</label>
+                  <label className="form-label fw-semibold">{t('paymentReference')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -361,9 +361,9 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
 
-                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">Credenciales de acceso</h4>
+                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">{t('accessCredentials')}</h4>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Correo institucional</label>
+                  <label className="form-label fw-semibold">{t('institutionalEmail')}</label>
                   <input
                     type="email"
                     className="form-control"
@@ -373,7 +373,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Usuario</label>
+                  <label className="form-label fw-semibold">{t('username')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -383,7 +383,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Contraseña</label>
+                  <label className="form-label fw-semibold">{t('password')}</label>
                   <input
                     type="password"
                     className="form-control"
@@ -393,9 +393,9 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
 
-                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">Información escolar</h4>
+                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">{t('schoolInformation')}</h4>
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Escuela</label>
+                  <label className="form-label fw-semibold">{t('school')}</label>
                   <select
                     className="form-select"
                     value={createStudentForm.school_id}
@@ -403,7 +403,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     required
                   >
                     <option value="" disabled>
-                      Selecciona una escuela
+                      {t('selectSchoolOption')}
                     </option>
                     {schoolsCatalog.map((school) => (
                       <option key={school.school_id} value={school.school_id ?? ''}>
@@ -414,7 +414,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-semibold">Grupo</label>
+                  <label className="form-label fw-semibold">{t('class')}</label>
                   <select
                     className="form-select"
                     value={createStudentForm.group_id}
@@ -422,7 +422,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                     required
                   >
                     <option value="" disabled>
-                      Selecciona un grupo
+                      {t('selectGroupOption')}
                     </option>
                     {groupsCatalog.map((group) => (
                       <option key={group.group_id} value={group.group_id ?? ''}>
@@ -435,9 +435,9 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   ) : null}
                 </div>
 
-                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">Información escolar</h4>
+                <h4 className="h6 text-primary fw-semibold mb-0 mt-4">{t('contactInformation')}</h4>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Teléfono</label>
+                  <label className="form-label fw-semibold">{t('phoneNumber')}</label>
                   <input
                     type="tel"
                     className="form-control"
@@ -446,7 +446,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">RFC</label>
+                  <label className="form-label fw-semibold">{t('taxId')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -456,7 +456,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">CURP</label>
+                  <label className="form-label fw-semibold">{t('curp')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -466,7 +466,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Correo personal</label>
+                  <label className="form-label fw-semibold">{t('personalEmail')}</label>
                   <input
                     type="email"
                     className="form-control"
@@ -476,7 +476,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Calle</label>
+                  <label className="form-label fw-semibold">{t('street')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -485,7 +485,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Número ext.</label>
+                  <label className="form-label fw-semibold">{t('extNumber')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -494,7 +494,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Número int.</label>
+                  <label className="form-label fw-semibold">{t('intNumber')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -504,7 +504,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Colonia</label>
+                  <label className="form-label fw-semibold">{t('suburb')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -513,7 +513,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Localidad</label>
+                  <label className="form-label fw-semibold">{t('locality')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -522,7 +522,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                   />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Municipio</label>
+                  <label className="form-label fw-semibold">{t('municipality')}</label>
                   <input
                     type="text"
                     className="form-control"
@@ -532,7 +532,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">Estado</label>
+                  <label className="form-label fw-semibold">{t('state')}</label>
                   <input
                     type="text"
                     className="form-control"

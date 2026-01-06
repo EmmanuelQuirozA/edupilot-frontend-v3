@@ -66,6 +66,8 @@ export function CreatePaymentRequestModal({
           <div className="modal-content" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <div>
+                <p className="text-muted mb-1">{t('paymentRequestModalDescription')}</p>
+                <h5 className="modal-title">{t('addPaymentRequest')}</h5>
                 <h5 className="modal-title fw-semibold">Agregar solicitud de pago</h5>
                 <p className="text-muted mb-1">Agrega solicitudes de pago para tus estudiantes.</p>
               </div>
@@ -83,7 +85,7 @@ export function CreatePaymentRequestModal({
                 <div className="row g-3">
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" htmlFor="apply_scope">
-                      Aplicar a
+                      {t('applyTo')}
                     </label>
                     <select
                       id="apply_scope"
@@ -91,15 +93,15 @@ export function CreatePaymentRequestModal({
                       value={applyScope}
                       onChange={(event) => onApplyScopeChange(event.target.value as ApplyScope)}
                     >
-                      <option value="school">Toda la escuela</option>
-                      <option value="group">Grupo</option>
-                      <option value="student">Estudiante</option>
+                      <option value="school">{t('allSchool')}</option>
+                      <option value="group">{t('class')}</option>
+                      <option value="student">{t('student')}</option>
                     </select>
                   </div>
 
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" htmlFor="payment_concept_id">
-                      Concepto de pago
+                      {t('payment_concept_id')}
                     </label>
                     <PaymentConceptSelect
                       id="payment_concept_id"
@@ -115,7 +117,7 @@ export function CreatePaymentRequestModal({
                   <div className="row g-3">
                     <div className="col-md-12">
                       <label className="form-label fw-semibold" htmlFor="school_id">
-                        Escuela
+                        {t('school')}
                       </label>
                       <select
                         id="school_id"
@@ -123,7 +125,7 @@ export function CreatePaymentRequestModal({
                         value={paymentRequestForm.school_id}
                         onChange={(event) => onFormChange('school_id', event.target.value)}
                       >
-                        <option value="">Selecciona una escuela</option>
+                        <option value="">{t('selectSchoolOption')}</option>
                         {schoolOptions?.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}
@@ -138,7 +140,7 @@ export function CreatePaymentRequestModal({
                   <div className="row g-3">
                     <div className="col-md-12">
                       <label className="form-label fw-semibold" htmlFor="group_id">
-                        Grupo
+                        {t('class')}
                       </label>
                       <select
                         id="group_id"
@@ -146,7 +148,7 @@ export function CreatePaymentRequestModal({
                         value={paymentRequestForm.group_id}
                         onChange={(event) => onFormChange('group_id', event.target.value)}
                       >
-                        <option value="">Selecciona un grupo</option>
+                        <option value="">{t('selectGroupOption')}</option>
                         {groupOptions?.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}
@@ -161,8 +163,8 @@ export function CreatePaymentRequestModal({
                   <div className="row g-3">
                     <div className="col-md-12">
                       <StudentSearchDropdown
-                        label="Estudiante"
-                        placeholder="Buscar alumno por nombre"
+                        label={t('student')}
+                        placeholder={t('searchStudentByName')}
                         lang={locale}
                         onSelect={onStudentSelect}
                         value={selectedStudent ? [selectedStudent] : []}
@@ -175,14 +177,14 @@ export function CreatePaymentRequestModal({
                 <div className="row g-3">
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" htmlFor="amount">
-                      Monto solicitado
+                      {t('requestedAmount')}
                     </label>
                     <input
                       id="amount"
                       className="form-control"
                       type="number"
                       inputMode="decimal"
-                      placeholder="Ej. 1200.00"
+                      placeholder="1200.00"
                       value={paymentRequestForm.amount}
                       onChange={(event) =>
                         onFormChange('amount', event.target.value === '' ? '' : Number(event.target.value))
@@ -192,7 +194,7 @@ export function CreatePaymentRequestModal({
 
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" htmlFor="pay_by">
-                      Fecha límite de pago
+                      {t('paymentDeadline')}
                     </label>
                     <input
                       id="pay_by"
@@ -207,7 +209,7 @@ export function CreatePaymentRequestModal({
                 <div className="row g-3">
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" htmlFor="late_fee">
-                      Recargo
+                      {t('late_fee')}
                     </label>
                     <input
                       id="late_fee"
@@ -224,7 +226,7 @@ export function CreatePaymentRequestModal({
 
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" htmlFor="fee_type">
-                      Tipo de recargo
+                      {t('fee_type')}
                     </label>
                     <select
                       id="fee_type"
@@ -241,7 +243,7 @@ export function CreatePaymentRequestModal({
                 <div className="row g-3">
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" htmlFor="late_fee_frequency">
-                      Frecuencia de recargo (días)
+                      {t('late_fee_frequency')}
                     </label>
                     <input
                       id="late_fee_frequency"
@@ -261,7 +263,7 @@ export function CreatePaymentRequestModal({
 
                   <div className="col-md-6">
                     <label className="form-label fw-semibold" htmlFor="payment_month">
-                      Mes de pago
+                      {t('payment_month')}
                     </label>
                     <input
                       id="payment_month"
@@ -282,19 +284,19 @@ export function CreatePaymentRequestModal({
                     onChange={(event) => onFormChange('partial_payment', event.target.checked)}
                   />
                   <label className="form-check-label" htmlFor="partial_payment">
-                    Permitir pago parcial
+                    {t('allowPartialPayment')}
                   </label>
                 </div>
 
                 <div>
                   <label className="form-label fw-semibold" htmlFor="comments">
-                    Comentarios
+                    {t('comments')}
                   </label>
                   <textarea
                     id="comments"
                     className="form-control"
                     rows={3}
-                    placeholder="Ej. Colegiatura junio nuevo"
+                    placeholder={t('commentsPlaceholder')}
                     value={paymentRequestForm.comments}
                     onChange={(event) => onFormChange('comments', event.target.value)}
                   />
@@ -302,10 +304,10 @@ export function CreatePaymentRequestModal({
 
                 <div className="d-flex align-items-center justify-content-end gap-2">
                   <button type="button" className="btn btn-link" onClick={onClose}>
-                    Cancelar
+                    {t('cancel')}
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={isSavingRequest}>
-                    {isSavingRequest ? t('saving') : 'Crear solicitudes'}
+                    {isSavingRequest ? t('saving') : t('createRequests')}
                   </button>
                 </div>
               </form>

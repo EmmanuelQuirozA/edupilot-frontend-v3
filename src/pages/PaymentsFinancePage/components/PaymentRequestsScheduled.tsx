@@ -168,46 +168,46 @@ export function PaymentRequestsScheduled({
     () => [
       {
         key: 'payment_request_scheduled_id',
-        label: 'ID',
+        label: t('id'),
         sortable: true,
       },
       {
         key: 'rule_name',
-        label: 'Regla',
+        label: t('rule'),
         sortable: true,
       },
       {
         key: 'pt_name',
-        label: 'Tipo de pago',
+        label: t('paymentType'),
         sortable: true,
       },
       {
         key: 'pot_name',
-        label: 'Periodicidad',
+        label: t('periodicity'),
         sortable: true,
       },
       {
         key: 'applies_to',
-        label: 'Aplica a',
+        label: t('appliesTo'),
         sortable: true,
       },
       {
         key: 'amount',
-        label: 'Monto',
+        label: t('amount'),
         sortable: true,
         currency: 'MXN',
       },
       {
         key: 'next_execution_date',
-        label: 'Próxima ejecución',
+        label: t('nextExecution'),
         sortable: true,
         render: (row) => formatDate(row.next_execution_date, locale, { year: 'numeric', month: 'short', day: '2-digit' }),
       },
       {
         key: 'active',
-        label: 'Activo',
+        label: t('active'),
         sortable: true,
-        render: (row) => (row.active ? 'Sí' : 'No'),
+        render: (row) => (row.active ? t('yes') : t('no')),
       },
       {
         key: 'actions',
@@ -333,7 +333,7 @@ export function PaymentRequestsScheduled({
                 onChange={(val) => setScheduledSearchTerm(val)}
                 onSubmit={handleScheduledSearchSubmit}
                 onClear={handleScheduledClearSearch}
-                placeholder="Buscar programadas"
+                placeholder={t('searchScheduledRequests')}
                 className="flex-grow-1"
                 inputClassName="w-100"
               />
@@ -350,7 +350,7 @@ export function PaymentRequestsScheduled({
                 <svg viewBox="0 0 20 20" aria-hidden="true" className="students-filter-button__icon" focusable="false">
                   <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
                 </svg>
-                <span className="fw-semibold">Filtros</span>
+                <span className="fw-semibold">{t('filters')}</span>
                 {scheduledActiveFiltersCount > 0 ? (
                   <span className="badge bg-primary rounded-pill ms-2">{scheduledActiveFiltersCount}</span>
                 ) : null}
@@ -363,7 +363,7 @@ export function PaymentRequestsScheduled({
               onClick={handleScheduledExport}
               disabled={scheduledExporting}
             >
-              {scheduledExporting ? 'Exportando...' : 'Exportar CSV'}
+              {scheduledExporting ? t('exporting') : t('exportCsv')}
             </button>
           </div>
         </div>
@@ -386,8 +386,8 @@ export function PaymentRequestsScheduled({
       />
 
       <FilterSidebar
-        title="Filtrar programadas"
-        subtitle="Aplica filtros para refinar reportes programados"
+        title={t('filterScheduledTitle')}
+        subtitle={t('filterScheduledSubtitle')}
         isOpen={scheduledFiltersOpen}
         onClose={() => setScheduledFiltersOpen(false)}
         onClear={() => {
@@ -407,7 +407,7 @@ export function PaymentRequestsScheduled({
       >
         <div className="d-flex flex-column gap-3">
           <div className="filter-sidebar__field">
-            <label htmlFor="rule_name">Regla</label>
+            <label htmlFor="rule_name">{t('rule')}</label>
             <input
               id="rule_name"
               className="form-control"
@@ -419,14 +419,14 @@ export function PaymentRequestsScheduled({
           </div>
 
           <div className="filter-sidebar__field">
-            <label htmlFor="school_id">Escuela</label>
+            <label htmlFor="school_id">{t('school')}</label>
             <select
               id="school_id"
               className="form-select"
               value={(scheduledFilters.school_id as string) ?? ''}
               onChange={(event) => setScheduledFilters((prev) => ({ ...prev, school_id: event.target.value }))}
             >
-              <option value="">Selecciona una escuela</option>
+              <option value="">{t('selectSchoolOption')}</option>
               {schoolOptions?.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -436,14 +436,14 @@ export function PaymentRequestsScheduled({
           </div>
 
           <div className="filter-sidebar__field">
-            <label htmlFor="group_id">Grupo</label>
+            <label htmlFor="group_id">{t('class')}</label>
             <select
               id="group_id"
               className="form-select"
               value={(scheduledFilters.group_id as string) ?? ''}
               onChange={(event) => setScheduledFilters((prev) => ({ ...prev, group_id: event.target.value }))}
             >
-              <option value="">Selecciona un grupo</option>
+              <option value="">{t('selectGroupOption')}</option>
               {groupOptions?.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -454,8 +454,8 @@ export function PaymentRequestsScheduled({
 
           <div className="filter-sidebar__field">
             <StudentSearchDropdown
-              label="Alumno"
-              placeholder="Buscar alumno por nombre"
+              label={t('student')}
+              placeholder={t('searchStudentByName')}
               lang={locale}
               onSelect={(student) => {
                 setScheduledFilters((prev) => ({ ...prev, student_id: String(student.student_id) }))
@@ -464,7 +464,9 @@ export function PaymentRequestsScheduled({
             />
             {scheduledFilterStudent ? (
               <div className="d-flex align-items-center justify-content-between mt-2">
-                <span className="small text-muted">Seleccionado: {scheduledFilterStudent.name}</span>
+                <span className="small text-muted">
+                  {t('selectedItem')}: {scheduledFilterStudent.name}
+                </span>
                 <button
                   type="button"
                   className="btn btn-link btn-sm text-decoration-none"
@@ -473,14 +475,14 @@ export function PaymentRequestsScheduled({
                     setScheduledFilters((prev) => ({ ...prev, student_id: '' }))
                   }}
                 >
-                  Quitar
+                  {t('remove')}
                 </button>
               </div>
             ) : null}
           </div>
 
           <div className="filter-sidebar__field">
-            <label htmlFor="due_start">Fecha inicio</label>
+            <label htmlFor="due_start">{t('start')}</label>
             <input
               id="due_start"
               className="form-control"
@@ -492,7 +494,7 @@ export function PaymentRequestsScheduled({
           </div>
 
           <div className="filter-sidebar__field">
-            <label htmlFor="due_end">Fecha fin</label>
+            <label htmlFor="due_end">{t('endDate')}</label>
             <input
               id="due_end"
               className="form-control"
@@ -510,7 +512,7 @@ export function PaymentRequestsScheduled({
               onChange={(event) => setScheduledFilters((prev) => ({ ...prev, active: event.target.checked }))}
             />
             <div>
-              <span className="filter-sidebar__checkbox-label">Solo activas</span>
+              <span className="filter-sidebar__checkbox-label">{t('onlyActive')}</span>
             </div>
           </label>
         </div>
