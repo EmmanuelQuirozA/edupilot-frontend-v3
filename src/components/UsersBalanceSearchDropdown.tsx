@@ -39,9 +39,7 @@ interface UsersBalanceSearchDropdownProps {
   onClear?: () => void
 }
 
-interface UsersBalanceSearchResponse {
-  content: UsersBalanceSearchItem[]
-}
+type UsersBalanceSearchResponse = UsersBalanceSearchItem[] | { content: UsersBalanceSearchItem[] }
 
 const buildUsersBalanceUrl = (query: string, lang: string, size: number) => {
   const params = new URLSearchParams()
@@ -83,7 +81,6 @@ export function UsersBalanceSearchDropdown({
   const dropdownRef = useRef<HTMLDivElement | null>(null)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
   const [selectedName, setSelectedName] = useState('')
-  const [userDetail, setUserDetail] = useState('')
 
   const fetchUrl = useMemo(
     () => buildUsersBalanceUrl(query, lang || locale || 'es', pageSize),
@@ -95,20 +92,10 @@ export function UsersBalanceSearchDropdown({
     if (selected) {
       const selectedItem = selected as UsersBalanceSearchItem
       const displayName = selectedItem.full_name || (selected as { name?: string }).name || ''
-      const balanceText = `${t('balance')}: $${(selectedItem.balance ?? 0).toFixed(2)}`
-      const detailParts = isStudentRole(selectedItem.role_name)
-        ? [
-            selectedItem.grade_group || (selected as { grade_group?: string }).grade_group,
-            selectedItem.generation || (selected as { generation?: string }).generation,
-            selectedItem.scholar_level_name || (selected as { scholar_level_name?: string }).scholar_level_name,
-          ].filter(Boolean)
-        : []
 
       setSelectedName(displayName)
-      setUserDetail(detailParts.length ? detailParts.join(' • ') : balanceText)
     } else {
       setSelectedName('')
-      setUserDetail('')
     }
   }, [t, value])
 
@@ -128,7 +115,8 @@ export function UsersBalanceSearchDropdown({
           throw new Error('No se pudo cargar el catálogo de usuarios')
         }
         const data: UsersBalanceSearchResponse = await response.json()
-        setResults(Array.isArray(data.content) ? data.content : [])
+        const content = Array.isArray(data) ? data : data.content
+        setResults(Array.isArray(content) ? content : [])
       })
       .catch((fetchError) => {
         if (controller.signal.aborted) return
@@ -187,9 +175,6 @@ export function UsersBalanceSearchDropdown({
         onClick={() => {
           onSelect(user)
           setSelectedName(user.full_name)
-          setUserDetail(
-            student ? detailParts.join(' • ') : balanceText,
-          )
           setIsOpen(false)
           setQuery('')
         }}
@@ -210,7 +195,7 @@ export function UsersBalanceSearchDropdown({
     <div className="student-search" ref={dropdownRef}>
       <label className="form-label d-flex flex-column gap-1 w-100">
         <div className="d-flex justify-content-between align-items-center">
-          <span className="text-muted small">{label}</span>
+          <span className="fw-semibold">{label}</span>
           {selectedName && onClear ? (
             <button
               type="button"
@@ -218,7 +203,6 @@ export function UsersBalanceSearchDropdown({
               onClick={() => {
                 onClear()
                 setSelectedName('')
-                setUserDetail('')
               }}
             >
               {t('clear')}
@@ -244,9 +228,6 @@ export function UsersBalanceSearchDropdown({
             {selectedName || placeholder || t('searchStudentByName')}
           </span>
         </button>
-        <div className="d-flex align-items-center justify-content-between mt-2">
-          <span className="small text-muted">{userDetail}</span>
-        </div>
       </label>
 
       {isOpen && (

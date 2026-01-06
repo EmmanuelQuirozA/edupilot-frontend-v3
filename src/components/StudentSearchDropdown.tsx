@@ -197,7 +197,7 @@ export function StudentSearchDropdown({
     <div className="student-search" ref={dropdownRef}>
       <label className="form-label d-flex flex-column gap-1 w-100">
         <div className="d-flex justify-content-between align-items-center">
-          <span className="text-muted small">{label}</span>
+          <span className="fw-semibold">{label}</span>
           {selectedName && onClear ? (
             <button
               type="button"

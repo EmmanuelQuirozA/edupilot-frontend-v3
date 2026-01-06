@@ -64,10 +64,10 @@ export function CreatePaymentRequestModal({
       <div className="modal fade show d-block" tabIndex={-1} role="dialog" onClick={onClose}>
         <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
           <div className="modal-content" onClick={(event) => event.stopPropagation()}>
-            <div className="modal-header border-0 pb-0">
+            <div className="modal-header">
               <div>
+                <h5 className="modal-title fw-semibold">Agregar solicitud de pago</h5>
                 <p className="text-muted mb-1">Agrega solicitudes de pago para tus estudiantes.</p>
-                <h5 className="modal-title">Agregar solicitud de pago</h5>
               </div>
               <button type="button" className="btn-close" aria-label={t('close')} onClick={onClose}></button>
             </div>
