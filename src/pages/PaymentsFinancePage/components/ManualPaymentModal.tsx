@@ -196,7 +196,7 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">{t('amount')}</label>
+                    <label className="form-label fw-semibold">{t('amount')}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -208,7 +208,7 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">{t('paymentThrough')}</label>
+                    <label className="form-label fw-semibold">{t('paymentThrough')}</label>
                     <PaymentThroughSelect
                       value={form.paymentThroughId}
                       onChange={(value) => handleChange('paymentThroughId', value)}
@@ -216,7 +216,7 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">{t('paymentType')}</label>
+                    <label className="form-label fw-semibold">{t('paymentType')}</label>
                     <PaymentConceptSelect
                       value={form.paymentConceptId}
                       onChange={handlePaymentConceptChange}
@@ -225,7 +225,7 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
                   </div>
                   {shouldShowPaymentMonth && (
                     <div className="col-md-6">
-                      <label className="form-label">{t('paymentMonth')}</label>
+                      <label className="form-label fw-semibold">{t('paymentMonth')}</label>
                       <input
                         type="month"
                         value={form.paymentMonth}
@@ -235,7 +235,7 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
                     </div>
                   )}
                   <div className="col-12">
-                    <label className="form-label">{t('comments')}</label>
+                    <label className="form-label fw-semibold">{t('comments')}</label>
                     <textarea
                       className="form-control"
                       rows={3}
@@ -245,7 +245,7 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
                     />
                   </div>
                   <div className="col-12">
-                    <label className="form-label">{t('receipt')}</label>
+                    <label className="form-label fw-semibold">{t('receipt')}</label>
                     <label className="payment-file-drop w-100" htmlFor="manual-payment-receipt">
                       <span className="text-muted">{t('uploadReceipt')}</span>
                       <input

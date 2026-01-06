@@ -54,10 +54,10 @@ export function CreatePaymentScheduleModal({
       <div className="modal fade show d-block" tabIndex={-1} role="dialog" onClick={onClose}>
         <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
           <div className="modal-content" onClick={(event) => event.stopPropagation()}>
-            <div className="modal-header border-0 pb-0">
+            <div className="modal-header">
               <div>
-                <p className="text-muted mb-1">Agrega reglas para generar solicitudes de pago.</p>
                 <h5 className="modal-title">Agendar solicitud de pago</h5>
+                <p className="text-muted mb-1">Agrega reglas para generar solicitudes de pago.</p>
               </div>
               <button type="button" className="btn-close" aria-label={t('close')} onClick={onClose}></button>
             </div>

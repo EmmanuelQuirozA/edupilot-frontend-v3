@@ -161,6 +161,10 @@ export function UsersBalanceRechargeModal({
             <div className="modal-content balance-modal">
             <div className="modal-header">
               <h5 className="modal-title">{t('addBalance')}</h5>
+              <div>
+                <h5 className="modal-title fw-semibold">Añadir saldo a favor</h5>
+                <p className="mb-0 text-muted">{t('createManualPaymentDescription')}</p>
+              </div>
               <button type="button" className="btn-close" aria-label="Close" onClick={handleClose} />
             </div>
             <div className="modal-body">
