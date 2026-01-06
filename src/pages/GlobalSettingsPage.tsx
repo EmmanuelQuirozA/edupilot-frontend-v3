@@ -23,13 +23,13 @@ interface School {
 
 interface GlobalSettingsPageProps {
   onNavigate: (path: string) => void
-  initialTab?: 'modules' | 'roles'
+  initialTab?: 'settings' | 'modules' | 'roles'
 }
 
-export function GlobalSettingsPage({ onNavigate, initialTab = 'modules' }: GlobalSettingsPageProps) {
+export function GlobalSettingsPage({ onNavigate, initialTab = 'settings' }: GlobalSettingsPageProps) {
   const { token, } = useAuth()
   const { locale, t } = useLanguage()
-  const [activeTab, setActiveTab] = useState<'modules' | 'roles'>(initialTab)
+  const [activeTab, setActiveTab] = useState<'settings' | 'modules' | 'roles'>(initialTab)
   const [modules, setModules] = useState<ModuleAccess[]>([])
   const [modulesLoading, setModulesLoading] = useState(false)
   
@@ -144,6 +144,14 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'modules' }: Globa
               <div className="nav nav-tabs card-header-tabs mt-3 mt-md-0" role="tablist">
                 <button
                   type="button"
+                  className={`nav-link ${activeTab === 'settings' ? 'active' : ''}`}
+                  role="tab"
+                  onClick={() => setActiveTab('settings')}
+                >
+                  {t('settingsTab')}
+                </button>
+                <button
+                  type="button"
                   className={`nav-link ${activeTab === 'modules' ? 'active' : ''}`}
                   role="tab"
                   onClick={() => setActiveTab('modules')}
@@ -163,14 +171,17 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'modules' }: Globa
           </div>
         </div>
 
-        {activeTab === 'modules' ? (
+        {activeTab === 'settings' ? (
+          <>
+            <PrinterSettingsSection />
+          </>
+        ) : activeTab === 'modules' ? (
           <div className="card shadow-sm">
             <div className="card-header border-bottom-0 bg-white">
               <h3 className="h5 mb-1">{t('modulesCatalogTab')}</h3>
             </div>
             <div className="card-body">
               <div className="mb-4">
-                <PrinterSettingsSection />
               </div>
 
               <div className="d-flex justify-content-between align-items-center mb-3">
