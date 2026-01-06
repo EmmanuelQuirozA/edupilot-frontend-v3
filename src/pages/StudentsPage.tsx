@@ -206,7 +206,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     () => [
       {
         key: 'full_name',
-        label: 'Alumno',
+        label: t('student'),
         sortable: true,
         render: (student) => (
           <StudentTableCell
@@ -222,13 +222,13 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
       },
       {
         key: 'generation',
-        label: 'Generación',
+        label: t('generation'),
         sortable: true,
         render: (student) => <span className="text-muted">{student.generation}</span>,
       },
       {
         key: 'grade_group',
-        label: 'Grupo',
+        label: t('class'),
         sortable: true,
         render: (student) => (
           <div className="d-flex flex-column">
@@ -239,7 +239,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
       },
       {
         key: 'user_status',
-        label: 'Estatus',
+        label: t('status'),
         sortable: true,
         render: (student) => (
           <span className={`badge ${student.status ? 'bg-success-subtle text-success' : 'bg-secondary'}`}>
@@ -329,31 +329,31 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     () => [
       {
         key: 'grade_group',
-        label: 'Grupo',
+        label: t('class'),
         sortable: true,
       },
       {
         key: 'generation',
-        label: 'Generación',
+        label: t('generation'),
         sortable: true,
       },
       {
         key: 'scholar_level_name',
-        label: 'Nivel académico',
+        label: t('scholarLevel'),
         sortable: true,
       },
       {
         key: 'enabled',
-        label: 'Estatus',
+        label: t('status'),
         sortable: true,
         render: (group) => (
           <span className={`badge ${group.enabled ? 'bg-success-subtle text-success' : 'bg-secondary'}`}>
-            {group.enabled ? 'Activo' : 'Inactivo'}
+            {group.enabled ? t('active') : t('inactive')}
           </span>
         ),
       },
     ],
-    [],
+    [t],
   )
 
   if (studentsPermissionsLoading || !studentsPermissionsLoaded || groupsPermissionsLoading || !groupsPermissionsLoaded) {
@@ -430,7 +430,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
                   <svg viewBox="0 0 20 20" aria-hidden="true" className="students-filter-button__icon" focusable="false">
                     <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
                   </svg>
-                  <span className="fw-semibold">Filtros</span>
+                  <span className="fw-semibold">{t('filters')}</span>
                 </button>
                 <div className="d-flex align-items-center gap-2">
                   {canCreateStudents ? (
@@ -509,7 +509,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
                   >
                     <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
                   </svg>
-                  <span className="fw-semibold">Filtros</span>
+                  <span className="fw-semibold">{t('filters')}</span>
                 </button>
                 {canCreateGroups ? (
                   <>

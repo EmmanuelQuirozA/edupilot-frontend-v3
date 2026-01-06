@@ -155,15 +155,15 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
 
   const frequentActions = [
     {
-      title: 'Registrar Pago',
-      description: 'Cobro en ventanilla',
+      title: 'recordPayment',
+      description: 'recordPaymentDescription',
       icon: 'bi-cash-coin',
       variant: 'primary',
       onClick: () => setPaymentModalOpen(true),
     },
     {
-      title: 'Recargar Saldo',
-      description: 'Abono a cuenta',
+      title: 'rechargeBalance',
+      description: 'rechargeBalanceDescription',
       icon: 'bi-wallet2',
       variant: 'success',
       onClick: () => {
@@ -172,15 +172,15 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
       },
     },
     {
-      title: 'Nueva Solicitud',
-      description: 'Crear cargo manual',
+      title: 'newPaymentRequest',
+      description: 'newPaymentRequestDescription',
       icon: 'bi-ui-checks-grid',
       variant: 'info',
       onClick: () => setPaymentRequestModalOpen(true),
     },
     {
-      title: 'Inscribir Alumno',
-      description: 'Nuevo ingreso',
+      title: 'enrollStudent',
+      description: 'enrollStudentDescription',
       icon: 'bi-person-plus',
       variant: 'secondary',
       onClick: () => setStudentModalOpen(true),
@@ -221,9 +221,9 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
     <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')}>
       <div className="scholar-dashboard__header">
         <div>
-          <p className="text-uppercase text-muted mb-1">Panel académico</p>
+          <p className="text-uppercase text-muted mb-1">{t('academicPanelLabel')}</p>
           <h2 className="fw-bold mb-2">{t('welcome')}</h2>
-          <p className="text-muted mb-0">Gestiona cobros, matrículas y metas del ciclo en tiempo real.</p>
+          <p className="text-muted mb-0">{t('academicPanelDescription')}</p>
         </div>
       </div>
 
@@ -235,7 +235,7 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
 
       {isLoading ? (
         <div className="alert alert-info" role="alert">
-          Cargando datos del panel académico...
+          {t('academicLoading')}
         </div>
       ) : null}
 
@@ -246,12 +246,16 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
               <div className="scholar-dashboard__stat-card scholar-dashboard__stat-card--income">
                 <div className="d-flex justify-content-between align-items-start mb-3">
                   <div>
-                    <p className="text-uppercase text-muted fw-semibold mb-1">Ingresos del mes</p>
+                    <p className="text-uppercase text-muted fw-semibold mb-1">{t('monthIncomeTitle')}</p>
                     <h3 className="fw-bold mb-0">{currencyFormatter.format(monthIncome)}</h3>
                   </div>
-                  <span className="scholar-dashboard__stat-pill scholar-dashboard__stat-pill--success">{monthProgress}% de la meta mensual</span>
+                  <span className="scholar-dashboard__stat-pill scholar-dashboard__stat-pill--success">
+                    {monthProgress}% {t('monthlyGoalProgress')}
+                  </span>
                 </div>
-                <p className="text-muted small mb-3">Meta: {currencyFormatter.format(monthGoal)}</p>
+                <p className="text-muted small mb-3">
+                  {t('goal')}: {currencyFormatter.format(monthGoal)}
+                </p>
                 <div className="scholar-dashboard__progress">
                   <div className="scholar-dashboard__progress-bar" style={{ width: `${monthProgress}%` }} />
                 </div>
@@ -262,7 +266,7 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
               <div className="scholar-dashboard__stat-card scholar-dashboard__stat-card--pending">
                 <div className="d-flex justify-content-between align-items-start mb-2">
                   <div>
-                    <p className="text-uppercase text-muted fw-semibold mb-1">Por cobrar (vencido)</p>
+                    <p className="text-uppercase text-muted fw-semibold mb-1">{t('overdueToCollect')}</p>
                     <h3 className="fw-bold mb-0">{currencyFormatter.format(pendingAmount)}</h3>
                   </div>
                   <span className="scholar-dashboard__stat-icon" aria-hidden>
@@ -270,8 +274,10 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
                   </span>
                 </div>
                 <div className="d-flex align-items-center gap-2">
-                  <span className="scholar-dashboard__chip scholar-dashboard__chip--danger">{pendingStudents} Alumnos</span>
-                  <span className="text-muted small">con deuda activa</span>
+                  <span className="scholar-dashboard__chip scholar-dashboard__chip--danger">
+                    {pendingStudents} {t('students')}
+                  </span>
+                  <span className="text-muted small">{t('studentsWithDebt')}</span>
                 </div>
               </div>
             </div>
@@ -280,9 +286,11 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
               <div className="scholar-dashboard__population-card">
                 <div className="d-flex justify-content-between align-items-start mb-3">
                   <div>
-                    <p className="text-uppercase text-light mb-1">Población escolar</p>
-                    <h5 className="text-white mb-0">Alumnos Activos</h5>
-                    <p className="text-white-50 mb-0">Ciclo 2025-2026</p>
+                    <p className="text-uppercase text-light mb-1">{t('schoolPopulation')}</p>
+                    <h5 className="text-white mb-0">{t('activeStudents')}</h5>
+                    <p className="text-white-50 mb-0">
+                      {t('cycleLabel')} 2025-2026
+                    </p>
                   </div>
                   <div className="scholar-dashboard__population-badge">
                     <span>{totalStudents}</span>
@@ -305,7 +313,7 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
             <div className="card-body">
               <div className="d-flex align-items-center gap-2 mb-3">
                 <span className="scholar-dashboard__eyebrow-icon" aria-hidden>⚡</span>
-                <p className="text-uppercase text-muted fw-semibold mb-0">Acciones frecuentes</p>
+                <p className="text-uppercase text-muted fw-semibold mb-0">{t('frequentActions')}</p>
               </div>
 
               <div className="scholar-dashboard__actions-grid">
@@ -315,15 +323,15 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
                     type="button"
                     className={`scholar-dashboard__action-tile scholar-dashboard__action-tile--${action.variant}`}
                     onClick={action.onClick}
-                  >
-                    <div className="scholar-dashboard__action-icon">
-                      <i className={`bi ${action.icon}`} aria-hidden />
-                    </div>
-                    <div>
-                      <p className="fw-semibold mb-1">{action.title}</p>
-                      <p className="text-muted mb-0">{action.description}</p>
-                    </div>
-                  </button>
+                    >
+                      <div className="scholar-dashboard__action-icon">
+                        <i className={`bi ${action.icon}`} aria-hidden />
+                      </div>
+                      <div>
+                        <p className="fw-semibold mb-1">{t(action.title)}</p>
+                        <p className="text-muted mb-0">{t(action.description)}</p>
+                      </div>
+                    </button>
                 ))}
               </div>
             </div>
