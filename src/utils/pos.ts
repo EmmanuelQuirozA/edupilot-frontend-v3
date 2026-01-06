@@ -3,6 +3,7 @@ import type { PosCapabilities } from '../types/pos'
 const POS_DEBUG_LOGGING_ENABLED = true // Toggle to disable POS bridge debug logging when no longer needed.
 export const PAPER_WIDTH_OPTIONS_MM = [58, 80, 57, 76, 112] as const
 export const DEFAULT_PAPER_WIDTH_MM = 58
+export const DEFAULT_CUT_PADDING_MM = 8
 
 const debugPosLog = (...args: unknown[]) => {
   if (!POS_DEBUG_LOGGING_ENABLED) return
@@ -10,6 +11,15 @@ const debugPosLog = (...args: unknown[]) => {
 }
 
 export const parsePaperWidthMm = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const parsed = Number.parseFloat(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return null
+}
+
+export const parseCutPaddingMm = (value: unknown): number | null => {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string') {
     const parsed = Number.parseFloat(value)
@@ -28,6 +38,21 @@ export const extractPaperWidthFromSettings = (settings: unknown): number | null 
 
     const widthFromAlias = parsePaperWidthMm((settings as { paperWidth?: unknown }).paperWidth)
     if (widthFromAlias !== null) return widthFromAlias
+  }
+
+  return null
+}
+
+export const extractCutPaddingFromSettings = (settings: unknown): number | null => {
+  if (!settings) return null
+  if (typeof settings === 'string') return parseCutPaddingMm(settings)
+
+  if (typeof settings === 'object') {
+    const paddingFromSettings = parseCutPaddingMm((settings as { cutPaddingMm?: unknown }).cutPaddingMm)
+    if (paddingFromSettings !== null) return paddingFromSettings
+
+    const paddingFromAlias = parseCutPaddingMm((settings as { cutPadding?: unknown }).cutPadding)
+    if (paddingFromAlias !== null) return paddingFromAlias
   }
 
   return null
@@ -71,6 +96,17 @@ export async function persistPaperWidthToBridge(paperWidthMm: number): Promise<v
     throw new Error('Updating paper width is not supported in this environment.')
 
   await bridge.setPaperWidthMm(paperWidthMm)
+}
+
+export async function persistCutPaddingToBridge(cutPaddingMm: number): Promise<void> {
+  if (typeof window === 'undefined' || !window.pos) throw new Error('POS bridge is not available on window.')
+
+  const bridge = window.pos
+
+  if (typeof bridge.setCutPaddingMm !== 'function')
+    throw new Error('Updating cut padding is not supported in this environment.')
+
+  await bridge.setCutPaddingMm(cutPaddingMm)
 }
 
 const extractPrintingAvailability = (capabilities?: PosCapabilities | null): boolean | null => {

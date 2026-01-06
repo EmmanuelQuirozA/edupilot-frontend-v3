@@ -7,9 +7,12 @@ import type {
   PosTestPrintResult,
 } from '../types/pos'
 import {
+  DEFAULT_CUT_PADDING_MM,
   DEFAULT_PAPER_WIDTH_MM,
+  extractCutPaddingFromSettings,
   extractPaperWidthFromSettings,
   getPrintingAvailability,
+  persistCutPaddingToBridge,
   persistPaperWidthToBridge,
 } from '../utils/pos'
 
@@ -36,6 +39,9 @@ export interface UsePrinterSettingsResult {
   paperWidthMm: number
   updatePaperWidthMm: (paperWidthMm: number) => Promise<void>
   paperWidthUpdating: boolean
+  cutPaddingMm: number
+  updateCutPaddingMm: (cutPaddingMm: number) => Promise<void>
+  cutPaddingUpdating: boolean
 }
 
 const getBridge = (): PosBridge | undefined => (typeof window === 'undefined' ? undefined : window.pos)
@@ -118,6 +124,8 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
   const [reloadToken, setReloadToken] = useState(0)
   const [paperWidthMm, setPaperWidthMm] = useState<number>(DEFAULT_PAPER_WIDTH_MM)
   const [paperWidthUpdating, setPaperWidthUpdating] = useState(false)
+  const [cutPaddingMm, setCutPaddingMm] = useState<number>(DEFAULT_CUT_PADDING_MM)
+  const [cutPaddingUpdating, setCutPaddingUpdating] = useState(false)
 
   const resetStatus = useCallback(() => {
     setError(null)
@@ -145,6 +153,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         setPrinters([])
         setSelected(null)
         setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
+        setCutPaddingMm(DEFAULT_CUT_PADDING_MM)
         setLoading(false)
         return
       }
@@ -170,6 +179,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         setPrinters([])
         setSelected(null)
         setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
+        setCutPaddingMm(DEFAULT_CUT_PADDING_MM)
         setLoading(false)
         return
       }
@@ -192,9 +202,11 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         const normalizedPrinters = normalizePrinters(Array.isArray(printerListRaw) ? printerListRaw : [])
         const savedPrinterName = parsePrinterSettings(printerSettingsRaw)?.trim() || null
         const savedPaperWidth = extractPaperWidthFromSettings(printerSettingsRaw)
+        const savedCutPadding = extractCutPaddingFromSettings(printerSettingsRaw)
 
         setPrinters(normalizedPrinters)
         setPaperWidthMm(savedPaperWidth ?? DEFAULT_PAPER_WIDTH_MM)
+        setCutPaddingMm(savedCutPadding ?? DEFAULT_CUT_PADDING_MM)
 
         const initialSelection = findPrinterSelection(normalizedPrinters, savedPrinterName)
         setSelected(initialSelection)
@@ -203,6 +215,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         setPrinters([])
         setSelected(null)
         setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
+        setCutPaddingMm(DEFAULT_CUT_PADDING_MM)
       } finally {
         setLoading(false)
       }
@@ -323,6 +336,36 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     [available, resetStatus],
   )
 
+  const updateCutPaddingMm = useCallback(
+    async (nextPadding: number) => {
+      resetStatus()
+      setCutPaddingMm(nextPadding)
+      const bridge = getBridge()
+
+      if (!bridge || !available) {
+        setError('Printing is not available in this environment.')
+        return
+      }
+
+      if (typeof bridge.setCutPaddingMm !== 'function') {
+        setError('Updating cut padding is not supported in this app.')
+        return
+      }
+
+      setCutPaddingUpdating(true)
+
+      try {
+        await persistCutPaddingToBridge(nextPadding)
+        setSuccess('Cut padding saved.')
+      } catch (persistError) {
+        setError(persistError instanceof Error ? persistError.message : 'Failed to save cut padding.')
+      } finally {
+        setCutPaddingUpdating(false)
+      }
+    },
+    [available, resetStatus],
+  )
+
   return {
     available,
     availabilityReason,
@@ -340,6 +383,9 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     paperWidthMm,
     updatePaperWidthMm,
     paperWidthUpdating,
+    cutPaddingMm,
+    updateCutPaddingMm,
+    cutPaddingUpdating,
   }
 }
 
