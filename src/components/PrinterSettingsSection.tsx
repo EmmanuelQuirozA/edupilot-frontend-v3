@@ -16,24 +16,21 @@ export function PrinterSettingsSection() {
     available,
     availabilityReason,
     printers,
-    selected,
+    draftSettings,
     setSelected,
+    setPaperWidthMm,
+    setCutPaddingInput,
+    finalizeCutPaddingInput,
+    setNormalizeAccents,
     loading,
     saving,
     testing,
     error,
     success,
+    cutPaddingError,
+    hasPendingChanges,
     save,
     testPrint,
-    paperWidthMm,
-    updatePaperWidthMm,
-    paperWidthUpdating,
-    cutPaddingMm,
-    updateCutPaddingMm,
-    cutPaddingUpdating,
-    normalizeAccents,
-    updateNormalizeAccents,
-    normalizeAccentsUpdating,
   } = usePrinterSettings()
 
   const availabilityText = useMemo(() => {
@@ -54,9 +51,6 @@ export function PrinterSettingsSection() {
     !available ||
     saving ||
     testing ||
-    paperWidthUpdating ||
-    cutPaddingUpdating ||
-    normalizeAccentsUpdating ||
     printers.length === 0
 
   const paperWidthOptions = PAPER_WIDTH_OPTIONS_MM.map((value) => {
@@ -100,7 +94,7 @@ export function PrinterSettingsSection() {
                 <select
                   id="printerSelect"
                   className="form-select"
-                  value={selected ?? ''}
+                  value={draftSettings.selectedPrinterName ?? ''}
                   onChange={(event) => setSelected(event.target.value || null)}
                   disabled={disabled}
                 >
@@ -122,10 +116,10 @@ export function PrinterSettingsSection() {
               <select
                 id="paperWidthSelect"
                 className="form-select"
-                value={paperWidthMm}
+                value={draftSettings.paperWidthMm}
                 onChange={(event) => {
                   const parsed = Number.parseInt(event.target.value, 10)
-                  void updatePaperWidthMm(Number.isNaN(parsed) ? DEFAULT_PAPER_WIDTH_MM : parsed)
+                  setPaperWidthMm(Number.isNaN(parsed) ? DEFAULT_PAPER_WIDTH_MM : parsed)
                 }}
                 disabled={disabled}
               >
@@ -148,15 +142,15 @@ export function PrinterSettingsSection() {
                 min={0}
                 max={20}
                 step={1}
-                className="form-control"
-                value={cutPaddingMm}
+                className={`form-control${cutPaddingError ? ' is-invalid' : ''}`}
+                value={draftSettings.cutPaddingMm}
                 onChange={(event) => {
-                  const parsed = Number.parseFloat(event.target.value)
-                  const nextValue = Number.isFinite(parsed) ? Math.min(20, Math.max(0, parsed)) : DEFAULT_CUT_PADDING_MM
-                  void updateCutPaddingMm(nextValue)
+                  setCutPaddingInput(event.target.value)
                 }}
+                onBlur={finalizeCutPaddingInput}
                 disabled={disabled}
               />
+              {cutPaddingError ? <div className="invalid-feedback">{t(cutPaddingError)}</div> : null}
               <div className="form-text">{t('cutPaddingHelper')}</div>
             </div>
 
@@ -166,10 +160,10 @@ export function PrinterSettingsSection() {
                 type="checkbox"
                 role="switch"
                 id="normalizeAccentsToggle"
-                checked={normalizeAccents}
+                checked={draftSettings.normalizeAccents}
                 onChange={(event) => {
                   const nextValue = event.target.checked
-                  void updateNormalizeAccents(nextValue)
+                  setNormalizeAccents(nextValue)
                 }}
                 disabled={disabled}
               />
@@ -179,11 +173,19 @@ export function PrinterSettingsSection() {
               <div className="form-text">{t('normalizeAccentsHelper')}</div>
             </div>
 
+            {hasPendingChanges ? (
+              <div className="alert alert-warning mb-0">{t('printerUnsavedChanges')}</div>
+            ) : null}
             {error ? <div className="alert alert-danger mb-0">{error}</div> : null}
             {success ? <div className="alert alert-success mb-0">{success}</div> : null}
 
             <div className="d-flex flex-wrap gap-2">
-              <button type="button" className="btn btn-primary" onClick={save} disabled={disabled || !selected || saving}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={save}
+                disabled={disabled || !draftSettings.selectedPrinterName || saving || !hasPendingChanges}
+              >
                 {saving ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden />
