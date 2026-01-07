@@ -45,9 +45,15 @@ export interface PosBridge {
   setNormalizeAccents?: (normalizeAccents: boolean) => unknown | Promise<unknown>
   testPrint?: (printerName?: string) => PosTestPrintResult | Promise<PosTestPrintResult>
   printTicket?: (payload: PosTicketPayload) =>
-    | { success?: boolean; ok?: boolean; error?: string | null; message?: string | null }
+    | { success?: boolean; ok?: boolean; error?: string | null; message?: string | null; failureReason?: string | null }
     | boolean
-    | Promise<{ success?: boolean; ok?: boolean; error?: string | null; message?: string | null } | boolean>
+    | Promise<{
+        success?: boolean
+        ok?: boolean
+        error?: string | null
+        message?: string | null
+        failureReason?: string | null
+      } | boolean>
 }
 
 declare global {

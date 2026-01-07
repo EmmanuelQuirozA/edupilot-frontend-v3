@@ -15,7 +15,6 @@ import {
   extractPaperWidthFromSettings,
   getPrintingAvailability,
   persistNormalizeAccentsToBridge,
-  persistCutPaddingToBridge,
   persistPaperWidthToBridge,
 } from '../utils/pos'
 
@@ -368,7 +367,16 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
       setCutPaddingUpdating(true)
 
       try {
-        await persistCutPaddingToBridge(nextPadding)
+        await bridge.setCutPaddingMm(nextPadding)
+        console.log('Saved cutPaddingMm', nextPadding)
+
+        if (typeof bridge.getPrinterSettings !== 'function') {
+          throw new Error('Fetching printer settings is not supported in this app.')
+        }
+
+        const updatedSettings = await bridge.getPrinterSettings()
+        const readBackPadding = extractCutPaddingFromSettings(updatedSettings)
+        setCutPaddingMm(readBackPadding ?? nextPadding)
         setSuccess('Cut padding saved.')
       } catch (persistError) {
         setError(persistError instanceof Error ? persistError.message : 'Failed to save cut padding.')
