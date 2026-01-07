@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type {
   PosBridge,
   PosCapabilities,
@@ -14,6 +14,7 @@ import {
   extractCutPaddingFromSettings,
   extractPaperWidthFromSettings,
   getPrintingAvailability,
+  persistCutPaddingToBridge,
   persistNormalizeAccentsToBridge,
   persistPaperWidthToBridge,
 } from '../utils/pos'
@@ -24,32 +25,56 @@ export interface PrinterOption {
   isDefault?: boolean
 }
 
+interface PrinterSettingsState {
+  selectedPrinterName: string | null
+  paperWidthMm: number
+  cutPaddingMm: number
+  normalizeAccents: boolean
+}
+
+interface DraftPrinterSettingsState {
+  selectedPrinterName: string | null
+  paperWidthMm: number
+  cutPaddingMm: string
+  normalizeAccents: boolean
+}
+
 export interface UsePrinterSettingsResult {
   available: boolean
   availabilityReason: string | null
   printers: PrinterOption[]
-  selected: string | null
+  savedSettings: PrinterSettingsState
+  draftSettings: DraftPrinterSettingsState
   setSelected: (name: string | null) => void
+  setPaperWidthMm: (paperWidthMm: number) => void
+  setCutPaddingInput: (cutPaddingInput: string) => void
+  finalizeCutPaddingInput: () => void
+  setNormalizeAccents: (normalizeAccents: boolean) => void
   loading: boolean
   saving: boolean
   testing: boolean
   error: string | null
   success: string | null
+  cutPaddingError: CutPaddingErrorKey | null
+  hasPendingChanges: boolean
   refresh: () => void
   save: () => Promise<void>
   testPrint: () => Promise<void>
-  paperWidthMm: number
-  updatePaperWidthMm: (paperWidthMm: number) => Promise<void>
-  paperWidthUpdating: boolean
-  cutPaddingMm: number
-  updateCutPaddingMm: (cutPaddingMm: number) => Promise<void>
-  cutPaddingUpdating: boolean
-  normalizeAccents: boolean
-  updateNormalizeAccents: (normalizeAccents: boolean) => Promise<void>
-  normalizeAccentsUpdating: boolean
 }
 
 const getBridge = (): PosBridge | undefined => (typeof window === 'undefined' ? undefined : window.pos)
+
+const DEFAULT_SETTINGS: PrinterSettingsState = {
+  selectedPrinterName: null,
+  paperWidthMm: DEFAULT_PAPER_WIDTH_MM,
+  cutPaddingMm: DEFAULT_CUT_PADDING_MM,
+  normalizeAccents: DEFAULT_NORMALIZE_ACCENTS,
+}
+
+const createDraftSettings = (savedSettings: PrinterSettingsState): DraftPrinterSettingsState => ({
+  ...savedSettings,
+  cutPaddingMm: Number.isFinite(savedSettings.cutPaddingMm) ? String(savedSettings.cutPaddingMm) : '',
+})
 
 const parsePrinterSettings = (settings: PosPrinterSettings | string | null | undefined): string | null => {
   if (!settings) return null
@@ -116,23 +141,54 @@ const extractPrintingCapabilityReason = (capabilities?: PosCapabilities | null):
   return null
 }
 
+type CutPaddingErrorKey = 'cutPaddingInvalid' | 'cutPaddingRange'
+
+const normalizeCutPaddingInput = (
+  value: string,
+): { value: number | null; error: CutPaddingErrorKey | null } => {
+  if (value.trim() === '') {
+    return { value: null, error: null }
+  }
+
+  const parsed = Number.parseFloat(value)
+  if (!Number.isFinite(parsed)) {
+    return { value: null, error: 'cutPaddingInvalid' }
+  }
+
+  if (parsed < 0 || parsed > 20) {
+    return { value: null, error: 'cutPaddingRange' }
+  }
+
+  return { value: parsed, error: null }
+}
+
+const areSettingsEqual = (saved: PrinterSettingsState, draft: DraftPrinterSettingsState): boolean => {
+  const parsed = normalizeCutPaddingInput(draft.cutPaddingMm).value
+  const cutPaddingValue = parsed ?? saved.cutPaddingMm
+
+  return (
+    saved.selectedPrinterName === draft.selectedPrinterName &&
+    saved.paperWidthMm === draft.paperWidthMm &&
+    saved.cutPaddingMm === cutPaddingValue &&
+    saved.normalizeAccents === draft.normalizeAccents
+  )
+}
+
 export const usePrinterSettings = (): UsePrinterSettingsResult => {
   const [available, setAvailable] = useState(false)
   const [availabilityReason, setAvailabilityReason] = useState<string | null>(null)
   const [printers, setPrinters] = useState<PrinterOption[]>([])
-  const [selected, setSelected] = useState<string | null>(null)
+  const [savedSettings, setSavedSettings] = useState<PrinterSettingsState>(DEFAULT_SETTINGS)
+  const [draftSettings, setDraftSettings] = useState<DraftPrinterSettingsState>(
+    createDraftSettings(DEFAULT_SETTINGS),
+  )
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [cutPaddingError, setCutPaddingError] = useState<CutPaddingErrorKey | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
-  const [paperWidthMm, setPaperWidthMm] = useState<number>(DEFAULT_PAPER_WIDTH_MM)
-  const [paperWidthUpdating, setPaperWidthUpdating] = useState(false)
-  const [cutPaddingMm, setCutPaddingMm] = useState<number>(DEFAULT_CUT_PADDING_MM)
-  const [cutPaddingUpdating, setCutPaddingUpdating] = useState(false)
-  const [normalizeAccents, setNormalizeAccents] = useState<boolean>(DEFAULT_NORMALIZE_ACCENTS)
-  const [normalizeAccentsUpdating, setNormalizeAccentsUpdating] = useState(false)
 
   const resetStatus = useCallback(() => {
     setError(null)
@@ -143,9 +199,77 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     setReloadToken((value) => value + 1)
   }, [])
 
-  const handleSelect = useCallback((value: string | null) => {
-    setSelected(value)
+  const setSelected = useCallback((value: string | null) => {
+    setDraftSettings((current) => ({
+      ...current,
+      selectedPrinterName: value,
+    }))
   }, [])
+
+  const setPaperWidthMm = useCallback((paperWidthMm: number) => {
+    setDraftSettings((current) => ({
+      ...current,
+      paperWidthMm,
+    }))
+  }, [])
+
+  const setCutPaddingInput = useCallback((cutPaddingInput: string) => {
+    setCutPaddingError(null)
+    setDraftSettings((current) => ({
+      ...current,
+      cutPaddingMm: cutPaddingInput,
+    }))
+  }, [])
+
+  const finalizeCutPaddingInput = useCallback(() => {
+    const { value, error: validationError } = normalizeCutPaddingInput(draftSettings.cutPaddingMm)
+
+    if (validationError) {
+      setCutPaddingError(validationError)
+      setDraftSettings((current) => ({
+        ...current,
+        cutPaddingMm: String(savedSettings.cutPaddingMm),
+      }))
+      return
+    }
+
+    if (value === null) {
+      setDraftSettings((current) => ({
+        ...current,
+        cutPaddingMm: String(savedSettings.cutPaddingMm),
+      }))
+      return
+    }
+
+    setCutPaddingError(null)
+    setDraftSettings((current) => ({
+      ...current,
+      cutPaddingMm: String(value),
+    }))
+  }, [draftSettings.cutPaddingMm, savedSettings.cutPaddingMm])
+
+  const setNormalizeAccents = useCallback((normalizeAccents: boolean) => {
+    setDraftSettings((current) => ({
+      ...current,
+      normalizeAccents,
+    }))
+  }, [])
+
+  const buildSettingsFromBridge = useCallback(
+    (printerList: PrinterOption[], settingsRaw: PosPrinterSettings | string | null | undefined): PrinterSettingsState => {
+      const savedPrinterName = parsePrinterSettings(settingsRaw)?.trim() || null
+      const savedPaperWidth = extractPaperWidthFromSettings(settingsRaw)
+      const savedCutPadding = extractCutPaddingFromSettings(settingsRaw)
+      const savedNormalizeAccents = extractNormalizeAccentsFromSettings(settingsRaw)
+
+      return {
+        selectedPrinterName: findPrinterSelection(printerList, savedPrinterName),
+        paperWidthMm: savedPaperWidth ?? DEFAULT_PAPER_WIDTH_MM,
+        cutPaddingMm: savedCutPadding ?? DEFAULT_CUT_PADDING_MM,
+        normalizeAccents: savedNormalizeAccents ?? DEFAULT_NORMALIZE_ACCENTS,
+      }
+    },
+  )
 
   useEffect(() => {
     const load = async () => {
@@ -158,10 +282,8 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         setAvailable(false)
         setAvailabilityReason(availability.reason ?? 'browser')
         setPrinters([])
-        setSelected(null)
-        setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
-        setCutPaddingMm(DEFAULT_CUT_PADDING_MM)
-        setNormalizeAccents(DEFAULT_NORMALIZE_ACCENTS)
+        setSavedSettings(DEFAULT_SETTINGS)
+        setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
         setLoading(false)
         return
       }
@@ -185,10 +307,8 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
 
       if (!printingAvailable) {
         setPrinters([])
-        setSelected(null)
-        setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
-        setCutPaddingMm(DEFAULT_CUT_PADDING_MM)
-        setNormalizeAccents(DEFAULT_NORMALIZE_ACCENTS)
+        setSavedSettings(DEFAULT_SETTINGS)
+        setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
         setLoading(false)
         return
       }
@@ -197,7 +317,8 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         setAvailable(false)
         setAvailabilityReason('missing-methods')
         setPrinters([])
-        setSelected(null)
+        setSavedSettings(DEFAULT_SETTINGS)
+        setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
         setLoading(false)
         return
       }
@@ -209,32 +330,23 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         ])
 
         const normalizedPrinters = normalizePrinters(Array.isArray(printerListRaw) ? printerListRaw : [])
-        const savedPrinterName = parsePrinterSettings(printerSettingsRaw)?.trim() || null
-        const savedPaperWidth = extractPaperWidthFromSettings(printerSettingsRaw)
-        const savedCutPadding = extractCutPaddingFromSettings(printerSettingsRaw)
-        const savedNormalizeAccents = extractNormalizeAccentsFromSettings(printerSettingsRaw)
+        const nextSavedSettings = buildSettingsFromBridge(normalizedPrinters, printerSettingsRaw)
 
         setPrinters(normalizedPrinters)
-        setPaperWidthMm(savedPaperWidth ?? DEFAULT_PAPER_WIDTH_MM)
-        setCutPaddingMm(savedCutPadding ?? DEFAULT_CUT_PADDING_MM)
-        setNormalizeAccents(savedNormalizeAccents ?? DEFAULT_NORMALIZE_ACCENTS)
-
-        const initialSelection = findPrinterSelection(normalizedPrinters, savedPrinterName)
-        setSelected(initialSelection)
+        setSavedSettings(nextSavedSettings)
+        setDraftSettings(createDraftSettings(nextSavedSettings))
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Unknown error')
         setPrinters([])
-        setSelected(null)
-        setPaperWidthMm(DEFAULT_PAPER_WIDTH_MM)
-        setCutPaddingMm(DEFAULT_CUT_PADDING_MM)
-        setNormalizeAccents(DEFAULT_NORMALIZE_ACCENTS)
+        setSavedSettings(DEFAULT_SETTINGS)
+        setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
       } finally {
         setLoading(false)
       }
     }
 
     load()
-  }, [reloadToken, resetStatus])
+  }, [buildSettingsFromBridge, reloadToken, resetStatus])
 
   const save = useCallback(async () => {
     resetStatus()
@@ -245,27 +357,57 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
       return
     }
 
-    if (!selected) {
+    if (!draftSettings.selectedPrinterName) {
       setError('Please select a printer before saving.')
       return
     }
 
-    if (typeof bridge.setSelectedPrinter !== 'function') {
-      setError('Selecting a printer is not supported in this app.')
+    const { value: parsedPadding, error: validationError } = normalizeCutPaddingInput(draftSettings.cutPaddingMm)
+    if (validationError) {
+      setCutPaddingError(validationError)
       return
     }
+
+    const cutPaddingValue = parsedPadding ?? savedSettings.cutPaddingMm
 
     setSaving(true)
 
     try {
-      await bridge.setSelectedPrinter(selected)
-      setSuccess('Printer selection saved.')
+      if (typeof bridge.setSelectedPrinter !== 'function') {
+        throw new Error('Selecting a printer is not supported in this app.')
+      }
+
+      await bridge.setSelectedPrinter(draftSettings.selectedPrinterName)
+
+      if (typeof bridge.setPaperWidthMm === 'function') {
+        await persistPaperWidthToBridge(draftSettings.paperWidthMm)
+      }
+
+      if (typeof bridge.setCutPaddingMm === 'function') {
+        await persistCutPaddingToBridge(cutPaddingValue)
+      }
+
+      if (typeof bridge.setNormalizeAccents === 'function') {
+        await persistNormalizeAccentsToBridge(draftSettings.normalizeAccents)
+      }
+
+      if (typeof bridge.getPrinterSettings !== 'function') {
+        throw new Error('Fetching printer settings is not supported in this app.')
+      }
+
+      const updatedSettings = await bridge.getPrinterSettings()
+      const nextSavedSettings = buildSettingsFromBridge(printers, updatedSettings)
+
+      setSavedSettings(nextSavedSettings)
+      setDraftSettings(createDraftSettings(nextSavedSettings))
+      setSuccess('Printer settings saved.')
+      setCutPaddingError(null)
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Failed to save printer selection.')
+      setError(saveError instanceof Error ? saveError.message : 'Failed to save printer settings.')
     } finally {
       setSaving(false)
     }
-  }, [available, resetStatus, selected])
+  }, [available, buildSettingsFromBridge, draftSettings, printers, resetStatus, savedSettings.cutPaddingMm])
 
   const testPrint = useCallback(async () => {
     resetStatus()
@@ -276,7 +418,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
       return
     }
 
-    if (!selected) {
+    if (!savedSettings.selectedPrinterName) {
       setError('Please select a printer before sending a test print.')
       return
     }
@@ -289,7 +431,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     setTesting(true)
 
     try {
-      const result = await bridge.testPrint(selected)
+      const result = await bridge.testPrint(savedSettings.selectedPrinterName)
 
       const isValidResult = (value: unknown): value is PosTestPrintResult =>
         Boolean(value && typeof value === 'object' && 'ok' in value)
@@ -300,7 +442,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
       }
 
       if (result.ok === true) {
-        const printerName = result.printerName ?? selected ?? 'the default printer'
+        const printerName = result.printerName ?? savedSettings.selectedPrinterName ?? 'the default printer'
         setSuccess(`Test ticket sent to ${printerName}.`)
         return
       }
@@ -316,130 +458,34 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     } finally {
       setTesting(false)
     }
-  }, [available, resetStatus, selected])
+  }, [available, resetStatus, savedSettings.selectedPrinterName])
 
-  const updatePaperWidthMm = useCallback(
-    async (nextWidth: number) => {
-      resetStatus()
-      setPaperWidthMm(nextWidth)
-      const bridge = getBridge()
-
-      if (!bridge || !available) {
-        setError('Printing is not available in this environment.')
-        return
-      }
-
-      if (typeof bridge.setPaperWidthMm !== 'function') {
-        setError('Updating paper width is not supported in this app.')
-        return
-      }
-
-      setPaperWidthUpdating(true)
-
-      try {
-        await persistPaperWidthToBridge(nextWidth)
-        setSuccess('Paper width saved.')
-      } catch (persistError) {
-        setError(persistError instanceof Error ? persistError.message : 'Failed to save paper width.')
-      } finally {
-        setPaperWidthUpdating(false)
-      }
-    },
-    [available, resetStatus],
-  )
-
-  const updateCutPaddingMm = useCallback(
-    async (nextPadding: number) => {
-      resetStatus()
-      setCutPaddingMm(nextPadding)
-      const bridge = getBridge()
-
-      if (!bridge || !available) {
-        setError('Printing is not available in this environment.')
-        return
-      }
-
-      if (typeof bridge.setCutPaddingMm !== 'function') {
-        setError('Updating cut padding is not supported in this app.')
-        return
-      }
-
-      setCutPaddingUpdating(true)
-
-      try {
-        await bridge.setCutPaddingMm(nextPadding)
-        console.log('Saved cutPaddingMm', nextPadding)
-
-        if (typeof bridge.getPrinterSettings !== 'function') {
-          throw new Error('Fetching printer settings is not supported in this app.')
-        }
-
-        const updatedSettings = await bridge.getPrinterSettings()
-        const readBackPadding = extractCutPaddingFromSettings(updatedSettings)
-        setCutPaddingMm(readBackPadding ?? nextPadding)
-        setSuccess('Cut padding saved.')
-      } catch (persistError) {
-        setError(persistError instanceof Error ? persistError.message : 'Failed to save cut padding.')
-      } finally {
-        setCutPaddingUpdating(false)
-      }
-    },
-    [available, resetStatus],
-  )
-
-  const updateNormalizeAccents = useCallback(
-    async (nextValue: boolean) => {
-      resetStatus()
-      setNormalizeAccents(nextValue)
-      const bridge = getBridge()
-
-      if (!bridge || !available) {
-        setError('Printing is not available in this environment.')
-        return
-      }
-
-      if (typeof bridge.setNormalizeAccents !== 'function') {
-        setError('Updating normalize accents is not supported in this app.')
-        return
-      }
-
-      setNormalizeAccentsUpdating(true)
-
-      try {
-        await persistNormalizeAccentsToBridge(nextValue)
-        setSuccess('Normalize accents saved.')
-      } catch (persistError) {
-        setError(persistError instanceof Error ? persistError.message : 'Failed to save normalize accents.')
-      } finally {
-        setNormalizeAccentsUpdating(false)
-      }
-    },
-    [available, resetStatus],
+  const hasPendingChanges = useMemo(
+    () => !areSettingsEqual(savedSettings, draftSettings),
+    [draftSettings, savedSettings],
   )
 
   return {
     available,
     availabilityReason,
     printers,
-    selected,
-    setSelected: handleSelect,
+    savedSettings,
+    draftSettings,
+    setSelected,
+    setPaperWidthMm,
+    setCutPaddingInput,
+    finalizeCutPaddingInput,
+    setNormalizeAccents,
     loading,
     saving,
     testing,
     error,
     success,
+    cutPaddingError,
+    hasPendingChanges,
     refresh,
     save,
     testPrint,
-    paperWidthMm,
-    updatePaperWidthMm,
-    paperWidthUpdating,
-    cutPaddingMm,
-    updateCutPaddingMm,
-    cutPaddingUpdating,
-    normalizeAccents,
-    updateNormalizeAccents,
-    normalizeAccentsUpdating,
   }
 }
 
