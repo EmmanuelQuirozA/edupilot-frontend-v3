@@ -7,9 +7,10 @@ import { API_BASE_URL } from '../../config'
 import { createCurrencyFormatter } from '../../utils/currencyFormatter'
 import { useCatalogOptions } from '../../hooks/useCatalogOptions'
 import { buildSchoolAddress, fetchSchoolDetails, resolveSchoolName } from '../../utils/schoolDetails'
-import { usePaymentReceiptPrinter } from '../../hooks/usePaymentReceiptPrinter'
+import { useDesktopPrintReceipt } from '../../hooks/useDesktopPrintReceipt'
 import { formatMexicoCityDateTime, formatMonthLabel } from '../../utils/receipt/buildPaymentReceipt'
 import './payment-registration-modal.css'
+import './print-loading-overlay.css'
 
 declare const Swal: {
   fire: (options: Record<string, unknown>) => Promise<{ isConfirmed?: boolean }>
@@ -87,7 +88,7 @@ export function PaymentRegistrationModal({
   schoolInfo,
 }: PaymentRegistrationModalProps) {
   const { token, user } = useAuth()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const [form, setForm] = useState<PaymentFormState>({
     amount: '',
     paymentMonth: defaultPaymentMonth || '',
@@ -100,7 +101,7 @@ export function PaymentRegistrationModal({
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [schoolDetails, setSchoolDetails] = useState<typeof schoolInfo | null>(schoolInfo ?? null)
-  const { promptAndPrintReceipt } = usePaymentReceiptPrinter()
+  const { isPrinting, printerName, printReceipt } = useDesktopPrintReceipt()
 
   const currencyFormatter = useMemo(
     () => createCurrencyFormatter('es-MX', 'MXN'),
@@ -140,6 +141,20 @@ export function PaymentRegistrationModal({
     requestSummary,
     requireFullPendingPayment,
   ])
+
+  useEffect(() => {
+    if (!isOpen || !isPrinting) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [isOpen, isPrinting])
 
   const ensureSchoolDetails = useCallback(async () => {
     if (schoolDetails) return schoolDetails
@@ -313,7 +328,7 @@ export function PaymentRegistrationModal({
       const monthLabel = tuitionLabel || '-'
       const paymentDateLabel = formatMexicoCityDateTime()
 
-      await promptAndPrintReceipt({
+      await printReceipt({
         school: {
           name: schoolName,
           address,
@@ -348,6 +363,9 @@ export function PaymentRegistrationModal({
   if (!isOpen) return null
 
   const tuitionLabel = requestSummary?.tuitionLabel ?? formatMonthLabel(defaultPaymentMonth)
+  const printingText = locale === 'es' ? 'Imprimiendo recibo…' : 'Printing ticket…'
+  const printerText =
+    printerName && (locale === 'es' ? `Imprimiendo en: ${printerName}` : `Printing to: ${printerName}`)
 
   return (
     <>
@@ -357,7 +375,7 @@ export function PaymentRegistrationModal({
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        onClick={onClose}
+        onClick={handleClose}
       >
         <div
           className="modal-dialog modal-lg modal-dialog-centered"
@@ -373,7 +391,8 @@ export function PaymentRegistrationModal({
                 type="button"
                 className="btn-close"
                 aria-label="Close"
-                onClick={onClose}
+                onClick={handleClose}
+                disabled={submitting || isPrinting}
               />
             </div>
 
@@ -498,12 +517,12 @@ export function PaymentRegistrationModal({
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={onClose}
-                  disabled={submitting}
+                  onClick={handleClose}
+                  disabled={submitting || isPrinting}
                 >
                   {t('cancel')}
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                <button type="submit" className="btn btn-primary" disabled={submitting || isPrinting}>
                   {submitting ? t('registeringPayment') : t('registerPayment')}
                 </button>
               </div>
@@ -511,6 +530,15 @@ export function PaymentRegistrationModal({
           </div>
         </div>
       </div>
+      {isPrinting && (
+        <div className="print-loading-overlay" role="status" aria-live="polite">
+          <div className="print-loading-card">
+            <div className="spinner-border text-primary" role="status" aria-label={printingText} />
+            <div className="print-loading-card__title">{printingText}</div>
+            {printerText && <div className="print-loading-card__subtitle">{printerText}</div>}
+          </div>
+        </div>
+      )}
     </>
   )
 }
@@ -539,3 +567,7 @@ export function StandalonePaymentModal(
 }
 
 export default PaymentRegistrationModal
+  const handleClose = useCallback(() => {
+    if (isPrinting) return
+    onClose()
+  }, [isPrinting, onClose])

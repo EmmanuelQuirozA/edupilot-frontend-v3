@@ -7,9 +7,10 @@ import { useAuth } from '../../../context/AuthContext'
 import { useLanguage } from '../../../context/LanguageContext'
 import { createCurrencyFormatter } from '../../../utils/currencyFormatter'
 import { useCatalogOptions } from '../../../hooks/useCatalogOptions'
-import { usePaymentReceiptPrinter } from '../../../hooks/usePaymentReceiptPrinter'
+import { useDesktopPrintReceipt } from '../../../hooks/useDesktopPrintReceipt'
 import { buildSchoolAddress, fetchSchoolDetails, resolveSchoolName } from '../../../utils/schoolDetails'
 import { formatMexicoCityDateTime, formatMonthLabel } from '../../../utils/receipt/buildPaymentReceipt'
+import '../../../components/payments/print-loading-overlay.css'
 
 declare const Swal: {
   fire: (options: Record<string, unknown>) => Promise<{ isConfirmed?: boolean }>
@@ -54,7 +55,7 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
   const [schoolDetails, setSchoolDetails] = useState<Awaited<ReturnType<typeof fetchSchoolDetails>> | null>(null)
   const { options: paymentThroughOptions } = useCatalogOptions('catalog/payment-through', lang)
   const { options: paymentConceptOptions } = useCatalogOptions('catalog/payment-concepts', lang)
-  const { promptAndPrintReceipt } = usePaymentReceiptPrinter()
+  const { isPrinting, printerName, printReceipt } = useDesktopPrintReceipt()
 
   const currencyFormatter = useMemo(
     () => createCurrencyFormatter('es-MX', 'MXN'),
@@ -76,6 +77,25 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
     setError(null)
     setSuccessMessage(null)
   }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen || !isPrinting) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [isOpen, isPrinting])
+
+  const handleClose = useCallback(() => {
+    if (isPrinting) return
+    onClose()
+  }, [isPrinting, onClose])
 
   const handleChange = <K extends keyof ManualPaymentFormState>(field: K, value: ManualPaymentFormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -226,7 +246,7 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
       const paymentDateLabel = formatMexicoCityDateTime()
       const amountText = currencyFormatter.format(amountValue)
 
-      await promptAndPrintReceipt({
+      await printReceipt({
         school: {
           name: schoolName,
           address,
@@ -257,11 +277,14 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
   }
 
   if (!isOpen) return null
+  const printingText = locale === 'es' ? 'Imprimiendo recibo…' : 'Printing ticket…'
+  const printerText =
+    printerName && (locale === 'es' ? `Imprimiendo en: ${printerName}` : `Printing to: ${printerName}`)
 
   return (
     <>
       <div className="modal-backdrop fade show" />
-      <div className={`modal fade ${isOpen ? 'show d-block' : ''}`} tabIndex={-1} role="dialog" aria-modal="true" onClick={onClose}>
+      <div className={`modal fade ${isOpen ? 'show d-block' : ''}`} tabIndex={-1} role="dialog" aria-modal="true" onClick={handleClose}>
         <div className="modal-dialog modal-lg modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
           <div className="modal-content">
             <div className="modal-header">
@@ -269,7 +292,13 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
                 <h5 className="modal-title fw-semibold">{t('createManualPayment')}</h5>
                 <p className="mb-0 text-muted">{t('createManualPaymentDescription')}</p>
               </div>
-              <button type="button" className="btn-close" aria-label={t('close')} onClick={onClose} />
+              <button
+                type="button"
+                className="btn-close"
+                aria-label={t('close')}
+                onClick={handleClose}
+                disabled={submitting || isPrinting}
+              />
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -362,10 +391,10 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
               </div>
 
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={onClose} disabled={submitting}>
+                <button type="button" className="btn btn-secondary" onClick={handleClose} disabled={submitting || isPrinting}>
                   {t('cancel')}
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                <button type="submit" className="btn btn-primary" disabled={submitting || isPrinting}>
                   {submitting ? t('registeringPayment') : t('registerPayment')}
                 </button>
               </div>
@@ -373,6 +402,15 @@ export function ManualPaymentModal({ isOpen, lang = 'es', onClose, onSuccess }: 
           </div>
         </div>
       </div>
+      {isPrinting && (
+        <div className="print-loading-overlay" role="status" aria-live="polite">
+          <div className="print-loading-card">
+            <div className="spinner-border text-primary" role="status" aria-label={printingText} />
+            <div className="print-loading-card__title">{printingText}</div>
+            {printerText && <div className="print-loading-card__subtitle">{printerText}</div>}
+          </div>
+        </div>
+      )}
     </>
   )
 }

@@ -1,0 +1,30 @@
+.print-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.print-loading-card {
+  min-width: 260px;
+  max-width: 360px;
+  padding: 24px 28px;
+  border-radius: 12px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.print-loading-card__title {
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.print-loading-card__subtitle {
+  margin-top: 6px;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
