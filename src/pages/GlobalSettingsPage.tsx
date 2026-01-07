@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import './GlobalSettingsPage.css'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { useAuth } from '../context/AuthContext'
@@ -149,41 +150,43 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'settings' }: Glob
           <div className="card-body">
             <div className="row g-0">
               <div className="col-12 col-lg-3 border-end pe-lg-4">
-                <p className="text-uppercase text-muted fw-semibold small mb-3">{t('globalSettingsGeneralTitle')}</p>
-                <div className="nav flex-column nav-pills gap-2" role="tablist">
-                  <button
-                    type="button"
-                    className={`nav-link text-start d-flex align-items-center gap-2 ${
-                      activeTab === 'modules' ? 'active text-primary' : 'text-secondary'
-                    }`}
-                    role="tab"
-                    onClick={() => setActiveTab('modules')}
-                  >
-                    <i className="bi bi-cash-stack" aria-hidden="true" />
-                    <span>{t('globalSettingsFinancialCatalogsTab')}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`nav-link text-start d-flex align-items-center gap-2 ${
-                      activeTab === 'settings' ? 'active text-primary' : 'text-secondary'
-                    }`}
-                    role="tab"
-                    onClick={() => setActiveTab('settings')}
-                  >
-                    <i className="bi bi-printer" aria-hidden="true" />
-                    <span>{t('globalSettingsPrintersTab')}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`nav-link text-start d-flex align-items-center gap-2 ${
-                      activeTab === 'roles' ? 'active text-primary' : 'text-secondary'
-                    }`}
-                    role="tab"
-                    onClick={() => setActiveTab('roles')}
-                  >
-                    <i className="bi bi-shield-lock" aria-hidden="true" />
-                    <span>{t('globalSettingsRolesTab')}</span>
-                  </button>
+                <div className="global-settings__tabs">
+                  <p className="text-uppercase text-muted fw-semibold small mb-3">{t('globalSettingsGeneralTitle')}</p>
+                  <div className="nav flex-column nav-pills gap-2" role="tablist">
+                    <button
+                      type="button"
+                      className={`nav-link text-start d-flex align-items-center gap-2 ${
+                        activeTab === 'modules' ? 'active text-primary' : 'text-secondary'
+                      }`}
+                      role="tab"
+                      onClick={() => setActiveTab('modules')}
+                    >
+                      <i className="bi bi-cash-stack" aria-hidden="true" />
+                      <span>{t('globalSettingsFinancialCatalogsTab')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`nav-link text-start d-flex align-items-center gap-2 ${
+                        activeTab === 'settings' ? 'active text-primary' : 'text-secondary'
+                      }`}
+                      role="tab"
+                      onClick={() => setActiveTab('settings')}
+                    >
+                      <i className="bi bi-printer" aria-hidden="true" />
+                      <span>{t('globalSettingsPrintersTab')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`nav-link text-start d-flex align-items-center gap-2 ${
+                        activeTab === 'roles' ? 'active text-primary' : 'text-secondary'
+                      }`}
+                      role="tab"
+                      onClick={() => setActiveTab('roles')}
+                    >
+                      <i className="bi bi-shield-lock" aria-hidden="true" />
+                      <span>{t('globalSettingsRolesTab')}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="col-12 col-lg-9 ps-lg-4 pt-4 pt-lg-0">
