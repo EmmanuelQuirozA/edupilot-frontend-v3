@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type {
   PosBridge,
   PosCapabilities,
@@ -188,7 +188,15 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [cutPaddingError, setCutPaddingError] = useState<CutPaddingErrorKey | null>(null)
-  const [reloadToken, setReloadToken] = useState(0)
+
+  const hasLoadedRef = useRef(false)
+  const actionTargetRef = useRef<EventTarget | null>(null)
+  const latestStateRef = useRef({
+    available,
+    printers,
+    savedSettings,
+    draftSettings,
+  })
 
   const resetStatus = useCallback(() => {
     setError(null)
@@ -196,7 +204,9 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
   }, [])
 
   const refresh = useCallback(() => {
-    setReloadToken((value) => value + 1)
+    actionTargetRef.current?.dispatchEvent(
+      new CustomEvent('printer-action', { detail: { type: 'refresh' } }),
+    )
   }, [])
 
   const setSelected = useCallback((value: string | null) => {
@@ -269,196 +279,240 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
         normalizeAccents: savedNormalizeAccents ?? DEFAULT_NORMALIZE_ACCENTS,
       }
     },
+    [],
   )
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true)
-      resetStatus()
+  const loadSettings = async () => {
+    if (hasLoadedRef.current) return
+    hasLoadedRef.current = true
 
-      const availability = await getPrintingAvailability()
-      const bridge = getBridge()
-      if (!availability.available || !bridge) {
-        setAvailable(false)
-        setAvailabilityReason(availability.reason ?? 'browser')
-        setPrinters([])
-        setSavedSettings(DEFAULT_SETTINGS)
-        setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
-        setLoading(false)
-        return
-      }
-
-      let capabilities: PosCapabilities | null | undefined
-
-      if (typeof bridge.getCapabilities === 'function') {
-        try {
-          capabilities = await bridge.getCapabilities()
-        } catch (capabilityError) {
-          capabilities = null
-          console.error('Failed to read POS capabilities', capabilityError)
-        }
-      }
-
-      const capabilityReason = extractPrintingCapabilityReason(capabilities ?? null)
-      const printingAvailable = availability.available
-
-      setAvailable(printingAvailable)
-      setAvailabilityReason(capabilityReason ?? availability.reason ?? null)
-
-      if (!printingAvailable) {
-        setPrinters([])
-        setSavedSettings(DEFAULT_SETTINGS)
-        setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
-        setLoading(false)
-        return
-      }
-
-      if (typeof bridge.listPrinters !== 'function' || typeof bridge.getPrinterSettings !== 'function') {
-        setAvailable(false)
-        setAvailabilityReason('missing-methods')
-        setPrinters([])
-        setSavedSettings(DEFAULT_SETTINGS)
-        setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
-        setLoading(false)
-        return
-      }
-
-      try {
-        const [printerListRaw, printerSettingsRaw] = await Promise.all([
-          bridge.listPrinters(),
-          bridge.getPrinterSettings(),
-        ])
-
-        const normalizedPrinters = normalizePrinters(Array.isArray(printerListRaw) ? printerListRaw : [])
-        const nextSavedSettings = buildSettingsFromBridge(normalizedPrinters, printerSettingsRaw)
-
-        setPrinters(normalizedPrinters)
-        setSavedSettings(nextSavedSettings)
-        setDraftSettings(createDraftSettings(nextSavedSettings))
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : 'Unknown error')
-        setPrinters([])
-        setSavedSettings(DEFAULT_SETTINGS)
-        setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    load()
-  }, [buildSettingsFromBridge, reloadToken, resetStatus])
-
-  const save = useCallback(async () => {
+    setLoading(true)
     resetStatus()
+
+    const availability = await getPrintingAvailability()
     const bridge = getBridge()
-
-    if (!bridge || !available) {
-      setError('Printing is not available in this environment.')
+    if (!availability.available || !bridge) {
+      setAvailable(false)
+      setAvailabilityReason(availability.reason ?? 'browser')
+      setPrinters([])
+      setSavedSettings(DEFAULT_SETTINGS)
+      setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
+      setLoading(false)
       return
     }
 
-    if (!draftSettings.selectedPrinterName) {
-      setError('Please select a printer before saving.')
+    let capabilities: PosCapabilities | null | undefined
+
+    if (typeof bridge.getCapabilities === 'function') {
+      try {
+        capabilities = await bridge.getCapabilities()
+      } catch (capabilityError) {
+        capabilities = null
+        console.error('Failed to read POS capabilities', capabilityError)
+      }
+    }
+
+    const capabilityReason = extractPrintingCapabilityReason(capabilities ?? null)
+    const printingAvailable = availability.available
+
+    setAvailable(printingAvailable)
+    setAvailabilityReason(capabilityReason ?? availability.reason ?? null)
+
+    if (!printingAvailable) {
+      setPrinters([])
+      setSavedSettings(DEFAULT_SETTINGS)
+      setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
+      setLoading(false)
       return
     }
 
-    const { value: parsedPadding, error: validationError } = normalizeCutPaddingInput(draftSettings.cutPaddingMm)
-    if (validationError) {
-      setCutPaddingError(validationError)
+    if (typeof bridge.listPrinters !== 'function' || typeof bridge.getPrinterSettings !== 'function') {
+      setAvailable(false)
+      setAvailabilityReason('missing-methods')
+      setPrinters([])
+      setSavedSettings(DEFAULT_SETTINGS)
+      setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
+      setLoading(false)
       return
     }
-
-    const cutPaddingValue = parsedPadding ?? savedSettings.cutPaddingMm
-
-    setSaving(true)
 
     try {
-      if (typeof bridge.setSelectedPrinter !== 'function') {
-        throw new Error('Selecting a printer is not supported in this app.')
-      }
+      const [printerListRaw, printerSettingsRaw] = await Promise.all([
+        bridge.listPrinters(),
+        bridge.getPrinterSettings(),
+      ])
 
-      await bridge.setSelectedPrinter(draftSettings.selectedPrinterName)
+      const normalizedPrinters = normalizePrinters(Array.isArray(printerListRaw) ? printerListRaw : [])
+      const nextSavedSettings = buildSettingsFromBridge(normalizedPrinters, printerSettingsRaw)
 
-      if (typeof bridge.setPaperWidthMm === 'function') {
-        await persistPaperWidthToBridge(draftSettings.paperWidthMm)
-      }
-
-      if (typeof bridge.setCutPaddingMm === 'function') {
-        await persistCutPaddingToBridge(cutPaddingValue)
-      }
-
-      if (typeof bridge.setNormalizeAccents === 'function') {
-        await persistNormalizeAccentsToBridge(draftSettings.normalizeAccents)
-      }
-
-      if (typeof bridge.getPrinterSettings !== 'function') {
-        throw new Error('Fetching printer settings is not supported in this app.')
-      }
-
-      const updatedSettings = await bridge.getPrinterSettings()
-      const nextSavedSettings = buildSettingsFromBridge(printers, updatedSettings)
-
+      setPrinters(normalizedPrinters)
       setSavedSettings(nextSavedSettings)
       setDraftSettings(createDraftSettings(nextSavedSettings))
-      setSuccess('Printer settings saved.')
-      setCutPaddingError(null)
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Failed to save printer settings.')
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Unknown error')
+      setPrinters([])
+      setSavedSettings(DEFAULT_SETTINGS)
+      setDraftSettings(createDraftSettings(DEFAULT_SETTINGS))
     } finally {
-      setSaving(false)
+      setLoading(false)
     }
-  }, [available, buildSettingsFromBridge, draftSettings, printers, resetStatus, savedSettings.cutPaddingMm])
+  }
 
-  const testPrint = useCallback(async () => {
-    resetStatus()
-    const bridge = getBridge()
-
-    if (!bridge || !available) {
-      setError('Printing is not available in this environment.')
-      return
+  useEffect(() => {
+    latestStateRef.current = {
+      available,
+      printers,
+      savedSettings,
+      draftSettings,
     }
+  }, [available, draftSettings, printers, savedSettings])
 
-    if (!savedSettings.selectedPrinterName) {
-      setError('Please select a printer before sending a test print.')
-      return
-    }
+  useEffect(() => {
+    loadSettings()
+  }, [])
 
-    if (typeof bridge.testPrint !== 'function') {
-      setError('Test print is not supported in this app.')
-      return
-    }
+  useEffect(() => {
+    const target = new EventTarget()
+    actionTargetRef.current = target
 
-    setTesting(true)
+    const handleAction = async (event: Event) => {
+      const detail = (event as CustomEvent<{ type: 'save' | 'test' | 'refresh' }>)?.detail
+      if (!detail) return
 
-    try {
-      const result = await bridge.testPrint(savedSettings.selectedPrinterName)
-
-      const isValidResult = (value: unknown): value is PosTestPrintResult =>
-        Boolean(value && typeof value === 'object' && 'ok' in value)
-
-      if (!isValidResult(result)) {
-        setError('Test print failed: Unknown error')
+      if (detail.type === 'refresh') {
+        hasLoadedRef.current = false
+        await loadSettings()
         return
       }
 
-      if (result.ok === true) {
-        const printerName = result.printerName ?? savedSettings.selectedPrinterName ?? 'the default printer'
-        setSuccess(`Test ticket sent to ${printerName}.`)
+      const bridge = getBridge()
+      const { available: latestAvailable, draftSettings, savedSettings, printers } = latestStateRef.current
+
+      if (!bridge || !latestAvailable) {
+        setError('Printing is not available in this environment.')
         return
       }
 
-      const errorMessage =
-        typeof result.error === 'string' && result.error.trim().length ? result.error : 'Unknown error'
-      const methodDetails =
-        typeof result.method === 'string' && result.method.trim().length ? ` (method: ${result.method})` : ''
-      setError(`Test print failed: ${errorMessage}${methodDetails}`)
-    } catch (printError) {
-      const message = printError instanceof Error ? printError.message : 'Failed to send test print.'
-      setError(`Test print failed: ${message}`)
-    } finally {
-      setTesting(false)
+      if (detail.type === 'save') {
+        resetStatus()
+
+        if (!draftSettings.selectedPrinterName) {
+          setError('Please select a printer before saving.')
+          return
+        }
+
+        const { value: parsedPadding, error: validationError } = normalizeCutPaddingInput(draftSettings.cutPaddingMm)
+        if (validationError) {
+          setCutPaddingError(validationError)
+          return
+        }
+
+        const cutPaddingValue = parsedPadding ?? savedSettings.cutPaddingMm
+
+        setSaving(true)
+
+        try {
+          if (typeof bridge.setSelectedPrinter !== 'function') {
+            throw new Error('Selecting a printer is not supported in this app.')
+          }
+
+          await bridge.setSelectedPrinter(draftSettings.selectedPrinterName)
+
+          if (typeof bridge.setPaperWidthMm === 'function') {
+            await persistPaperWidthToBridge(draftSettings.paperWidthMm)
+          }
+
+          if (typeof bridge.setCutPaddingMm === 'function') {
+            await persistCutPaddingToBridge(cutPaddingValue)
+          }
+
+          if (typeof bridge.setNormalizeAccents === 'function') {
+            await persistNormalizeAccentsToBridge(draftSettings.normalizeAccents)
+          }
+
+          if (typeof bridge.getPrinterSettings !== 'function') {
+            throw new Error('Fetching printer settings is not supported in this app.')
+          }
+
+          const updatedSettings = await bridge.getPrinterSettings()
+          const nextSavedSettings = buildSettingsFromBridge(printers, updatedSettings)
+
+          setSavedSettings(nextSavedSettings)
+          setDraftSettings(createDraftSettings(nextSavedSettings))
+          setSuccess('Printer settings saved.')
+          setCutPaddingError(null)
+        } catch (saveError) {
+          setError(saveError instanceof Error ? saveError.message : 'Failed to save printer settings.')
+        } finally {
+          setSaving(false)
+        }
+        return
+      }
+
+      if (detail.type === 'test') {
+        resetStatus()
+
+        if (!savedSettings.selectedPrinterName) {
+          setError('Please select a printer before sending a test print.')
+          return
+        }
+
+        if (typeof bridge.testPrint !== 'function') {
+          setError('Test print is not supported in this app.')
+          return
+        }
+
+        setTesting(true)
+
+        try {
+          const result = await bridge.testPrint(savedSettings.selectedPrinterName)
+
+          const isValidResult = (value: unknown): value is PosTestPrintResult =>
+            Boolean(value && typeof value === 'object' && 'ok' in value)
+
+          if (!isValidResult(result)) {
+            setError('Test print failed: Unknown error')
+            return
+          }
+
+          if (result.ok === true) {
+            const printerName = result.printerName ?? savedSettings.selectedPrinterName ?? 'the default printer'
+            setSuccess(`Test ticket sent to ${printerName}.`)
+            return
+          }
+
+          const errorMessage =
+            typeof result.error === 'string' && result.error.trim().length ? result.error : 'Unknown error'
+          const methodDetails =
+            typeof result.method === 'string' && result.method.trim().length ? ` (method: ${result.method})` : ''
+          setError(`Test print failed: ${errorMessage}${methodDetails}`)
+        } catch (printError) {
+          const message = printError instanceof Error ? printError.message : 'Failed to send test print.'
+          setError(`Test print failed: ${message}`)
+        } finally {
+          setTesting(false)
+        }
+      }
     }
-  }, [available, resetStatus, savedSettings.selectedPrinterName])
+
+    target.addEventListener('printer-action', handleAction as EventListener)
+    return () => {
+      target.removeEventListener('printer-action', handleAction as EventListener)
+      actionTargetRef.current = null
+    }
+  }, [])
+
+  const save = useCallback(() => {
+    actionTargetRef.current?.dispatchEvent(
+      new CustomEvent('printer-action', { detail: { type: 'save' } }),
+    )
+  }, [])
+
+  const testPrint = useCallback(() => {
+    actionTargetRef.current?.dispatchEvent(
+      new CustomEvent('printer-action', { detail: { type: 'test' } }),
+    )
+  }, [])
 
   const hasPendingChanges = useMemo(
     () => !areSettingsEqual(savedSettings, draftSettings),
