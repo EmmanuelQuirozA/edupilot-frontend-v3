@@ -407,6 +407,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
           return
         }
 
+        setCutPaddingError(null)
         const cutPaddingValue = parsedPadding ?? savedSettings.cutPaddingMm
 
         setSaving(true)
@@ -452,7 +453,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
       if (detail.type === 'test') {
         resetStatus()
 
-        if (!savedSettings.selectedPrinterName) {
+        if (!draftSettings.selectedPrinterName) {
           setError('Please select a printer before sending a test print.')
           return
         }
@@ -462,10 +463,23 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
           return
         }
 
+        const { value: parsedPadding, error: validationError } = normalizeCutPaddingInput(draftSettings.cutPaddingMm)
+        if (validationError) {
+          setCutPaddingError(validationError)
+          return
+        }
+
+        const cutPaddingValue = parsedPadding ?? savedSettings.cutPaddingMm
+
         setTesting(true)
 
         try {
-          const result = await bridge.testPrint(savedSettings.selectedPrinterName)
+          const result = await bridge.testPrint({
+            printerName: draftSettings.selectedPrinterName,
+            paperWidthMm: draftSettings.paperWidthMm,
+            cutPaddingMm: cutPaddingValue,
+            normalizeAccents: draftSettings.normalizeAccents,
+          })
 
           const isValidResult = (value: unknown): value is PosTestPrintResult =>
             Boolean(value && typeof value === 'object' && 'ok' in value)
@@ -476,7 +490,7 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
           }
 
           if (result.ok === true) {
-            const printerName = result.printerName ?? savedSettings.selectedPrinterName ?? 'the default printer'
+            const printerName = result.printerName ?? draftSettings.selectedPrinterName ?? 'the default printer'
             setSuccess(`Test ticket sent to ${printerName}.`)
             return
           }

@@ -206,6 +206,7 @@ export function PrinterSettingsSection() {
                 )}
               </button>
             </div>
+            {hasPendingChanges ? <div className="text-muted small">{t('printerTestUsesDraftNote')}</div> : null}
           </div>
         ) : null}
       </div>

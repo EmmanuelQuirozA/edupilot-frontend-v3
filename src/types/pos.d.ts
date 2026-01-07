@@ -27,6 +27,14 @@ export interface PosTestPrintResult {
   details?: unknown
 }
 
+export interface PosTestPrintPayload {
+  printerName?: string | null
+  paperWidthMm?: number
+  cutPaddingMm?: number
+  normalizeAccents?: boolean
+  [key: string]: unknown
+}
+
 export interface PosTicketPayload {
   title: string
   lines: string[]
@@ -43,7 +51,7 @@ export interface PosBridge {
   setPaperWidthMm?: (paperWidthMm: number) => unknown | Promise<unknown>
   setCutPaddingMm?: (cutPaddingMm: number) => unknown | Promise<unknown>
   setNormalizeAccents?: (normalizeAccents: boolean) => unknown | Promise<unknown>
-  testPrint?: (printerName?: string) => PosTestPrintResult | Promise<PosTestPrintResult>
+  testPrint?: (payload?: PosTestPrintPayload | string | null) => PosTestPrintResult | Promise<PosTestPrintResult>
   printTicket?: (payload: PosTicketPayload) =>
     | { success?: boolean; ok?: boolean; error?: string | null; message?: string | null; failureReason?: string | null }
     | boolean
