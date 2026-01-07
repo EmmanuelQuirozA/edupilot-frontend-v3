@@ -65,7 +65,7 @@ export function PrinterSettingsSection() {
   })
 
   return (
-    <div className="card shadow-sm">
+    <div className="card shadow-none">
       <div className="card-header bg-white border-bottom-0">
         <h3 className="h6 mb-0">{t('printerSettingsTitle')}</h3>
         <small className="text-muted">{t('printerSettingsDescription')}</small>

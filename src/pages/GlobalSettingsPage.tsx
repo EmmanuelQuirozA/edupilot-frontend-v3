@@ -154,7 +154,7 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'settings' }: Glob
                   <button
                     type="button"
                     className={`nav-link text-start d-flex align-items-center gap-2 ${
-                      activeTab === 'modules' ? 'active' : ''
+                      activeTab === 'modules' ? 'active text-primary' : 'text-secondary'
                     }`}
                     role="tab"
                     onClick={() => setActiveTab('modules')}
@@ -165,7 +165,7 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'settings' }: Glob
                   <button
                     type="button"
                     className={`nav-link text-start d-flex align-items-center gap-2 ${
-                      activeTab === 'settings' ? 'active' : ''
+                      activeTab === 'settings' ? 'active text-primary' : 'text-secondary'
                     }`}
                     role="tab"
                     onClick={() => setActiveTab('settings')}
@@ -176,7 +176,7 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'settings' }: Glob
                   <button
                     type="button"
                     className={`nav-link text-start d-flex align-items-center gap-2 ${
-                      activeTab === 'roles' ? 'active' : ''
+                      activeTab === 'roles' ? 'active text-primary' : 'text-secondary'
                     }`}
                     role="tab"
                     onClick={() => setActiveTab('roles')}

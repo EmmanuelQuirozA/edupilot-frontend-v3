@@ -567,7 +567,3 @@ export function StandalonePaymentModal(
 }
 
 export default PaymentRegistrationModal
-  const handleClose = useCallback(() => {
-    if (isPrinting) return
-    onClose()
-  }, [isPrinting, onClose])
