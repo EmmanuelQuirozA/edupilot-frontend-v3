@@ -414,65 +414,60 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
     <div className="d-flex flex-column gap-4">
       <div className="card shadow-sm">
         <div className="card-body">
-          <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-            <div>
-              <h2 className="h4 mb-1">{t('rolesPermissionsTitle')}</h2>
-              <p className="text-muted mb-0">{t('rolesPermissionsSubtitle')}</p>
-            </div>
-            <div className="text-muted small">
-              {t('rolesPermissionsHelper')}
-            </div>
-          </div>
-        </div>
-      </div>
+          <label className="form-label fw-semibold" htmlFor="schoolSelect">
+            {t('selectSchoolLabel')}
+          </label>
+          <select
+            id="schoolSelect"
+            className="form-select"
+            value={selectedSchoolId ?? ''}
+            onChange={(event) => setSelectedSchoolId(event.target.value ? Number(event.target.value) : null)}
+            disabled={schoolsLoading}
+          >
+            <option value="">{schoolsLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
+            {schools.map((school) => (
+              <option key={school.school_id} value={school.school_id}>
+                {school.description}
+              </option>
+            ))}
+          </select>
 
-      <div className="card shadow-sm">
-        <div className="card-body">
-          <div className="row g-3">
-            <div className="col-lg-6">
-              <label className="form-label fw-semibold" htmlFor="schoolSelect">
-                {t('selectSchoolLabel')}
-              </label>
-              <select
-                id="schoolSelect"
-                className="form-select"
-                value={selectedSchoolId ?? ''}
-                onChange={(event) => setSelectedSchoolId(event.target.value ? Number(event.target.value) : null)}
-                disabled={schoolsLoading}
-              >
-                <option value="">{schoolsLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
-                {schools.map((school) => (
-                  <option key={school.school_id} value={school.school_id}>
-                    {school.description}
-                  </option>
-                ))}
-              </select>
+          <div className="mt-4">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h3 className="h6 mb-0">{t('rolesPermissionsTitle')}</h3>
+              {rolesLoading ? <span className="badge bg-secondary">{t('tableLoading')}</span> : null}
             </div>
-
-            <div className="col-lg-6">
-              <label className="form-label fw-semibold" htmlFor="roleSelect">
-                {t('selectRoleLabel')}
-              </label>
-              <select
-                id="roleSelect"
-                className="form-select"
-                value={selectedRoleId ?? ''}
-                onChange={(event) => setSelectedRoleId(event.target.value ? Number(event.target.value) : null)}
-                disabled={!selectedSchoolId || rolesLoading}
-              >
-                <option value="">{rolesLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
-                {roles.map((role) => (
-                  <option key={role.role_id} value={role.role_id}>
-                    {role.role_name}
-                  </option>
-                ))}
-              </select>
-              {selectedRoleId && (
-                <p className="text-muted small mt-2 mb-0">
-                  {roles.find((role) => role.role_id === selectedRoleId)?.role_description || t('noDescription')}
-                </p>
-              )}
-            </div>
+            {selectedSchoolId ? (
+              <div className="list-group">
+                {roles.length === 0 && !rolesLoading ? (
+                  <div className="text-muted small">{t('tableNoData')}</div>
+                ) : (
+                  roles.map((role) => {
+                    const isSelected = selectedRoleId === role.role_id
+                    return (
+                      <button
+                        key={role.role_id}
+                        type="button"
+                        className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${
+                          isSelected ? 'active' : ''
+                        }`}
+                        onClick={() => setSelectedRoleId(role.role_id)}
+                      >
+                        <div className="text-start">
+                          <div className="fw-semibold">{role.role_name}</div>
+                          <small className={isSelected ? 'text-white-50' : 'text-muted'}>
+                            {role.role_description || t('noDescription')}
+                          </small>
+                        </div>
+                        <i className={`bi ${isSelected ? 'bi-chevron-down' : 'bi-chevron-right'}`} aria-hidden="true" />
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+            ) : (
+              <p className="text-muted small mb-0">{t('rolesPermissionsHelper')}</p>
+            )}
           </div>
         </div>
       </div>
@@ -481,8 +476,8 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
         <div className="card-body">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div>
-              <h3 className="h5 mb-1">{t('permissionsTableTitle')}</h3>
-              <p className="text-muted mb-0">{t('permissionsTableSubtitle')}</p>
+              <h3 className="h6 mb-1">{t('permissionsTableTitle')}</h3>
+              <p className="text-muted small mb-0">{t('permissionsTableSubtitle')}</p>
             </div>
             {permissionRowsLoading ? (
               <span className="badge bg-secondary">{t('tableLoading')}</span>
@@ -519,9 +514,9 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
                         </div>
                       </th>
                       {([
-                        'c', 
-                        'r', 
-                        'u', 
+                        'c',
+                        'r',
+                        'u',
                         // 'd'
                       ] as PermissionKey[]).map((key) => {
                         const switchId = `permission-${permission.permission_id}-${key}`
