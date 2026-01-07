@@ -1,0 +1,11 @@
+.global-settings__tabs {
+  position: sticky;
+  top: 1.5rem;
+  z-index: 2;
+}
+
+@media (max-width: 991.98px) {
+  .global-settings__tabs {
+    position: static;
+  }
+}
