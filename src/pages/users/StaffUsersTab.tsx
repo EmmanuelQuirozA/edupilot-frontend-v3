@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { DataTable, type DataTableColumn } from '../../components/DataTable'
-import SearchInput from '../../components/ui/SearchInput'
+import { FilterSidebar } from '../../components/FilterSidebar'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE_URL } from '../../config'
@@ -30,6 +30,20 @@ interface SchoolOption {
 interface RoleOption {
   role_id: number
   role_name: string
+}
+
+interface StaffFilters {
+  schoolId: string
+  roleId: string
+  enabled: string
+  fullName: string
+}
+
+const emptyFilters: StaffFilters = {
+  schoolId: '',
+  roleId: '',
+  enabled: '',
+  fullName: '',
 }
 
 const statusIsActive = (status: string) => {
@@ -62,15 +76,13 @@ export function StaffUsersTab() {
   const [roles, setRoles] = useState<RoleOption[]>([])
   const [rolesLoading, setRolesLoading] = useState(false)
 
-  const [selectedSchoolId, setSelectedSchoolId] = useState<number | ''>('')
-  const [selectedRoleId, setSelectedRoleId] = useState<number | ''>('')
-  const [enabledFilter, setEnabledFilter] = useState<'all' | 'active' | 'inactive'>('all')
-
-  const [searchTerm, setSearchTerm] = useState('')
-  const [appliedSearch, setAppliedSearch] = useState('')
   const [orderBy, setOrderBy] = useState('')
   const [orderDir, setOrderDir] = useState<'ASC' | 'DESC'>('ASC')
   const [isExporting, setIsExporting] = useState(false)
+
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [draftFilters, setDraftFilters] = useState<StaffFilters>(emptyFilters)
+  const [appliedFilters, setAppliedFilters] = useState<StaffFilters>(emptyFilters)
 
   useEffect(() => {
     if (!token) return
@@ -106,9 +118,13 @@ export function StaffUsersTab() {
   }, [token])
 
   useEffect(() => {
-    if (!token || !selectedSchoolId) {
+    if (!filtersOpen) return
+    setDraftFilters(appliedFilters)
+  }, [appliedFilters, filtersOpen])
+
+  useEffect(() => {
+    if (!token || !draftFilters.schoolId) {
       setRoles([])
-      setSelectedRoleId('')
       return
     }
 
@@ -119,7 +135,7 @@ export function StaffUsersTab() {
       try {
         const params = new URLSearchParams({
           lang: locale,
-          school_id: String(selectedSchoolId),
+          school_id: draftFilters.schoolId,
         })
         const response = await fetch(`${API_BASE_URL}/roles?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -144,7 +160,7 @@ export function StaffUsersTab() {
     fetchRoles()
 
     return () => controller.abort()
-  }, [locale, selectedSchoolId, token])
+  }, [draftFilters.schoolId, locale, token])
 
   useEffect(() => {
     if (!token) return
@@ -165,20 +181,20 @@ export function StaffUsersTab() {
           order_dir: orderDir,
         })
 
-        if (selectedSchoolId) {
-          params.set('school_id', String(selectedSchoolId))
+        if (appliedFilters.schoolId) {
+          params.set('school_id', appliedFilters.schoolId)
         }
 
-        if (selectedRoleId) {
-          params.set('role_id', String(selectedRoleId))
+        if (appliedFilters.roleId) {
+          params.set('role_id', appliedFilters.roleId)
         }
 
-        if (appliedSearch) {
-          params.set('full_name', appliedSearch)
+        if (appliedFilters.fullName) {
+          params.set('full_name', appliedFilters.fullName)
         }
 
-        if (enabledFilter !== 'all') {
-          params.set('enabled', enabledFilter === 'active' ? 'true' : 'false')
+        if (appliedFilters.enabled) {
+          params.set('enabled', appliedFilters.enabled)
         }
 
         const response = await fetch(`${API_BASE_URL}/users?${params.toString()}`, {
@@ -206,18 +222,7 @@ export function StaffUsersTab() {
     fetchUsers()
 
     return () => controller.abort()
-  }, [appliedSearch, enabledFilter, locale, orderBy, orderDir, page, pageSize, selectedRoleId, selectedSchoolId, t, token])
-
-  const handleSearchSubmit = () => {
-    setAppliedSearch(searchTerm)
-    setPage(0)
-  }
-
-  const handleClearSearch = () => {
-    setSearchTerm('')
-    setAppliedSearch('')
-    setPage(0)
-  }
+  }, [appliedFilters, locale, orderBy, orderDir, page, pageSize, t, token])
 
   const handleSort = (columnKey: keyof StaffUser) => {
     setPage(0)
@@ -240,20 +245,20 @@ export function StaffUsersTab() {
         order_dir: orderDir,
       })
 
-      if (selectedSchoolId) {
-        params.set('school_id', String(selectedSchoolId))
+      if (appliedFilters.schoolId) {
+        params.set('school_id', appliedFilters.schoolId)
       }
 
-      if (selectedRoleId) {
-        params.set('role_id', String(selectedRoleId))
+      if (appliedFilters.roleId) {
+        params.set('role_id', appliedFilters.roleId)
       }
 
-      if (appliedSearch) {
-        params.set('full_name', appliedSearch)
+      if (appliedFilters.fullName) {
+        params.set('full_name', appliedFilters.fullName)
       }
 
-      if (enabledFilter !== 'all') {
-        params.set('enabled', enabledFilter === 'active' ? 'true' : 'false')
+      if (appliedFilters.enabled) {
+        params.set('enabled', appliedFilters.enabled)
       }
 
       const response = await fetch(`${API_BASE_URL}/users?${params.toString()}`, {
@@ -351,105 +356,21 @@ export function StaffUsersTab() {
       <div className="card shadow-sm border-0">
         <div className="card-body d-flex flex-column gap-3">
           <div className="d-flex flex-column gap-3 flex-md-row align-items-md-center">
-            <SearchInput
-              value={searchTerm}
-              onChange={(value) => setSearchTerm(value)}
-              onSubmit={handleSearchSubmit}
-              onClear={handleClearSearch}
-              placeholder={t('searchByName')}
-              className="flex-grow-1"
-              inputClassName="w-100"
-            />
-            <button type="button" className="users-filter-button">
+            <button type="button" className="users-filter-button" onClick={() => setFiltersOpen(true)}>
               <svg viewBox="0 0 20 20" aria-hidden="true" className="users-filter-button__icon" focusable="false">
                 <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
               </svg>
               <span className="fw-semibold">{t('filters')}</span>
             </button>
-          </div>
-
-          <div className="d-flex flex-column gap-3 flex-lg-row align-items-lg-center">
-            <div className="flex-grow-1">
-              <label className="form-label small text-muted" htmlFor="staff-school-select">
-                {t('selectSchoolLabel')}
-              </label>
-              <select
-                id="staff-school-select"
-                className="form-select"
-                value={selectedSchoolId}
-                onChange={(event) => {
-                  const value = event.target.value
-                  setSelectedSchoolId(value ? Number(value) : '')
-                  setPage(0)
-                }}
-                disabled={schoolsLoading}
-              >
-                <option value="">{schoolsLoading ? t('tableLoading') : t('selectSchoolOption')}</option>
-                {schools.map((school) => (
-                  <option key={school.school_id} value={school.school_id}>
-                    {school.description}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-grow-1">
-              <label className="form-label small text-muted" htmlFor="staff-role-select">
-                {t('selectRoleLabel')}
-              </label>
-              <select
-                id="staff-role-select"
-                className="form-select"
-                value={selectedRoleId}
-                onChange={(event) => {
-                  const value = event.target.value
-                  setSelectedRoleId(value ? Number(value) : '')
-                  setPage(0)
-                }}
-                disabled={rolesLoading || !selectedSchoolId}
-              >
-                <option value="">
-                  {rolesLoading
-                    ? t('tableLoading')
-                    : selectedSchoolId
-                      ? t('selectRoleLabel')
-                      : t('selectSchoolOption')}
-                </option>
-                {roles.map((role) => (
-                  <option key={role.role_id} value={role.role_id}>
-                    {role.role_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-grow-1">
-              <label className="form-label small text-muted" htmlFor="staff-status-select">
-                {t('status')}
-              </label>
-              <select
-                id="staff-status-select"
-                className="form-select"
-                value={enabledFilter}
-                onChange={(event) => {
-                  setEnabledFilter(event.target.value as 'all' | 'active' | 'inactive')
-                  setPage(0)
-                }}
-              >
-                <option value="all">{t('selectPlaceholder')}</option>
-                <option value="active">{t('active')}</option>
-                <option value="inactive">{t('inactive')}</option>
-              </select>
-            </div>
-            <div className="align-self-lg-end">
-              <button
-                type="button"
-                className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
-                onClick={handleExport}
-                disabled={isExporting}
-              >
-                <i className="bi bi-download" aria-hidden="true" />
-                {isExporting ? t('exporting') : t('exportCsv')}
-              </button>
-            </div>
+            <button
+              type="button"
+              className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
+              <i className="bi bi-download" aria-hidden="true" />
+              {isExporting ? t('exporting') : t('exportCsv')}
+            </button>
           </div>
         </div>
       </div>
@@ -470,6 +391,93 @@ export function StaffUsersTab() {
         sortDirection={orderDir}
         onSort={(columnKey) => handleSort(columnKey as keyof StaffUser)}
       />
+
+      <FilterSidebar
+        title={t('filters')}
+        isOpen={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        onClear={() => {
+          setDraftFilters(emptyFilters)
+          setAppliedFilters(emptyFilters)
+          setPage(0)
+          setFiltersOpen(false)
+        }}
+        onApply={() => {
+          setAppliedFilters(draftFilters)
+          setPage(0)
+          setFiltersOpen(false)
+        }}
+      >
+        <div className="mb-3">
+          <label htmlFor="staff-full-name">{t('name')}</label>
+          <input
+            id="staff-full-name"
+            className="form-control"
+            placeholder={t('searchByName')}
+            value={draftFilters.fullName}
+            onChange={(event) => setDraftFilters((prev) => ({ ...prev, fullName: event.target.value }))}
+          />
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor="staff-school-select">{t('selectSchoolLabel')}</label>
+          <select
+            id="staff-school-select"
+            className="form-select"
+            value={draftFilters.schoolId}
+            onChange={(event) => {
+              const value = event.target.value
+              setDraftFilters((prev) => ({ ...prev, schoolId: value, roleId: '' }))
+            }}
+            disabled={schoolsLoading}
+          >
+            <option value="">{schoolsLoading ? t('tableLoading') : t('selectSchoolOption')}</option>
+            {schools.map((school) => (
+              <option key={school.school_id} value={String(school.school_id)}>
+                {school.description}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor="staff-role-select">{t('selectRoleLabel')}</label>
+          <select
+            id="staff-role-select"
+            className="form-select"
+            value={draftFilters.roleId}
+            onChange={(event) => setDraftFilters((prev) => ({ ...prev, roleId: event.target.value }))}
+            disabled={rolesLoading || !draftFilters.schoolId}
+          >
+            <option value="">
+              {rolesLoading
+                ? t('tableLoading')
+                : draftFilters.schoolId
+                  ? t('selectRoleLabel')
+                  : t('selectSchoolOption')}
+            </option>
+            {roles.map((role) => (
+              <option key={role.role_id} value={String(role.role_id)}>
+                {role.role_name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor="staff-status-select">{t('status')}</label>
+          <select
+            id="staff-status-select"
+            className="form-select"
+            value={draftFilters.enabled}
+            onChange={(event) => setDraftFilters((prev) => ({ ...prev, enabled: event.target.value }))}
+          >
+            <option value="">{t('selectPlaceholder')}</option>
+            <option value="true">{t('active')}</option>
+            <option value="false">{t('inactive')}</option>
+          </select>
+        </div>
+      </FilterSidebar>
     </>
   )
 }
