@@ -8,6 +8,7 @@ import { useModulePermissions } from '../../hooks/useModulePermissions'
 import { NoPermission } from '../../components/NoPermission'
 import { LoadingSkeleton } from '../../components/LoadingSkeleton'
 import SearchInput from '../../components/ui/SearchInput'
+import { UserCreateModal } from '../../components/UserCreateModal'
 
 interface StaffUser {
   user_id: number
@@ -88,6 +89,9 @@ export function StaffUsersTab() {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
+
+  const [isCreateUserOpen, setIsCreateUserOpen] = useState(false)
+  const [reloadCounter, setReloadCounter] = useState(0)
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [draftFilters, setDraftFilters] = useState<StaffFilters>(emptyFilters)
@@ -235,7 +239,7 @@ export function StaffUsersTab() {
     fetchUsers()
 
     return () => controller.abort()
-  }, [appliedSearch, appliedFilters, locale, orderBy, orderDir, page, pageSize, t, token])
+  }, [appliedSearch, appliedFilters, locale, orderBy, orderDir, page, pageSize, reloadCounter, t, token])
 
   const handleSearchSubmit = () => {
     setAppliedSearch(searchTerm)
@@ -252,6 +256,19 @@ export function StaffUsersTab() {
     setPage(0)
     setOrderDir((prevDir) => (orderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
     setOrderBy(columnKey)
+  }
+
+  const handleOpenCreateUserModal = () => {
+    setIsCreateUserOpen(true)
+  }
+
+  const handleCloseCreateUserModal = () => {
+    setIsCreateUserOpen(false)
+  }
+
+  const handleUserCreated = () => {
+    setPage(0)
+    setReloadCounter((prev) => prev + 1)
   }
 
   const handleExport = async () => {
@@ -435,8 +452,7 @@ export function StaffUsersTab() {
                 <button
                   className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
                   type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
+                  onClick={handleOpenCreateUserModal}
                 >
                   <span aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -560,6 +576,12 @@ export function StaffUsersTab() {
           </select>
         </div>
       </FilterSidebar>
+
+      <UserCreateModal
+        isOpen={isCreateUserOpen}
+        onClose={handleCloseCreateUserModal}
+        onCreated={handleUserCreated}
+      />
     </>
   )
 }
