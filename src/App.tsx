@@ -20,6 +20,7 @@ import { KitchenPage } from "./pages/KitchenPage";
 import { SchoolsPage } from "./pages/SchoolsPage";
 import { SchoolDetailsPage } from "./pages/SchoolDetailsPage";
 import { StudentsPage } from "./pages/StudentsPage";
+import { UsersPage } from "./pages/UsersPage";
 import { StudentsBulkUploadPage } from "./pages/StudentsBulkUploadPage";
 import { StudentDetailPage } from "./pages/StudentDetailPage";
 import { PaymentsFinancePage } from "./pages/PaymentsFinancePage/PaymentsFinancePage";
@@ -119,6 +120,7 @@ function Router() {
   const isStudentsBulkPath = /^\/(es|en)\/students&Classes\/bulk-upload$/.test(path);
   const studentDetailMatch = path.match(/^\/(es|en)\/students&Classes\/students\/(\d+)$/);
   const isStudentDetailPath = Boolean(studentDetailMatch);
+  const isUsersPath = /^\/(es|en)\/users$/.test(path);
   const isControlAccessPath = /^\/(es|en)\/control-access$/.test(path);
   const isGlobalSettingsPath = /^\/(es|en)\/globalSetings$/.test(path);
   const scheduledFinanceMatch = path.match(/^\/(es|en)\/finance\/request\/scheduled\/(\d+)$/);
@@ -170,6 +172,7 @@ function Router() {
 
     if (isSchoolsPath) return <SchoolsPage onNavigate={navigate} />;
     if (isStudentsPath) return <StudentsPage onNavigate={navigate} />;
+    if (isUsersPath) return <UsersPage onNavigate={navigate} />;
     if (scheduledFinanceMatch) {
       return (
         <PaymentRequestScheduledDetailPage
