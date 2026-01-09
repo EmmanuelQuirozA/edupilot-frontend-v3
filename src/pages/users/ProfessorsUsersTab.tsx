@@ -4,6 +4,10 @@ import { FilterSidebar } from '../../components/FilterSidebar'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE_URL } from '../../config'
+import { useModulePermissions } from '../../hooks/useModulePermissions'
+import { NoPermission } from '../../components/NoPermission'
+import { LoadingSkeleton } from '../../components/LoadingSkeleton'
+import SearchInput from '../../components/ui/SearchInput'
 
 interface TeacherUser {
   user_id: number
@@ -51,6 +55,8 @@ const buildCsvValue = (value: string | number | null | undefined) => {
 export function ProfessorsUsersTab() {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
+  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('teachers')
+  const canCreate = permissions?.c ?? false
   const [teachers, setTeachers] = useState<TeacherUser[]>([])
   const [page, setPage] = useState(0)
   const [pageSize] = useState(10)
@@ -65,6 +71,9 @@ export function ProfessorsUsersTab() {
   const [orderBy, setOrderBy] = useState('')
   const [orderDir, setOrderDir] = useState<'ASC' | 'DESC'>('ASC')
   const [isExporting, setIsExporting] = useState(false)
+
+  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [draftFilters, setDraftFilters] = useState<TeacherFilters>(emptyFilters)
@@ -139,6 +148,10 @@ export function ProfessorsUsersTab() {
           params.set('enabled', appliedFilters.enabled)
         }
 
+        if (appliedSearch) {
+          params.set('full_name', appliedSearch)
+        }
+
         const response = await fetch(`${API_BASE_URL}/teachers?${params.toString()}`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
@@ -164,7 +177,18 @@ export function ProfessorsUsersTab() {
     fetchTeachers()
 
     return () => controller.abort()
-  }, [appliedFilters, locale, orderBy, orderDir, page, pageSize, t, token])
+  }, [appliedSearch, appliedFilters, locale, orderBy, orderDir, page, pageSize, t, token])
+
+  const handleSearchSubmit = () => {
+    setAppliedSearch(searchTerm)
+    setPage(0)
+  }
+
+  const handleClearSearch = () => {
+    setSearchTerm('')
+    setAppliedSearch('')
+    setPage(0)
+  }
 
   const handleSort = (columnKey: keyof TeacherUser) => {
     setPage(0)
@@ -276,6 +300,32 @@ export function ProfessorsUsersTab() {
     [t],
   )
 
+  if (permissionsLoading || !permissionsLoaded) {
+    return (
+      <>
+        <LoadingSkeleton variant="table" rowCount={10} />
+      </>
+    )
+  }
+
+  if (permissionsError) {
+    return (
+      <>
+        <div className="alert alert-danger" role="alert">
+          {t('defaultError')}
+        </div>
+      </>
+    )
+  }
+    
+  if (
+    (permissionsLoaded && permissions && !permissions.r)
+  ) {
+    return (
+        <NoPermission />
+    )
+  }
+
   return (
     <>
       {error ? (
@@ -287,6 +337,15 @@ export function ProfessorsUsersTab() {
       <div className="card shadow-sm border-0">
         <div className="card-body d-flex flex-column gap-3">
           <div className="d-flex flex-column gap-3 flex-md-row align-items-md-center">
+            <SearchInput
+              value={searchTerm}
+              onChange={(val) => setSearchTerm(val)}
+              onSubmit={handleSearchSubmit}
+              onClear={handleClearSearch}
+              placeholder={t("searchTeacherByName")}
+              className="flex-grow-1"
+              inputClassName="w-100"
+            />
             <button type="button" className="users-filter-button" onClick={() => setFiltersOpen(true)}>
               <svg viewBox="0 0 20 20" aria-hidden="true" className="users-filter-button__icon" focusable="false">
                 <path d="M4 5.25C4 4.56 4.56 4 5.25 4h9a.75.75 0 0 1 .6 1.2L12 9.25v3.7a.75.75 0 0 1-.3.6l-2 1.5A.75.75 0 0 1 8.5 14V9.25L4.4 5.2A.75.75 0 0 1 4 4.5Z" />
@@ -302,6 +361,29 @@ export function ProfessorsUsersTab() {
               <i className="bi bi-download" aria-hidden="true" />
               {isExporting ? t('exporting') : t('exportCsv')}
             </button>
+            <div className="d-flex align-items-center gap-2">
+              {canCreate ? (
+                <button
+                  className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <span aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M12 5v14M5 12h14"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                  <span className="fw-semibold">{t('createTeacher')}</span>
+                </button>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
