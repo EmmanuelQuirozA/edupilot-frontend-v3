@@ -8,6 +8,7 @@ import { useModulePermissions } from '../../hooks/useModulePermissions'
 import { NoPermission } from '../../components/NoPermission'
 import { LoadingSkeleton } from '../../components/LoadingSkeleton'
 import SearchInput from '../../components/ui/SearchInput'
+import { TeacherCreateModal } from '../../components/TeacherCreateModal'
 
 interface TeacherUser {
   user_id: number
@@ -74,6 +75,9 @@ export function ProfessorsUsersTab() {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
+
+  const [isCreateTeacherOpen, setIsCreateTeacherOpen] = useState(false)
+  const [reloadCounter, setReloadCounter] = useState(0)
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [draftFilters, setDraftFilters] = useState<TeacherFilters>(emptyFilters)
@@ -177,7 +181,7 @@ export function ProfessorsUsersTab() {
     fetchTeachers()
 
     return () => controller.abort()
-  }, [appliedSearch, appliedFilters, locale, orderBy, orderDir, page, pageSize, t, token])
+  }, [appliedSearch, appliedFilters, locale, orderBy, orderDir, page, pageSize, reloadCounter, t, token])
 
   const handleSearchSubmit = () => {
     setAppliedSearch(searchTerm)
@@ -194,6 +198,19 @@ export function ProfessorsUsersTab() {
     setPage(0)
     setOrderDir((prevDir) => (orderBy === columnKey ? (prevDir === 'ASC' ? 'DESC' : 'ASC') : 'ASC'))
     setOrderBy(columnKey)
+  }
+
+  const handleOpenCreateTeacherModal = () => {
+    setIsCreateTeacherOpen(true)
+  }
+
+  const handleCloseCreateTeacherModal = () => {
+    setIsCreateTeacherOpen(false)
+  }
+
+  const handleTeacherCreated = () => {
+    setPage(0)
+    setReloadCounter((prev) => prev + 1)
   }
 
   const handleExport = async () => {
@@ -366,8 +383,7 @@ export function ProfessorsUsersTab() {
                 <button
                   className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
                   type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
+                  onClick={handleOpenCreateTeacherModal}
                 >
                   <span aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -464,6 +480,12 @@ export function ProfessorsUsersTab() {
           </select>
         </div>
       </FilterSidebar>
+
+      <TeacherCreateModal
+        isOpen={isCreateTeacherOpen}
+        onClose={handleCloseCreateTeacherModal}
+        onCreated={handleTeacherCreated}
+      />
     </>
   )
 }
