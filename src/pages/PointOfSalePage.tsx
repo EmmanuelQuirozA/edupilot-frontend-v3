@@ -10,21 +10,12 @@ import './PointOfSalePage.css'
 import { useModulePermissions } from '../hooks/useModulePermissions'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { NoPermission } from '../components/NoPermission'
+import { ProductCreateModal } from '../components/point-of-sale/ProductCreateModal'
+import { ProductUpdateModal } from '../components/point-of-sale/ProductUpdateModal'
+import type { MenuItem } from '../components/point-of-sale/types'
 
 interface PointOfSalePageProps {
   onNavigate: (path: string) => void
-}
-
-interface MenuItem {
-  menu_id: number
-  school_id: number
-  code: string
-  name: string
-  description: string
-  price: number
-  enabled: boolean
-  menu_status: string
-  image: string | null
 }
 
 interface MenuResponse {
@@ -59,6 +50,7 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
   const { locale, t } = useLanguage()
   const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('point-of-sale')
   const canCreate = permissions?.c ?? false
+  const canUpdate = permissions?.u ?? false
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -69,6 +61,10 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
   const [processMessage, setProcessMessage] = useState<string | null>(null)
   const [menuImageUrls, setMenuImageUrls] = useState<Record<string, string>>({})
   const menuImageUrlsRef = useRef<Record<string, string>>({})
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     menuImageUrlsRef.current = menuImageUrls
@@ -165,14 +161,14 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
         })
 
         if (!response.ok) {
-          throw new Error('No se pudo cargar el catálogo de productos')
+          throw new Error(t('posCatalogLoadError'))
         }
 
         const data: MenuResponse = await response.json()
         setMenuItems(Array.isArray(data.content) ? data.content : [])
       } catch (fetchError) {
         if ((fetchError as DOMException).name === 'AbortError') return
-        setError(fetchError instanceof Error ? fetchError.message : 'Error desconocido')
+        setError(fetchError instanceof Error ? fetchError.message : t('posUnknownError'))
         setMenuItems([])
       } finally {
         if (!controller.signal.aborted) {
@@ -183,14 +179,14 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
 
     fetchMenu()
     return () => controller.abort()
-  }, [search, token])
+  }, [refreshKey, search, t, token])
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
-      { label: 'Dashboard', onClick: () => onNavigate(`/${locale}`) },
-      { label: 'Punto de venta' },
+      { label: t('portalTitle'), onClick: () => onNavigate(`/${locale}`) },
+      { label: t('posTitle') },
     ],
-    [locale, onNavigate],
+    [locale, onNavigate, t],
   )
 
   const totalItems = useMemo(
@@ -278,21 +274,35 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
       }
 
       if (!response.ok || responseBody?.success === false) {
-        throw new Error(responseBody?.message || 'No se pudo procesar la venta')
+        throw new Error(responseBody?.message || t('posProcessError'))
       }
 
       setCartItems([])
-      setProcessMessage(responseBody?.message || 'Venta procesada correctamente.')
+      setProcessMessage(responseBody?.message || t('posProcessSuccess'))
     } catch (processError) {
-      setProcessMessage(processError instanceof Error ? processError.message : 'Error desconocido')
+      setProcessMessage(processError instanceof Error ? processError.message : t('posUnknownError'))
     } finally {
       setProcessing(false)
     }
   }
+
+  const handleOpenUpdateModal = (item: MenuItem) => {
+    setSelectedItem(item)
+    setIsUpdateModalOpen(true)
+  }
+
+  const handleCloseUpdateModal = () => {
+    setIsUpdateModalOpen(false)
+    setSelectedItem(null)
+  }
+
+  const handleMenuRefresh = () => {
+    setRefreshKey((prev) => prev + 1)
+  }
   
   if (permissionsLoading || !permissionsLoaded) {
     return (
-      <Layout onNavigate={onNavigate} pageTitle="Punto de venta" breadcrumbItems={breadcrumbItems}>
+      <Layout onNavigate={onNavigate} pageTitle={t('posTitle')} breadcrumbItems={breadcrumbItems}>
         <LoadingSkeleton variant="dashboard" rowCount={10} />
       </Layout>
     )
@@ -312,14 +322,14 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
     (permissionsLoaded && permissions && !permissions.r)
   ) {
     return (
-      <Layout onNavigate={onNavigate} pageTitle="Punto de venta" breadcrumbItems={breadcrumbItems}>
+      <Layout onNavigate={onNavigate} pageTitle={t('posTitle')} breadcrumbItems={breadcrumbItems}>
         <NoPermission />
       </Layout>
     )
   }
 
   return (
-    <Layout onNavigate={onNavigate} pageTitle="Punto de venta" breadcrumbItems={breadcrumbItems}>
+    <Layout onNavigate={onNavigate} pageTitle={t('posTitle')} breadcrumbItems={breadcrumbItems}>
       <div className="point-of-sale d-flex flex-column gap-4">
         <div className="row g-4">
           <div className="col-12 col-xl-8">
@@ -329,17 +339,16 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
                   <SearchInput
                     value={search}
                     onChange={setSearch}
-                    placeholder="Buscar productos (Código o Nombre)..."
+                    placeholder={t('posSearchProductsPlaceholder')}
                     debounceMs={300}
                     className="pos-search-input w-100"
-                    clearButtonAriaLabel="Limpiar búsqueda"
+                    clearButtonAriaLabel={t('posClearSearchLabel')}
                   />
                   {canCreate ? (
                     <button
                       className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium text-nowrap"
                       type="button"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
+                      onClick={() => setIsCreateModalOpen(true)}
                     >
                       <span aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -357,23 +366,51 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
                   ) : null}
                 </div>
 
-                {loading ? <div className="text-muted">Cargando productos...</div> : null}
+                {loading ? <div className="text-muted">{t('posLoadingProducts')}</div> : null}
                 {error ? <div className="alert alert-danger mb-0">{error}</div> : null}
 
                 {!loading && !error && menuItems.length === 0 ? (
-                  <div className="text-muted">No hay productos disponibles.</div>
+                  <div className="text-muted">{t('posNoProducts')}</div>
                 ) : null}
 
                 <div className="pos-products-grid">
                   {menuItems.map((item) => {
                     const imageUrl = item.image ? menuImageUrls[item.image] : null
                     return (
-                      <button
+                      <div
                         key={item.menu_id}
-                        type="button"
                         className="pos-product-card"
                         onClick={() => addToCart(item)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            addToCart(item)
+                          }
+                        }}
                       >
+                        {canUpdate ? (
+                          <button
+                            type="button"
+                            className="pos-product-edit btn btn-light"
+                            aria-label={`Actualizar ${item.name}`}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              handleOpenUpdateModal(item)
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <path
+                                d="M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4L4 16v4z"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        ) : null}
                         <div className="pos-product-image">
                           {imageUrl ? (
                             <img src={imageUrl} alt={item.name} />
@@ -383,10 +420,10 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
                         </div>
                         <div className="pos-product-info">
                           <h6 className="mb-1">{item.name}</h6>
-                          <p className="text-muted small mb-2">{item.description || 'Producto de cafetería'}</p>
+                          <p className="text-muted small mb-2">{item.description || t('posDefaultProductDescription')}</p>
                           <span className="fw-semibold">{formatCurrency(item.price)}</span>
                         </div>
-                      </button>
+                      </div>
                     )
                   })}
                 </div>
@@ -401,8 +438,8 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
                   <UsersBalanceSearchDropdown
                     onSelect={(user) => setSelectedUser(user as UsersBalanceSearchItem)}
                     onClear={() => setSelectedUser(null)}
-                    label="Buscar alumno"
-                    placeholder="Buscar alumno..."
+                    label={t('posSearchStudentLabel')}
+                    placeholder={t('posSearchStudentPlaceholder')}
                     value={selectedUser ? [selectedUser] : []}
                   />
                 </div>
@@ -418,32 +455,34 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
                         </div>
                       </div>
                       <div className="pos-user-balance">
-                        <span className="text-muted">Saldo actual</span>
+                        <span className="text-muted">{t('posCurrentBalance')}</span>
                         <span className="badge bg-success-subtle text-success-emphasis">
                           {formatCurrency(userDetails.balance)}
                         </span>
                       </div>
                     </>
                   ) : (
-                    <div className="text-muted">Selecciona un usuario para ver su información.</div>
+                    <div className="text-muted">{t('posSelectUserMessage')}</div>
                   )}
                 </div>
 
                 <div className="pos-cart-header">
                   <div>
-                    <p className="text-uppercase text-muted fw-semibold small mb-0">Orden actual</p>
-                    <span className="text-muted small">{totalItems} items</span>
+                    <p className="text-uppercase text-muted fw-semibold small mb-0">{t('posCurrentOrder')}</p>
+                    <span className="text-muted small">
+                      {totalItems} {t('posItemsLabel')}
+                    </span>
                   </div>
                   {cartItems.length ? (
                     <button type="button" className="btn btn-link btn-sm" onClick={() => setCartItems([])}>
-                      Vaciar
+                      {t('posClearCart')}
                     </button>
                   ) : null}
                 </div>
 
                 <div className="pos-cart-list">
                   {cartItems.length === 0 ? (
-                    <div className="text-muted">Agrega productos al carrito.</div>
+                    <div className="text-muted">{t('posEmptyCart')}</div>
                   ) : (
                     cartItems.map((item) => (
                       <div key={item.menuId} className="pos-cart-item">
@@ -483,7 +522,7 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
 
                 <div className="pos-total-card">
                   <div className="d-flex justify-content-between align-items-center">
-                    <span className="fw-semibold">Total a pagar</span>
+                    <span className="fw-semibold">{t('posTotalLabel')}</span>
                     <span className="pos-total-amount">{formatCurrency(totalAmount)}</span>
                   </div>
                 </div>
@@ -501,7 +540,7 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
                     onClick={() => setCartItems([])}
                     disabled={cartItems.length === 0}
                   >
-                    Cancelar
+                    {t('cancel')}
                   </button>
                   <button
                     type="button"
@@ -509,7 +548,7 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
                     onClick={handleCheckout}
                     disabled={!selectedUser || cartItems.length === 0 || processing}
                   >
-                    {processing ? 'Procesando...' : `Cobrar ${formatCurrency(totalAmount)}`}
+                    {processing ? t('processing') : `${t('posChargeAction')} ${formatCurrency(totalAmount)}`}
                   </button>
                 </div>
               </div>
@@ -517,6 +556,17 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
           </div>
         </div>
       </div>
+      <ProductCreateModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreated={handleMenuRefresh}
+      />
+      <ProductUpdateModal
+        isOpen={isUpdateModalOpen}
+        item={selectedItem}
+        onClose={handleCloseUpdateModal}
+        onUpdated={handleMenuRefresh}
+      />
     </Layout>
   )
 }
