@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Layout } from '../layout/Layout'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -51,11 +51,6 @@ const getInitials = (name?: string | null) => {
   return parts.slice(0, 2).map((part) => part[0]?.toUpperCase()).join('')
 }
 
-const buildMenuImageUrl = (image: string | null) => {
-  if (!image) return null
-  return `${API_BASE_URL}/coffee-menu-image/${encodeURIComponent(image)}`
-}
-
 export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
   const { token } = useAuth()
   const { locale } = useLanguage()
@@ -67,6 +62,63 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [processing, setProcessing] = useState(false)
   const [processMessage, setProcessMessage] = useState<string | null>(null)
+  const [menuImageUrls, setMenuImageUrls] = useState<Record<string, string>>({})
+  const menuImageUrlsRef = useRef<Record<string, string>>({})
+
+  useEffect(() => {
+    menuImageUrlsRef.current = menuImageUrls
+  }, [menuImageUrls])
+
+  useEffect(() => {
+    if (!token) return
+
+    const controller = new AbortController()
+    const loadImages = async () => {
+      const imagesToLoad = new Set<string>()
+      menuItems.forEach((item) => {
+        if (item.image && !menuImageUrlsRef.current[item.image]) {
+          imagesToLoad.add(item.image)
+        }
+      })
+      cartItems.forEach((item) => {
+        if (item.image && !menuImageUrlsRef.current[item.image]) {
+          imagesToLoad.add(item.image)
+        }
+      })
+
+      await Promise.all(
+        Array.from(imagesToLoad).map(async (image) => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/coffee-menu-image/${encodeURIComponent(image)}`, {
+              headers: { Authorization: `Bearer ${token}` },
+              signal: controller.signal,
+            })
+
+            if (!response.ok) return
+
+            const blob = await response.blob()
+            const objectUrl = URL.createObjectURL(blob)
+            if (controller.signal.aborted) {
+              URL.revokeObjectURL(objectUrl)
+              return
+            }
+            setMenuImageUrls((prev) => ({ ...prev, [image]: objectUrl }))
+          } catch (imageError) {
+            if ((imageError as DOMException).name === 'AbortError') return
+          }
+        }),
+      )
+    }
+
+    loadImages()
+    return () => controller.abort()
+  }, [cartItems, menuItems, token])
+
+  useEffect(() => {
+    return () => {
+      Object.values(menuImageUrlsRef.current).forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -213,12 +265,19 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
         body: JSON.stringify(payload),
       })
 
-      if (!response.ok) {
-        throw new Error('No se pudo procesar la venta')
+      let responseBody: { message?: string; success?: boolean } | null = null
+      try {
+        responseBody = (await response.json()) as { message?: string; success?: boolean }
+      } catch (parseError) {
+        responseBody = null
+      }
+
+      if (!response.ok || responseBody?.success === false) {
+        throw new Error(responseBody?.message || 'No se pudo procesar la venta')
       }
 
       setCartItems([])
-      setProcessMessage('Venta procesada correctamente.')
+      setProcessMessage(responseBody?.message || 'Venta procesada correctamente.')
     } catch (processError) {
       setProcessMessage(processError instanceof Error ? processError.message : 'Error desconocido')
     } finally {
@@ -251,7 +310,7 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
 
                 <div className="pos-products-grid">
                   {menuItems.map((item) => {
-                    const imageUrl = buildMenuImageUrl(item.image)
+                    const imageUrl = item.image ? menuImageUrls[item.image] : null
                     return (
                       <button
                         key={item.menu_id}
@@ -333,8 +392,8 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
                     cartItems.map((item) => (
                       <div key={item.menuId} className="pos-cart-item">
                         <div className="pos-cart-item-icon">
-                          {buildMenuImageUrl(item.image) ? (
-                            <img src={buildMenuImageUrl(item.image) ?? ''} alt={item.name} />
+                          {item.image && menuImageUrls[item.image] ? (
+                            <img src={menuImageUrls[item.image]} alt={item.name} />
                           ) : (
                             <span>☕</span>
                           )}
