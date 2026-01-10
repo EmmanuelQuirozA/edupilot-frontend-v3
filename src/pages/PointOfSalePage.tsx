@@ -7,6 +7,9 @@ import UsersBalanceSearchDropdown, { type UsersBalanceSearchItem } from '../comp
 import SearchInput from '../components/ui/SearchInput'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import './PointOfSalePage.css'
+import { useModulePermissions } from '../hooks/useModulePermissions'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { NoPermission } from '../components/NoPermission'
 
 interface PointOfSalePageProps {
   onNavigate: (path: string) => void
@@ -53,7 +56,9 @@ const getInitials = (name?: string | null) => {
 
 export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
   const { token } = useAuth()
-  const { locale } = useLanguage()
+  const { locale, t } = useLanguage()
+  const { permissions, loading: permissionsLoading, error: permissionsError, loaded: permissionsLoaded } = useModulePermissions('point-of-sale')
+  const canCreate = permissions?.c ?? false
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -284,22 +289,73 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
       setProcessing(false)
     }
   }
+  
+  if (permissionsLoading || !permissionsLoaded) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle="Punto de venta" breadcrumbItems={breadcrumbItems}>
+        <LoadingSkeleton variant="dashboard" rowCount={10} />
+      </Layout>
+    )
+  }
+
+  if (permissionsError) {
+    return (
+      <>
+        <div className="alert alert-danger" role="alert">
+          {t('defaultError')}
+        </div>
+      </>
+    )
+  }
+    
+  if (
+    (permissionsLoaded && permissions && !permissions.r)
+  ) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle="Punto de venta" breadcrumbItems={breadcrumbItems}>
+        <NoPermission />
+      </Layout>
+    )
+  }
 
   return (
     <Layout onNavigate={onNavigate} pageTitle="Punto de venta" breadcrumbItems={breadcrumbItems}>
       <div className="point-of-sale d-flex flex-column gap-4">
         <div className="row g-4">
           <div className="col-12 col-xl-8">
-            <div className="card border-0 shadow-sm pos-products-panel">
+            <div className="card border-0 shadow-sm">
               <div className="card-body d-flex flex-column gap-4">
-                <SearchInput
-                  value={search}
-                  onChange={setSearch}
-                  placeholder="Buscar productos (Código o Nombre)..."
-                  debounceMs={300}
-                  className="pos-search-input"
-                  clearButtonAriaLabel="Limpiar búsqueda"
-                />
+                <div className='d-flex justify-content-between'>
+                  <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Buscar productos (Código o Nombre)..."
+                    debounceMs={300}
+                    className="pos-search-input w-100"
+                    clearButtonAriaLabel="Limpiar búsqueda"
+                  />
+                  {canCreate ? (
+                    <button
+                      className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium text-nowrap"
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <span aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M12 5v14M5 12h14"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                      <span className="fw-semibold">{t('createProduct')}</span>
+                    </button>
+                  ) : null}
+                </div>
 
                 {loading ? <div className="text-muted">Cargando productos...</div> : null}
                 {error ? <div className="alert alert-danger mb-0">{error}</div> : null}
@@ -339,7 +395,7 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
           </div>
 
           <div className="col-12 col-xl-4">
-            <div className="card border-0 shadow-sm pos-summary-panel">
+            <div className="card border-0 shadow-sm">
               <div className="card-body d-flex flex-column gap-4">
                 <div className="pos-user-search">
                   <UsersBalanceSearchDropdown
