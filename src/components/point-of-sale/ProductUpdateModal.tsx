@@ -34,7 +34,11 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
     enabled: true,
   })
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [currentImage, setCurrentImage] = useState<string | null>(null)
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isRemovingImage, setIsRemovingImage] = useState(false)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const schoolId = useMemo(() => user?.school_id ?? 1, [user?.school_id])
@@ -52,11 +56,126 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
       enabled: item.enabled ?? true,
     })
     setImageFile(null)
+    setCurrentImage(item.image ?? null)
     setErrorMessage(null)
   }, [isOpen, item])
 
+  useEffect(() => {
+    if (!isOpen || !currentImage || !token) {
+      setImagePreviewUrl((prev) => {
+        if (prev) {
+          URL.revokeObjectURL(prev)
+        }
+        return null
+      })
+      return
+    }
+
+    const controller = new AbortController()
+    const loadImage = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/coffee-menu-image/${encodeURIComponent(currentImage)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) return
+        const blob = await response.blob()
+        const objectUrl = URL.createObjectURL(blob)
+        if (controller.signal.aborted) {
+          URL.revokeObjectURL(objectUrl)
+          return
+        }
+        setImagePreviewUrl((prev) => {
+          if (prev) {
+            URL.revokeObjectURL(prev)
+          }
+          return objectUrl
+        })
+      } catch (imageError) {
+        if ((imageError as DOMException).name === 'AbortError') return
+      }
+    }
+
+    loadImage()
+    return () => controller.abort()
+  }, [currentImage, isOpen, token])
+
   const handleChange = <Key extends keyof ProductFormState>(key: Key, value: ProductFormState[Key]) => {
     setFormState((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleRemoveImage = async () => {
+    if (!token || !item) return
+
+    try {
+      setIsRemovingImage(true)
+      setErrorMessage(null)
+
+      const response = await fetch(`${API_BASE_URL}/coffee/update/${item.menu_id}?lang=${locale}&removeImage=true`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      let responseBody: { message?: string; success?: boolean } | null = null
+      try {
+        responseBody = (await response.json()) as { message?: string; success?: boolean }
+      } catch (parseError) {
+        responseBody = null
+      }
+
+      if (!response.ok || responseBody?.success === false) {
+        throw new Error(responseBody?.message || t('defaultError'))
+      }
+
+      setCurrentImage(null)
+      setImageFile(null)
+      onUpdated?.()
+    } catch (removeError) {
+      setErrorMessage(removeError instanceof Error ? removeError.message : t('defaultError'))
+    } finally {
+      setIsRemovingImage(false)
+    }
+  }
+
+  const handleStatusUpdate = async () => {
+    if (!token || !item) return
+
+    const nextEnabled = !formState.enabled
+
+    try {
+      setIsUpdatingStatus(true)
+      setErrorMessage(null)
+
+      const response = await fetch(`${API_BASE_URL}/coffee/update/${item.menu_id}/status`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled: nextEnabled }),
+      })
+
+      let responseBody: { message?: string; success?: boolean } | null = null
+      try {
+        responseBody = (await response.json()) as { message?: string; success?: boolean }
+      } catch (parseError) {
+        responseBody = null
+      }
+
+      if (!response.ok || responseBody?.success === false) {
+        throw new Error(responseBody?.message || t('defaultError'))
+      }
+
+      setFormState((prev) => ({ ...prev, enabled: nextEnabled }))
+      onUpdated?.()
+    } catch (statusError) {
+      setErrorMessage(statusError instanceof Error ? statusError.message : t('defaultError'))
+    } finally {
+      setIsUpdatingStatus(false)
+    }
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -204,19 +323,48 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
                       accept="image/*"
                       onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
                     />
+                    {imagePreviewUrl ? (
+                      <div className="mt-3 position-relative d-inline-block">
+                        <img
+                          src={imagePreviewUrl}
+                          alt={formState.nameEs || formState.nameEn || item.name}
+                          className="img-thumbnail"
+                          style={{ maxHeight: '160px' }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm position-absolute top-0 end-0 translate-middle"
+                          onClick={handleRemoveImage}
+                          disabled={isRemovingImage}
+                          aria-label={t('remove')}
+                        >
+                          x
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="col-12">
-                    <div className="form-check">
-                      <input
-                        id="product-update-enabled"
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={formState.enabled}
-                        onChange={(event) => handleChange('enabled', event.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="product-update-enabled">
-                        {t('posEnabledLabel')}
-                      </label>
+                    <div className="d-flex flex-wrap align-items-center gap-3">
+                      <div className="form-check">
+                        <input
+                          id="product-update-enabled"
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={formState.enabled}
+                          readOnly
+                        />
+                        <label className="form-check-label" htmlFor="product-update-enabled">
+                          {t('posEnabledLabel')}
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={handleStatusUpdate}
+                        disabled={isUpdatingStatus}
+                      >
+                        {formState.enabled ? t('posDeactivateProduct') : t('posActivateProduct')}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -226,7 +374,7 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
                 <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
                   {t('cancel')}
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                <button type="submit" className="btn btn-primary" disabled={isSubmitting || isUpdatingStatus}>
                   {isSubmitting ? t('posSaving') : t('posSaveChanges')}
                 </button>
               </div>
