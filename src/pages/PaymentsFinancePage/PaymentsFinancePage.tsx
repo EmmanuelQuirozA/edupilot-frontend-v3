@@ -229,12 +229,12 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
         )}
         {activeTab === 'kitchenSales' && (
           <>
-            <KitchenSalesTab />
+            <KitchenSalesTab onNavigate={onNavigate} />
           </>
         )}
         {activeTab === 'balanceRecharges' && (
           <>
-            <BalanceRechargesTab />
+            <BalanceRechargesTab onNavigate={onNavigate} />
           </>
         )}
       </div>

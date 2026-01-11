@@ -34,7 +34,11 @@ type OrderDirection = 'ASC' | 'DESC'
 
 const DEFAULT_PAGE_SIZE = 10
 
-export function BalanceRechargesTab() {
+interface BalanceRechargesTabProps {
+  onNavigate: (path: string) => void
+}
+
+export function BalanceRechargesTab({ onNavigate }: BalanceRechargesTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
 
@@ -201,6 +205,8 @@ export function BalanceRechargesTab() {
               name={row.full_name}
               gradeGroup={row.grade_group ?? undefined}
               scholarLevel={row.scholar_level_name ?? undefined}
+              onClick={() => onNavigate(`/${locale}/students&Classes/students/${row.student_id}`)}
+              nameButtonProps={{ 'aria-label': row.full_name }}
             />
           ) : (
             row.full_name
@@ -240,7 +246,7 @@ export function BalanceRechargesTab() {
         sortable: true,
       },
     ],
-    [locale],
+    [locale, onNavigate],
   )
 
   return (
