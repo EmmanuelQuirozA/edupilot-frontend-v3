@@ -128,7 +128,9 @@ function Router() {
   const isPointOfSalePath = /^\/(es|en)\/point-of-sale$/.test(path);
   const isPointOfSaleMenuPath = /^\/(es|en)\/point-of-sale\/menu$/.test(path);
   const scheduledFinanceMatch = path.match(/^\/(es|en)\/finance\/request\/scheduled\/(\d+)$/);
-  const financeMatch = path.match(/^\/(es|en)\/finance(?:\/(payments|request|request-upload)(?:\/(\d+))?)?$/);
+  const financeMatch = path.match(
+    /^\/(es|en)\/finance(?:\/(payments|request|request-upload|kitchen-sales|balance-recharges)(?:\/(\d+))?)?$/,
+  );
   const isFinancePath = Boolean(financeMatch) || Boolean(scheduledFinanceMatch);
   const financeSection = financeMatch?.[2];
   const financeEntityId = financeMatch?.[3];

@@ -7,6 +7,8 @@ import { useLanguage } from '../../context/LanguageContext'
 import { TuitionTab } from './components/TuitionTab'
 import { PaymentsTab } from './components/PaymentsTab'
 import { PaymentRequestsTab } from './components/PaymentRequestsTab'
+import { KitchenSalesTab } from './components/KitchenSalesTab'
+import { BalanceRechargesTab } from './components/BalanceRechargesTab'
 
 import './PaymentsFinancePage.css'
 import { LoadingSkeleton } from '../../components/LoadingSkeleton'
@@ -51,20 +53,27 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
   const [error] = useState<string | null>(null)
 
   // Tabs
-  const [activeTab, setActiveTab] = useState<'tuitions' | 'paymentRequests' | 'payments'>('tuitions')
+  const [activeTab, setActiveTab] = useState<
+    'tuitions' | 'paymentRequests' | 'payments' | 'kitchenSales' | 'balanceRecharges'
+  >('tuitions')
 
   const tabLabels = useMemo(
     () => ({
       tuitions: t('tuitions'),
       paymentRequests: t('paymentRequests'),
       payments: t('payments'),
+      kitchenSales: t('kitchenSales'),
+      balanceRecharges: t('balanceRecharges'),
     }),
     [t],
   )
 
   const availableTabs = useMemo(
     () => {
-      const tabsList: { key: 'tuitions' | 'paymentRequests' | 'payments'; label: string }[] = []
+      const tabsList: {
+        key: 'tuitions' | 'paymentRequests' | 'payments' | 'kitchenSales' | 'balanceRecharges'
+        label: string
+      }[] = []
 
       if (effectiveTuitionsPermissions?.r) {
         tabsList.push({ key: 'tuitions', label: tabLabels.tuitions })
@@ -76,6 +85,8 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
 
       if (effectivePaymentsPermissions?.r) {
         tabsList.push({ key: 'payments', label: tabLabels.payments })
+        tabsList.push({ key: 'kitchenSales', label: tabLabels.kitchenSales })
+        tabsList.push({ key: 'balanceRecharges', label: tabLabels.balanceRecharges })
       }
 
       return tabsList
@@ -104,6 +115,10 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
       setActiveTab('payments')
     } else if (currentPath.includes('/finance/request') && availableKeys.includes('paymentRequests')) {
       setActiveTab('paymentRequests')
+    } else if (currentPath.includes('/finance/kitchen-sales') && availableKeys.includes('kitchenSales')) {
+      setActiveTab('kitchenSales')
+    } else if (currentPath.includes('/finance/balance-recharges') && availableKeys.includes('balanceRecharges')) {
+      setActiveTab('balanceRecharges')
     } else if (availableKeys.includes('tuitions')) {
       setActiveTab('tuitions')
     } else {
@@ -112,7 +127,7 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
   }, [availableTabs, currentPath])
 
   const handleTabChange = (key: string) => {
-    const nextTab = key as 'tuitions' | 'paymentRequests' | 'payments'
+    const nextTab = key as 'tuitions' | 'paymentRequests' | 'payments' | 'kitchenSales' | 'balanceRecharges'
 
     if (!availableTabs.length) return
 
@@ -127,6 +142,10 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
       onNavigate(`/${locale}/finance/payments`)
     } else if (nextTab === 'paymentRequests') {
       onNavigate(`/${locale}/finance/request`)
+    } else if (nextTab === 'kitchenSales') {
+      onNavigate(`/${locale}/finance/kitchen-sales`)
+    } else if (nextTab === 'balanceRecharges') {
+      onNavigate(`/${locale}/finance/balance-recharges`)
     } else {
       onNavigate(`/${locale}/finance`)
     }
@@ -206,6 +225,16 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
         {activeTab === 'payments' && (
           <>
             <PaymentsTab onNavigate={onNavigate} isStudent={isStudent} />
+          </>
+        )}
+        {activeTab === 'kitchenSales' && (
+          <>
+            <KitchenSalesTab />
+          </>
+        )}
+        {activeTab === 'balanceRecharges' && (
+          <>
+            <BalanceRechargesTab />
           </>
         )}
       </div>
