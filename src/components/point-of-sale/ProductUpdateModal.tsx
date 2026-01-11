@@ -156,13 +156,19 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
       setIsUpdatingStatus(true)
       setErrorMessage(null)
 
-      const response = await fetch(`${API_BASE_URL}/coffee/update/${item.menu_id}/status`, {
+      const formData = new FormData()
+      formData.append(
+        'request',
+        new Blob([JSON.stringify({ enabled: nextEnabled })], { type: 'application/json' }),
+        'blob',
+      )
+
+      const response = await fetch(`${API_BASE_URL}/coffee/update/${item.menu_id}?lang=${locale}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ enabled: nextEnabled }),
+        body: formData,
       })
 
       let responseBody: { message?: string; success?: boolean; type?: string; title?: string } | null = null
