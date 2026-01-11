@@ -336,35 +336,46 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
           <div className="col-12 col-xl-8">
             <div className="card border-0 shadow-sm">
               <div className="card-body d-flex flex-column gap-4">
-                <div className='d-flex justify-content-between'>
+                <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-3">
                   <SearchInput
                     value={search}
                     onChange={setSearch}
                     placeholder={t('posSearchProductsPlaceholder')}
                     debounceMs={300}
-                    className="pos-search-input w-100"
+                    className="pos-search-input flex-grow-1"
                     clearButtonAriaLabel={t('posClearSearchLabel')}
                   />
-                  {canCreate ? (
-                    <button
-                      className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium text-nowrap"
-                      type="button"
-                      onClick={() => setIsCreateModalOpen(true)}
-                    >
-                      <span aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                          <path
-                            d="M12 5v14M5 12h14"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </span>
-                      <span className="fw-semibold">{t('createProduct')}</span>
-                    </button>
-                  ) : null}
+                  <div className="d-flex align-items-center gap-2 justify-content-end">
+                    {(canCreate || canUpdate) ? (
+                      <button
+                        className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium text-nowrap"
+                        type="button"
+                        onClick={() => onNavigate(`/${locale}/point-of-sale/menu`)}
+                      >
+                        <span className="fw-semibold">{t('posFullMenuButton')}</span>
+                      </button>
+                    ) : null}
+                    {canCreate ? (
+                      <button
+                        className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium text-nowrap"
+                        type="button"
+                        onClick={() => setIsCreateModalOpen(true)}
+                      >
+                        <span aria-hidden="true">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path
+                              d="M12 5v14M5 12h14"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </span>
+                        <span className="fw-semibold">{t('createProduct')}</span>
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
 
                 {loading ? <div className="text-muted">{t('posLoadingProducts')}</div> : null}
