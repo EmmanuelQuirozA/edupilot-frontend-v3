@@ -4,6 +4,15 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import type { MenuItem } from './types'
 
+declare const Swal: {
+  fire: (options: {
+    icon?: 'success' | 'error' | 'warning' | 'info' | 'question'
+    title?: string
+    text?: string
+    [key: string]: unknown
+  }) => Promise<unknown>
+}
+
 interface ProductUpdateModalProps {
   isOpen: boolean
   item: MenuItem | null
@@ -113,13 +122,13 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
       setErrorMessage(null)
 
       const response = await fetch(`${API_BASE_URL}/coffee/update/${item.menu_id}?lang=${locale}&removeImage=true`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
 
-      let responseBody: { message?: string; success?: boolean } | null = null
+      let responseBody: { message?: string; success?: boolean; type?: string; title?: string } | null = null
       try {
         responseBody = (await response.json()) as { message?: string; success?: boolean }
       } catch (parseError) {
@@ -140,17 +149,15 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
     }
   }
 
-  const handleStatusUpdate = async () => {
+  const handleStatusUpdate = async (nextEnabled: boolean) => {
     if (!token || !item) return
-
-    const nextEnabled = !formState.enabled
 
     try {
       setIsUpdatingStatus(true)
       setErrorMessage(null)
 
       const response = await fetch(`${API_BASE_URL}/coffee/update/${item.menu_id}/status`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -158,9 +165,9 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
         body: JSON.stringify({ enabled: nextEnabled }),
       })
 
-      let responseBody: { message?: string; success?: boolean } | null = null
+      let responseBody: { message?: string; success?: boolean; type?: string; title?: string } | null = null
       try {
-        responseBody = (await response.json()) as { message?: string; success?: boolean }
+        responseBody = (await response.json()) as { message?: string; success?: boolean; type?: string; title?: string }
       } catch (parseError) {
         responseBody = null
       }
@@ -170,6 +177,12 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
       }
 
       setFormState((prev) => ({ ...prev, enabled: nextEnabled }))
+      await Swal.fire({
+        icon: responseBody?.type === 'success' ? 'success' : 'info',
+        title: responseBody?.title ?? 'Changes saved!',
+        text: responseBody?.message ?? 'Menu disabled.',
+        success: responseBody?.success ?? true,
+      })
       onUpdated?.()
     } catch (statusError) {
       setErrorMessage(statusError instanceof Error ? statusError.message : t('defaultError'))
@@ -203,8 +216,8 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
         formData.append('image', imageFile)
       }
 
-      const response = await fetch(`${API_BASE_URL}/coffee/update?lang=${locale}`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE_URL}/coffee/update/${item.menu_id}?lang=${locale}`, {
+        method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -343,34 +356,24 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
                       </div>
                     ) : null}
                   </div>
-                  <div className="col-12">
-                    <div className="d-flex flex-wrap align-items-center gap-3">
-                      <div className="form-check">
-                        <input
-                          id="product-update-enabled"
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={formState.enabled}
-                          readOnly
-                        />
-                        <label className="form-check-label" htmlFor="product-update-enabled">
-                          {t('posEnabledLabel')}
-                        </label>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-outline-primary btn-sm"
-                        onClick={handleStatusUpdate}
-                        disabled={isUpdatingStatus}
-                      >
-                        {formState.enabled ? t('posDeactivateProduct') : t('posActivateProduct')}
-                      </button>
-                    </div>
-                  </div>
                 </div>
                 {errorMessage ? <div className="alert alert-danger mt-3 mb-0">{errorMessage}</div> : null}
               </div>
               <div className="modal-footer">
+                <div className="form-check form-switch me-auto">
+                  <input
+                    id="product-update-enabled"
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    checked={formState.enabled}
+                    onChange={(event) => handleStatusUpdate(event.target.checked)}
+                    disabled={isUpdatingStatus}
+                  />
+                  <label className="form-check-label" htmlFor="product-update-enabled">
+                    {t('posEnabledLabel')}
+                  </label>
+                </div>
                 <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
                   {t('cancel')}
                 </button>

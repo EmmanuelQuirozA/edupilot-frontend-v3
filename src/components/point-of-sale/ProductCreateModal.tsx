@@ -16,7 +16,6 @@ interface ProductFormState {
   descriptionEs: string
   descriptionEn: string
   price: string
-  enabled: boolean
 }
 
 const initialFormState: ProductFormState = {
@@ -26,7 +25,6 @@ const initialFormState: ProductFormState = {
   descriptionEs: '',
   descriptionEn: '',
   price: '',
-  enabled: true,
 }
 
 export function ProductCreateModal({ isOpen, onClose, onCreated }: ProductCreateModalProps) {
@@ -67,7 +65,6 @@ export function ProductCreateModal({ isOpen, onClose, onCreated }: ProductCreate
         descriptionEs: formState.descriptionEs.trim(),
         descriptionEn: formState.descriptionEn.trim(),
         price: Number.parseFloat(formState.price) || 0,
-        enabled: formState.enabled,
       }
 
       const formData = new FormData()
@@ -196,20 +193,6 @@ export function ProductCreateModal({ isOpen, onClose, onCreated }: ProductCreate
                       accept="image/*"
                       onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
                     />
-                  </div>
-                  <div className="col-12">
-                    <div className="form-check">
-                      <input
-                        id="product-create-enabled"
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={formState.enabled}
-                        onChange={(event) => handleChange('enabled', event.target.checked)}
-                      />
-                      <label className="form-check-label" htmlFor="product-create-enabled">
-                        {t('posEnabledLabel')}
-                      </label>
-                    </div>
                   </div>
                 </div>
                 {errorMessage ? <div className="alert alert-danger mt-3 mb-0">{errorMessage}</div> : null}
