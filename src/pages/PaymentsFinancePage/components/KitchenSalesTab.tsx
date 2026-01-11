@@ -33,7 +33,11 @@ type OrderDirection = 'ASC' | 'DESC'
 
 const DEFAULT_PAGE_SIZE = 10
 
-export function KitchenSalesTab() {
+interface KitchenSalesTabProps {
+  onNavigate: (path: string) => void
+}
+
+export function KitchenSalesTab({ onNavigate }: KitchenSalesTabProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
 
@@ -206,7 +210,15 @@ export function KitchenSalesTab() {
         label: 'Nombre',
         sortable: true,
         render: (row) =>
-          row.student_id ? <StudentTableCell name={row.full_name} /> : row.full_name,
+          row.student_id ? (
+            <StudentTableCell
+              name={row.full_name}
+              onClick={() => onNavigate(`/${locale}/students&Classes/students/${row.student_id}`)}
+              nameButtonProps={{ 'aria-label': row.full_name }}
+            />
+          ) : (
+            row.full_name
+          ),
       },
       {
         key: 'item_name',
@@ -243,7 +255,7 @@ export function KitchenSalesTab() {
         }),
       },
     ],
-    [locale],
+    [locale, onNavigate],
   )
 
   return (
