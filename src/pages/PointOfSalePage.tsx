@@ -150,7 +150,8 @@ export function PointOfSalePage({ onNavigate }: PointOfSalePageProps) {
         setError(null)
         const params = new URLSearchParams({
           page: '0',
-          size: '30',
+          size: '9',
+          enabled: 'true',
         })
         if (search.trim()) {
           params.set('search_criteria', search.trim())

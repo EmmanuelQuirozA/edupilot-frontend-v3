@@ -166,8 +166,17 @@ export function GroupCreateModal({ isOpen, onClose, onCreated }: GroupCreateModa
   return (
     <>
       <div className="modal-backdrop fade show" />
-      <div className="modal fade show d-block" tabIndex={-1} role="dialog">
-        <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div
+        className="modal fade show d-block"
+        tabIndex={-1}
+        role="dialog"
+        onClick={handleClose}
+      >
+        <div
+          className="modal-dialog modal-lg modal-dialog-centered"
+          role="document"
+          onClick={(event) => event.stopPropagation()}
+        >
           <div className="modal-content">
             <div className="modal-header">
               <div>

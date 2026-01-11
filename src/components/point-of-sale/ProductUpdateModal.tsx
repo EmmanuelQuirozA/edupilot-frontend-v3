@@ -183,13 +183,14 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
       }
 
       setFormState((prev) => ({ ...prev, enabled: nextEnabled }))
+      onUpdated?.()
+      onClose()
       await Swal.fire({
         icon: responseBody?.type === 'success' ? 'success' : 'info',
         title: responseBody?.title ?? 'Changes saved!',
         text: responseBody?.message ?? 'Menu disabled.',
         success: responseBody?.success ?? true,
       })
-      onUpdated?.()
     } catch (statusError) {
       setErrorMessage(statusError instanceof Error ? statusError.message : t('defaultError'))
     } finally {
@@ -230,7 +231,7 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
         body: formData,
       })
 
-      let responseBody: { message?: string; success?: boolean } | null = null
+      let responseBody: { message?: string; success?: boolean; type?: string; title?: string } | null = null
       try {
         responseBody = (await response.json()) as { message?: string; success?: boolean }
       } catch (parseError) {
@@ -243,6 +244,12 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
 
       onUpdated?.()
       onClose()
+      await Swal.fire({
+        icon: responseBody?.type === 'success' ? 'success' : 'info',
+        title: responseBody?.title ?? 'Changes saved!',
+        text: responseBody?.message ?? 'Menu disabled.',
+        success: responseBody?.success ?? true,
+      })
     } catch (submitError) {
       setErrorMessage(submitError instanceof Error ? submitError.message : t('defaultError'))
     } finally {
@@ -290,7 +297,7 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
                       type="number"
                       className="form-control"
                       min="0"
-                      step="0.01"
+                      step="1"
                       value={formState.price}
                       onChange={(event) => handleChange('price', event.target.value)}
                       required
@@ -336,31 +343,34 @@ export function ProductUpdateModal({ isOpen, item, onClose, onUpdated }: Product
                   </div>
                   <div className="col-12">
                     <label className="form-label fw-semibold">{t('posImageOptionalLabel')}</label>
-                    <input
-                      type="file"
-                      className="form-control"
-                      accept="image/*"
-                      onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
-                    />
                     {imagePreviewUrl ? (
-                      <div className="mt-3 position-relative d-inline-block">
-                        <img
-                          src={imagePreviewUrl}
-                          alt={formState.nameEs || formState.nameEn || item.name}
-                          className="img-thumbnail"
-                          style={{ maxHeight: '160px' }}
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm position-absolute top-0 end-0 translate-middle"
-                          onClick={handleRemoveImage}
-                          disabled={isRemovingImage}
-                          aria-label={t('remove')}
-                        >
-                          x
-                        </button>
+                      <div>
+                        <div className="mt-3 position-relative d-inline-block">
+                          <img
+                            src={imagePreviewUrl}
+                            alt={formState.nameEs || formState.nameEn || item.name}
+                            className="img-thumbnail"
+                            style={{ maxHeight: '160px' }}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-sm position-absolute mt-3 px-1 py-0 end-0 translate-middle"
+                            onClick={handleRemoveImage}
+                            disabled={isRemovingImage}
+                            aria-label={t('remove')}
+                          >
+                            x
+                          </button>
+                        </div>
                       </div>
-                    ) : null}
+                    ) : 
+                      <input
+                        type="file"
+                        className="form-control"
+                        accept="image/*"
+                        onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
+                      />
+                    }
                   </div>
                 </div>
                 {errorMessage ? <div className="alert alert-danger mt-3 mb-0">{errorMessage}</div> : null}
