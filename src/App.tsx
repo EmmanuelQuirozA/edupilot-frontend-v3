@@ -30,6 +30,7 @@ import { PaymentRequestUploadResultPage } from "./pages/PaymentsFinancePage/Paym
 import { PaymentRequestScheduledDetailPage } from "./pages/PaymentsFinancePage/PaymentRequestScheduledDetailPage";
 import { GlobalSettingsPage } from "./pages/GlobalSettingsPage";
 import { PointOfSalePage } from "./pages/PointOfSalePage";
+import { PointOfSaleMenuPage } from "./pages/PointOfSaleMenuPage";
 
 import { LoadingSkeleton } from "./components/LoadingSkeleton";
 import { Layout } from "./layout/Layout";
@@ -125,6 +126,7 @@ function Router() {
   const isControlAccessPath = /^\/(es|en)\/control-access$/.test(path);
   const isGlobalSettingsPath = /^\/(es|en)\/globalSetings$/.test(path);
   const isPointOfSalePath = /^\/(es|en)\/point-of-sale$/.test(path);
+  const isPointOfSaleMenuPath = /^\/(es|en)\/point-of-sale\/menu$/.test(path);
   const scheduledFinanceMatch = path.match(/^\/(es|en)\/finance\/request\/scheduled\/(\d+)$/);
   const financeMatch = path.match(/^\/(es|en)\/finance(?:\/(payments|request|request-upload)(?:\/(\d+))?)?$/);
   const isFinancePath = Boolean(financeMatch) || Boolean(scheduledFinanceMatch);
@@ -213,6 +215,7 @@ function Router() {
     if (isFinancePath) return <PaymentsFinancePage onNavigate={navigate} currentPath={path} />;
     if (isGlobalSettingsPath) return <GlobalSettingsPage onNavigate={navigate} />;
     if (isControlAccessPath) return <GlobalSettingsPage onNavigate={navigate} initialTab="roles" />;
+    if (isPointOfSaleMenuPath) return <PointOfSaleMenuPage onNavigate={navigate} />;
     if (isPointOfSalePath) return <PointOfSalePage onNavigate={navigate} />;
 
     if (isRootPath) {

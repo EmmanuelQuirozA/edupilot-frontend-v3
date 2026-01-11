@@ -29,6 +29,7 @@ interface DataTableProps<T> {
   sortBy?: string
   sortDirection?: 'ASC' | 'DESC'
   onSort?: (columnKey: string) => void
+  getRowClassName?: (row: T, index: number) => string | undefined
 }
 
 export function DataTable<T>({
@@ -40,6 +41,7 @@ export function DataTable<T>({
   sortBy,
   sortDirection,
   onSort,
+  getRowClassName,
 }: DataTableProps<T>) {
   const { t, locale } = useLanguage()
 
@@ -110,7 +112,7 @@ export function DataTable<T>({
               </tr>
             ) : (
               rows.map((row, index) => (
-                <tr key={index}>
+                <tr key={index} className={getRowClassName?.(row, index)}>
                   {columns.map((column) => (
                     <td className="text-muted" key={column.key}>
                       {column.render
