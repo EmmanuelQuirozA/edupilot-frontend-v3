@@ -8,6 +8,7 @@ import { API_BASE_URL } from '../config'
 import { RolesPermissionsPage } from './RolesPermissionsPage'
 import { PrinterSettingsSection } from '../components/PrinterSettingsSection'
 import { PaymentConceptModal, type PaymentConcept } from '../components/PaymentConceptModal'
+import { PaymentMethodModal, type PaymentMethod } from '../components/PaymentMethodModal'
 
 interface GlobalSettingsPageProps {
   onNavigate: (path: string) => void
@@ -23,6 +24,11 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
   const [isConceptModalOpen, setIsConceptModalOpen] = useState(false)
   const [conceptModalMode, setConceptModalMode] = useState<'create' | 'edit'>('create')
   const [selectedConcept, setSelectedConcept] = useState<PaymentConcept | null>(null)
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
+  const [paymentMethodsLoading, setPaymentMethodsLoading] = useState(false)
+  const [isMethodModalOpen, setIsMethodModalOpen] = useState(false)
+  const [methodModalMode, setMethodModalMode] = useState<'create' | 'edit'>('create')
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -56,9 +62,31 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
     }
   }, [locale, token])
 
+  const fetchPaymentMethods = useCallback(async () => {
+    if (!token) {
+      setPaymentMethods([])
+      return
+    }
+    setPaymentMethodsLoading(true)
+    try {
+      const params = new URLSearchParams({ lang: locale })
+      const response = await fetch(`${API_BASE_URL}/catalog/payment-through?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) throw new Error('failed_request')
+      const data = (await response.json()) as PaymentMethod[]
+      setPaymentMethods(data)
+    } catch (error) {
+      setPaymentMethods([])
+    } finally {
+      setPaymentMethodsLoading(false)
+    }
+  }, [locale, token])
+
   useEffect(() => {
     fetchPaymentConcepts()
-  }, [fetchPaymentConcepts])
+    fetchPaymentMethods()
+  }, [fetchPaymentConcepts, fetchPaymentMethods])
 
   const handleOpenCreateConcept = () => {
     setConceptModalMode('create')
@@ -73,6 +101,19 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
   }
 
   const handleCloseConceptModal = () => setIsConceptModalOpen(false)
+  const handleOpenCreateMethod = () => {
+    setMethodModalMode('create')
+    setSelectedMethod(null)
+    setIsMethodModalOpen(true)
+  }
+
+  const handleOpenEditMethod = (method: PaymentMethod) => {
+    setMethodModalMode('edit')
+    setSelectedMethod(method)
+    setIsMethodModalOpen(true)
+  }
+
+  const handleCloseMethodModal = () => setIsMethodModalOpen(false)
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('globalSettingsTitle')} breadcrumbItems={breadcrumbItems}>
@@ -191,8 +232,38 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
                           <div className="card-body">
                             <div className="d-flex align-items-center justify-content-between mb-3">
                               <h4 className="h6 mb-0">{t('financialCatalogsMethodsTitle')}</h4>
+                              <button type="button" className="btn btn-link p-0" onClick={handleOpenCreateMethod}>
+                                <span className="text-primary fw-semibold">
+                                  + {t('financialCatalogsNew')}
+                                </span>
+                              </button>
                             </div>
-                            <p className="text-muted mb-0">{t('financialCatalogsEmptyMethods')}</p>
+                            {paymentMethodsLoading ? (
+                              <span className="badge bg-secondary">{t('tableLoading')}</span>
+                            ) : paymentMethods.length ? (
+                              <div className="list-group list-group-flush" style={{maxHeight:'300px',overflow:'auto'}}>
+                                {paymentMethods.map((method) => (
+                                  <div
+                                    key={method.id}
+                                    className="list-group-item d-flex align-items-center justify-content-between gap-3"
+                                  >
+                                    <div>
+                                      <p className="fw-semibold mb-0">{method.name}</p>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-outline-secondary"
+                                      onClick={() => handleOpenEditMethod(method)}
+                                      aria-label={t('paymentMethodUpdateTitle')}
+                                    >
+                                      <i className="bi bi-pencil" aria-hidden="true" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-muted mb-0">{t('financialCatalogsEmptyMethods')}</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -211,6 +282,13 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
           concept={selectedConcept}
           onClose={handleCloseConceptModal}
           onSaved={fetchPaymentConcepts}
+        />
+        <PaymentMethodModal
+          isOpen={isMethodModalOpen}
+          mode={methodModalMode}
+          method={selectedMethod}
+          onClose={handleCloseMethodModal}
+          onSaved={fetchPaymentMethods}
         />
       </div>
     </Layout>
