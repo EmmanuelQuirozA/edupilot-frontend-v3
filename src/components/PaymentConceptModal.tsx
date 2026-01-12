@@ -5,8 +5,10 @@ import { useLanguage } from '../context/LanguageContext'
 
 export interface PaymentConcept {
   payment_concept_id: number
+  name: string
   name_es: string
   name_en: string
+  description: string
   description_es: string
   description_en: string
 }

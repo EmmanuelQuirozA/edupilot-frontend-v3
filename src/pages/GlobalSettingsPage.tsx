@@ -163,10 +163,10 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
                                   >
                                     <div>
                                       <p className="fw-semibold mb-1">
-                                        {locale === 'es' ? concept.name_es : concept.name_en}
+                                        {concept.name}
                                       </p>
                                       <small className="text-muted">
-                                        {locale === 'es' ? concept.description_es : concept.description_en}
+                                        {concept.description}
                                       </small>
                                     </div>
                                     <button
