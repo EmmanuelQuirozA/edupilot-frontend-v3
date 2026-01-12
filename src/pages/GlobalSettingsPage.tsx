@@ -1,42 +1,28 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './GlobalSettingsPage.css'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
-import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 import { Layout } from '../layout/Layout'
 import { API_BASE_URL } from '../config'
 import { RolesPermissionsPage } from './RolesPermissionsPage'
 import { PrinterSettingsSection } from '../components/PrinterSettingsSection'
-
-interface ModuleAccess {
-  moduleId: number
-  moduleName: string
-  moduleKey: string 
-  moduleDescription: string 
-  sortOrder: number | null
-}
-
-interface School {
-  school_id: number
-  description: string
-}
+import { PaymentConceptModal, type PaymentConcept } from '../components/PaymentConceptModal'
 
 interface GlobalSettingsPageProps {
   onNavigate: (path: string) => void
-  initialTab?: 'settings' | 'modules' | 'roles'
+  initialTab?: 'settings' | 'catalogs' | 'roles'
 }
 
-export function GlobalSettingsPage({ onNavigate, initialTab = 'settings' }: GlobalSettingsPageProps) {
-  const { token, } = useAuth()
+export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: GlobalSettingsPageProps) {
+  const { token } = useAuth()
   const { locale, t } = useLanguage()
-  const [activeTab, setActiveTab] = useState<'settings' | 'modules' | 'roles'>(initialTab)
-  const [modules, setModules] = useState<ModuleAccess[]>([])
-  const [modulesLoading, setModulesLoading] = useState(false)
-  
-  const [schools, setSchools] = useState<School[]>([])
-  const [selectedSchoolId, setSelectedSchoolId] = useState<number | null>(null)
-  const [schoolsLoading, setSchoolsLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'settings' | 'catalogs' | 'roles'>(initialTab)
+  const [paymentConcepts, setPaymentConcepts] = useState<PaymentConcept[]>([])
+  const [paymentConceptsLoading, setPaymentConceptsLoading] = useState(false)
+  const [isConceptModalOpen, setIsConceptModalOpen] = useState(false)
+  const [conceptModalMode, setConceptModalMode] = useState<'create' | 'edit'>('create')
+  const [selectedConcept, setSelectedConcept] = useState<PaymentConcept | null>(null)
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -49,88 +35,44 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'settings' }: Glob
     [locale, onNavigate, t],
   )
   
-  useEffect(() => {
-    if (!token) return
-
-    const controller = new AbortController()
-
-    const fetchSchools = async () => {
-      setSchoolsLoading(true)
-      try {
-        const response = await fetch(`${API_BASE_URL}/schools/list`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          signal: controller.signal,
-        })
-
-        if (!response.ok) {
-          throw new Error('failed_request')
-        }
-
-        const json = (await response.json()) as School[]
-        setSchools(json)
-      } catch (error) {
-        if ((error as DOMException).name !== 'AbortError') {
-          setSchools([])
-        }
-      } finally {
-        setSchoolsLoading(false)
-      }
-    }
-
-    fetchSchools()
-
-    return () => controller.abort()
-  }, [token])
-
-  useEffect(() => {
-    if (!token || !selectedSchoolId) {
-      setModules([])
+  const fetchPaymentConcepts = useCallback(async () => {
+    if (!token) {
+      setPaymentConcepts([])
       return
     }
-
-    const controller = new AbortController()
-    const fetchModules = async () => {
-      setModulesLoading(true)
-      try {
-        const params = new URLSearchParams({
-          lang: locale,
-          school_id: String(selectedSchoolId),
-        })
-        const response = await fetch(`${API_BASE_URL}/catalog/plan-modules?${params.toString()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        })
-
-        if (!response.ok) throw new Error('Failed to fetch modules')
-
-        const data = (await response.json()) as ModuleAccess[]
-        setModules(data)
-      } catch (error) {
-        if ((error as DOMException)?.name !== 'AbortError') {
-          setModules([])
-        }
-      } finally {
-        setModulesLoading(false)
-      }
+    setPaymentConceptsLoading(true)
+    try {
+      const params = new URLSearchParams({ lang: locale })
+      const response = await fetch(`${API_BASE_URL}/catalog/payment-concepts?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) throw new Error('failed_request')
+      const data = (await response.json()) as PaymentConcept[]
+      setPaymentConcepts(data)
+    } catch (error) {
+      setPaymentConcepts([])
+    } finally {
+      setPaymentConceptsLoading(false)
     }
+  }, [locale, token])
 
-    fetchModules()
-    return () => controller.abort()
-  }, [locale, selectedSchoolId, token])
+  useEffect(() => {
+    fetchPaymentConcepts()
+  }, [fetchPaymentConcepts])
 
-  const sortedModules = useMemo(
-    () =>
-      [...modules]
-        .sort((a, b) => {
-          const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER
-          const orderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER
-          if (orderA !== orderB) return orderA - orderB
-          return a.moduleName.localeCompare(b.moduleName)
-        }),
-    [modules],
-  )
+  const handleOpenCreateConcept = () => {
+    setConceptModalMode('create')
+    setSelectedConcept(null)
+    setIsConceptModalOpen(true)
+  }
+
+  const handleOpenEditConcept = (concept: PaymentConcept) => {
+    setConceptModalMode('edit')
+    setSelectedConcept(concept)
+    setIsConceptModalOpen(true)
+  }
+
+  const handleCloseConceptModal = () => setIsConceptModalOpen(false)
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('globalSettingsTitle')} breadcrumbItems={breadcrumbItems}>
@@ -156,10 +98,10 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'settings' }: Glob
                     <button
                       type="button"
                       className={`nav-link text-start d-flex align-items-center gap-2 ${
-                        activeTab === 'modules' ? 'active text-primary' : 'text-secondary'
+                        activeTab === 'catalogs' ? 'active text-primary' : 'text-secondary'
                       }`}
                       role="tab"
-                      onClick={() => setActiveTab('modules')}
+                      onClick={() => setActiveTab('catalogs')}
                     >
                       <i className="bi bi-cash-stack" aria-hidden="true" />
                       <span>{t('globalSettingsFinancialCatalogsTab')}</span>
@@ -195,55 +137,66 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'settings' }: Glob
                     <h3 className="h5 mb-3">{t('globalSettingsPrintersTab')}</h3>
                     <PrinterSettingsSection />
                   </>
-                ) : activeTab === 'modules' ? (
+                ) : activeTab === 'catalogs' ? (
                   <>
                     <h3 className="h5 mb-3">{t('globalSettingsFinancialCatalogsTab')}</h3>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <div className="d-flex flex-column gap-3">
-                        <div>
-                          <label className="form-label fw-semibold" htmlFor="schoolSelect">
-                            {t('selectSchoolLabel')}
-                          </label>
-                          <select
-                            id="schoolSelect"
-                            className="form-select"
-                            value={selectedSchoolId ?? ''}
-                            onChange={(event) => setSelectedSchoolId(event.target.value ? Number(event.target.value) : null)}
-                            disabled={schoolsLoading}
-                          >
-                            <option value="">{schoolsLoading ? t('tableLoading') : t('selectPlaceholder')}</option>
-                            {schools.map((school) => (
-                              <option key={school.school_id} value={school.school_id}>
-                                {school.description}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <p className="text-muted mb-0">{t('modulesCatalogDescription')}</p>
-                      </div>
-                      {modulesLoading ? <span className="badge bg-secondary">{t('tableLoading')}</span> : null}
-                    </div>
-
-                    {modulesLoading ? (
-                      <LoadingSkeleton variant="dashboard" cardCount={6} />
-                    ) : sortedModules.length ? (
-                      <div className="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
-                        {sortedModules.map((module) => (
-                          <div className="col" key={module.moduleId}>
-                            <div className="border rounded-3 p-3 h-100">
-                              <div className="d-flex justify-content-between align-items-start gap-3">
-                                <div>
-                                  <p className="fw-semibold mb-1">{module.moduleName}</p>
-                                  <small className="text-muted">{module.moduleDescription}</small>
-                                </div>
-                              </div>
+                    <div className="row row-cols-1 row-cols-xl-2 g-4">
+                      <div className="col">
+                        <div className="card shadow-sm h-100 financial-catalog-card">
+                          <div className="card-body">
+                            <div className="d-flex align-items-center justify-content-between mb-3">
+                              <h4 className="h6 mb-0">{t('financialCatalogsConceptsTitle')}</h4>
+                              <button type="button" className="btn btn-link p-0" onClick={handleOpenCreateConcept}>
+                                <span className="text-primary fw-semibold">
+                                  + {t('financialCatalogsNew')}
+                                </span>
+                              </button>
                             </div>
+                            {paymentConceptsLoading ? (
+                              <span className="badge bg-secondary">{t('tableLoading')}</span>
+                            ) : paymentConcepts.length ? (
+                              <div className="list-group list-group-flush">
+                                {paymentConcepts.map((concept) => (
+                                  <div
+                                    key={concept.payment_concept_id}
+                                    className="list-group-item d-flex align-items-center justify-content-between gap-3"
+                                  >
+                                    <div>
+                                      <p className="fw-semibold mb-1">
+                                        {locale === 'es' ? concept.name_es : concept.name_en}
+                                      </p>
+                                      <small className="text-muted">
+                                        {locale === 'es' ? concept.description_es : concept.description_en}
+                                      </small>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-outline-secondary"
+                                      onClick={() => handleOpenEditConcept(concept)}
+                                      aria-label={t('paymentConceptUpdateTitle')}
+                                    >
+                                      <i className="bi bi-pencil" aria-hidden="true" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-muted mb-0">{t('financialCatalogsEmptyConcepts')}</p>
+                            )}
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    ) : (
-                      <p className="text-muted mb-0">{t('modulesCatalogEmpty')}</p>
-                    )}
+                      <div className="col">
+                        <div className="card shadow-sm h-100 financial-catalog-card">
+                          <div className="card-body">
+                            <div className="d-flex align-items-center justify-content-between mb-3">
+                              <h4 className="h6 mb-0">{t('financialCatalogsMethodsTitle')}</h4>
+                            </div>
+                            <p className="text-muted mb-0">{t('financialCatalogsEmptyMethods')}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <RolesPermissionsPage onNavigate={onNavigate} embedded />
@@ -252,6 +205,13 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'settings' }: Glob
             </div>
           </div>
         </div>
+        <PaymentConceptModal
+          isOpen={isConceptModalOpen}
+          mode={conceptModalMode}
+          concept={selectedConcept}
+          onClose={handleCloseConceptModal}
+          onSaved={fetchPaymentConcepts}
+        />
       </div>
     </Layout>
   )

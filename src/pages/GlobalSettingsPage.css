@@ -4,6 +4,11 @@
   z-index: 2;
 }
 
+.financial-catalog-card .list-group-item {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 @media (max-width: 991.98px) {
   .global-settings__tabs {
     position: static;
