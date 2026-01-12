@@ -142,7 +142,7 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
                     <h3 className="h5 mb-3">{t('globalSettingsFinancialCatalogsTab')}</h3>
                     <div className="row row-cols-1 row-cols-xl-2 g-4">
                       <div className="col">
-                        <div className="card shadow-sm h-100 financial-catalog-card">
+                        <div className="card shadow-sm border h-100 financial-catalog-card">
                           <div className="card-body">
                             <div className="d-flex align-items-center justify-content-between mb-3">
                               <h4 className="h6 mb-0">{t('financialCatalogsConceptsTitle')}</h4>
@@ -155,10 +155,10 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
                             {paymentConceptsLoading ? (
                               <span className="badge bg-secondary">{t('tableLoading')}</span>
                             ) : paymentConcepts.length ? (
-                              <div className="list-group list-group-flush">
+                              <div className="list-group list-group-flush" style={{maxHeight:'300px',overflow:'auto'}}>
                                 {paymentConcepts.map((concept) => (
                                   <div
-                                    key={concept.payment_concept_id}
+                                    key={concept.id}
                                     className="list-group-item d-flex align-items-center justify-content-between gap-3"
                                   >
                                     <div>
@@ -187,7 +187,7 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
                         </div>
                       </div>
                       <div className="col">
-                        <div className="card shadow-sm h-100 financial-catalog-card">
+                        <div className="card shadow-sm border h-100 financial-catalog-card">
                           <div className="card-body">
                             <div className="d-flex align-items-center justify-content-between mb-3">
                               <h4 className="h6 mb-0">{t('financialCatalogsMethodsTitle')}</h4>

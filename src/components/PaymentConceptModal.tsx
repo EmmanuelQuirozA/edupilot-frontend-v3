@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 
 export interface PaymentConcept {
-  payment_concept_id: number
+  id: number
   name: string
   name_es: string
   name_en: string
@@ -73,11 +73,27 @@ export function PaymentConceptModal({ isOpen, mode, concept, onClose, onSaved }:
 
       if (mode === 'edit' && concept) {
         url.searchParams.set('lang', locale)
-        url.searchParams.set('payment_concept_id', String(concept.payment_concept_id))
+        url.searchParams.set('payment_concept_id', String(concept.id))
       }
 
       const response = await fetch(url.toString(), options)
       if (!response.ok) throw new Error('failed_request')
+      const result = await response.json()
+
+      if (!result?.success) {
+        Swal.fire({
+          icon: 'error',
+          title: result?.title || t('defaultError'),
+          text: result?.message || t('defaultError'),
+        })
+        return
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: result?.title || '',
+        text: result?.message || '',
+      })
 
       onSaved()
       onClose()
