@@ -13,7 +13,6 @@ interface RoleCreateFormState {
   description_en: string
   description_es: string
   enabled: boolean
-  is_super_admin: boolean
 }
 
 const defaultRoleCreateForm: RoleCreateFormState = {
@@ -23,7 +22,6 @@ const defaultRoleCreateForm: RoleCreateFormState = {
   description_en: '',
   description_es: '',
   enabled: true,
-  is_super_admin: false,
 }
 
 interface RoleCreateModalProps {
@@ -74,7 +72,6 @@ export function RoleCreateModal({ isOpen, schoolId, onClose, onCreated }: RoleCr
         description_es: formState.description_es.trim(),
         school_id: schoolId,
         enabled: formState.enabled ? 1 : 0,
-        is_super_admin: formState.is_super_admin ? 1 : 0,
       }
 
       const params = new URLSearchParams({ lang: locale })
@@ -229,21 +226,6 @@ export function RoleCreateModal({ isOpen, schoolId, onClose, onCreated }: RoleCr
                       value={formState.description_en}
                       onChange={(event) => handleChange('description_en', event.target.value)}
                     />
-                  </div>
-                  <div className="col-12">
-                    <div className="form-check">
-                      <input
-                        id="role_super_admin"
-                        className="form-check-input"
-                        type="checkbox"
-                        checked={formState.is_super_admin}
-                        onChange={(event) => handleChange('is_super_admin', event.target.checked)}
-                        disabled={isSubmitting}
-                      />
-                      <label className="form-check-label" htmlFor="role_super_admin">
-                        {t('roleSuperAdminLabel')}
-                      </label>
-                    </div>
                   </div>
                 </div>
 

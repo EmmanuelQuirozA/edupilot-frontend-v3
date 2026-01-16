@@ -21,7 +21,6 @@ interface Role {
   role_description: string | null
   enabled: boolean
   school_id: number | null
-  is_super_admin: boolean
   name_en?: string | null
   name_es?: string | null
   description_en?: string | null
@@ -454,10 +453,10 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
                 setRoleToEdit({
                   role_id: selectedRole.role_id,
                   role_name: selectedRole.role_name,
-                  name_en: selectedRole.name_en,
-                  name_es: selectedRole.name_es,
-                  description_en: selectedRole.description_en,
-                  description_es: selectedRole.description_es,
+                  name_en: selectedRole.name_en ?? selectedRole.role_name ?? '',
+                  name_es: selectedRole.name_es ?? selectedRole.role_name ?? '',
+                  description_en: selectedRole.description_en ?? selectedRole.role_description ?? '',
+                  description_es: selectedRole.description_es ?? selectedRole.role_description ?? '',
                   enabled: selectedRole.enabled,
                 })
                 setIsEditRoleModalOpen(true)
