@@ -7,6 +7,8 @@ import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { useModulePermissions } from '../hooks/useModulePermissions'
 import { NoPermission } from '../components/NoPermission'
+import { RoleCreateModal } from '../components/RoleCreateModal'
+import { RoleEditModal, type RoleEditValues } from '../components/RoleEditModal'
 
 interface School {
   school_id: number
@@ -18,10 +20,16 @@ interface Role {
   role_name: string
   role_description: string | null
   enabled: boolean
+  school_id: number | null
+  is_super_admin: boolean
+  name_en?: string | null
+  name_es?: string | null
+  description_en?: string | null
+  description_es?: string | null
 }
 
 interface PermissionRow {
-  permission_id: number
+  role_permission_id: number
   module_id: number
   module_name: string
   module_key: string
@@ -62,6 +70,8 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
     loaded: permissionsLoaded,
     error: permissionsError,
   } = useModulePermissions('roles')
+  const canCreate = Boolean(permissions?.c)
+  const canEdit = Boolean(permissions?.u)
 
   const [schools, setSchools] = useState<School[]>([])
   const [selectedSchoolId, setSelectedSchoolId] = useState<number | null>(null)
@@ -70,6 +80,9 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
   const [roles, setRoles] = useState<Role[]>([])
   const [rolesLoading, setRolesLoading] = useState(false)
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null)
+  const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false)
+  const [isEditRoleModalOpen, setIsEditRoleModalOpen] = useState(false)
+  const [roleToEdit, setRoleToEdit] = useState<RoleEditValues | null>(null)
 
   const [permissionRows, setPermissionRows] = useState<PermissionRow[]>([])
   const [permissionRowsLoading, setPermissionRowsLoading] = useState(false)
@@ -83,6 +96,11 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
   const [permissionUpdate, setPermissionUpdate] = useState(false)
   const [permissionDelete, setPermissionDelete] = useState(false)
   const [addPermissionLoading, setAddPermissionLoading] = useState(false)
+
+  const selectedRole = useMemo(
+    () => roles.find((role) => role.role_id === selectedRoleId) ?? null,
+    [roles, selectedRoleId],
+  )
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -130,11 +148,10 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
     return () => controller.abort()
   }, [token])
 
-  useEffect(() => {
-    if (!token || !selectedSchoolId) return
+  const fetchRoles = useCallback(
+    async (options?: { signal?: AbortSignal }) => {
+      if (!token || !selectedSchoolId) return
 
-    const controller = new AbortController()
-    const fetchRoles = async () => {
       setRolesLoading(true)
       setSelectedRoleId(null)
       setPermissionRows([])
@@ -147,7 +164,7 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          signal: controller.signal,
+          signal: options?.signal,
         })
 
         if (!response.ok) {
@@ -163,11 +180,17 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
       } finally {
         setRolesLoading(false)
       }
-    }
+    },
+    [locale, selectedSchoolId, token],
+  )
 
-    fetchRoles()
+  useEffect(() => {
+    if (!token || !selectedSchoolId) return
+
+    const controller = new AbortController()
+    fetchRoles({ signal: controller.signal })
     return () => controller.abort()
-  }, [locale, selectedSchoolId, token])
+  }, [fetchRoles, selectedSchoolId, token])
 
   useEffect(() => {
     if (!token || !selectedSchoolId) return
@@ -312,7 +335,7 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
 
     if (!confirmation.isConfirmed) return
 
-    const permissionKey = `${permission.permission_id}-${key}`
+    const permissionKey = `${permission.role_permission_id}-${key}`
     setUpdatingPermissionKey(permissionKey)
 
     try {
@@ -324,14 +347,17 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
         [key]: nextValue ? 1 : 0,
       }
 
-      const response = await fetch(`${API_BASE_URL}/permissions/update?permissionId=${permission.permission_id}`, {
+      const response = await fetch(
+        `${API_BASE_URL}/permissions/update?permissionId=${permission.role_permission_id}`,
+        {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
-      })
+        },
+      )
 
       if (!response.ok) {
         throw new Error('failed_request')
@@ -340,7 +366,9 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
       const json = (await response.json()) as PermissionUpdateResponse
 
       setPermissionRows((current) =>
-        current.map((row) => (row.permission_id === permission.permission_id ? { ...row, [key]: nextValue } : row)),
+        current.map((row) =>
+          row.role_permission_id === permission.role_permission_id ? { ...row, [key]: nextValue } : row,
+        ),
       )
 
       await Swal.fire({
@@ -417,7 +445,29 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
           <h3 className="h6 mb-1">{t('permissionsTableTitle')}</h3>
           <p className="text-muted small mb-0">{t('permissionsTableSubtitle')}</p>
         </div>
-        {permissionRowsLoading ? <span className="badge bg-secondary">{t('tableLoading')}</span> : null}
+        <div className="d-flex align-items-center gap-2">
+          {canEdit && selectedRole && selectedRole.school_id !== null ? (
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => {
+                setRoleToEdit({
+                  role_id: selectedRole.role_id,
+                  role_name: selectedRole.role_name,
+                  name_en: selectedRole.name_en,
+                  name_es: selectedRole.name_es,
+                  description_en: selectedRole.description_en,
+                  description_es: selectedRole.description_es,
+                  enabled: selectedRole.enabled,
+                })
+                setIsEditRoleModalOpen(true)
+              }}
+            >
+              {t('editRole')}
+            </button>
+          ) : null}
+          {permissionRowsLoading ? <span className="badge bg-secondary">{t('tableLoading')}</span> : null}
+        </div>
       </div>
 
       {!permissionRowsLoading && sortedPermissions.length === 0 ? (
@@ -438,7 +488,7 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
             </thead>
             <tbody>
               {sortedPermissions.map((permission) => (
-                <tr key={permission.permission_id}>
+                <tr key={permission.role_permission_id}>
                   <th scope="row" className="fw-semibold">
                     <div className="d-flex flex-column">
                       <span>{permission.module_name}</span>
@@ -451,8 +501,8 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
                     'u',
                     // 'd'
                   ] as PermissionKey[]).map((key) => {
-                    const switchId = `permission-${permission.permission_id}-${key}`
-                    const isUpdating = updatingPermissionKey === `${permission.permission_id}-${key}`
+                    const switchId = `permission-${permission.role_permission_id}-${key}`
+                    const isUpdating = updatingPermissionKey === `${permission.role_permission_id}-${key}`
                     return (
                       <td key={key} className="text-center">
                         <div className="form-check form-switch d-inline-flex align-items-center justify-content-center">
@@ -631,7 +681,30 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
         <div className="mt-4">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <h3 className="h6 mb-0">{t('rolesPermissionsTitle')}</h3>
-            {rolesLoading ? <span className="badge bg-secondary">{t('tableLoading')}</span> : null}
+            {rolesLoading ? (
+              <span className="badge bg-secondary">{t('tableLoading')}</span>
+            ) : canCreate && selectedSchoolId ? (
+              <button
+                className="btn d-flex align-items-center gap-2 btn-print text-muted fw-medium"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                onClick={() => setIsCreateRoleModalOpen(true)}
+              >
+                <span aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 5v14M5 12h14"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span className="fw-semibold">{t('createRole')}</span>
+              </button>
+            ) : null}
           </div>
           {selectedSchoolId ? (
             <div className="list-group">
@@ -677,6 +750,25 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
           <p className="text-muted mb-0 mt-3">{t('selectRolePrompt')}</p>
         ) : null}
       </div>
+      <RoleCreateModal
+        isOpen={isCreateRoleModalOpen}
+        schoolId={selectedSchoolId}
+        onClose={() => setIsCreateRoleModalOpen(false)}
+        onCreated={() => {
+          fetchRoles()
+        }}
+      />
+      <RoleEditModal
+        isOpen={isEditRoleModalOpen}
+        role={roleToEdit}
+        onClose={() => {
+          setIsEditRoleModalOpen(false)
+          setRoleToEdit(null)
+        }}
+        onUpdated={() => {
+          fetchRoles()
+        }}
+      />
     </div>
   )
 
