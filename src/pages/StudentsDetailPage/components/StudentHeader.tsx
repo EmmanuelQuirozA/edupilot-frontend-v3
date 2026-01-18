@@ -3,19 +3,23 @@ import type { Student } from '../types/Student'
 interface StudentHeaderProps {
   student: Student
   isEditing: boolean
+  statusDraft: boolean
   statusLabel: string
   onEdit: () => void
   onSave: () => void
   onCancel: () => void
+  onToggleStatus: () => void
 }
 
 export function StudentHeader({
   student,
   isEditing,
+  statusDraft,
   statusLabel,
   onEdit,
   onSave,
   onCancel,
+  onToggleStatus,
 }: StudentHeaderProps) {
   const initials = student.fullName
     .split(' ')
@@ -37,14 +41,32 @@ export function StudentHeader({
         <div className="d-flex flex-column gap-2">
           <h4 className="mb-1 fw-semibold text-black">{student.fullName}</h4>
           <div className="d-flex align-items-center gap-2">
-            <span className="pill-chip"
-              style={{
-                color: (student?.user_enabled ? '#0f766e' : '#761b0fff'),
-                background: (student?.user_enabled ? 'rgba(16, 185, 129, 0.12)' : 'rgba(185, 16, 16, 0.12)'),
-              }}
-            >
-              {statusLabel}
-            </span>
+            {isEditing ? (
+              <div className="student-detail-page__status-toggle">
+                <div className="form-check form-switch m-0">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id="student-status-switch"
+                    aria-label="Desactivar acceso del alumno temporalmente"
+                    checked={statusDraft}
+                    onChange={onToggleStatus}
+                  />
+                </div>
+                <span>{statusLabel}</span>
+              </div>
+            ) : (
+              <span className="pill-chip"
+                // style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#0f766e' }}
+                style={{
+                  color: (student?.user_enabled ? '#0f766e' : '#761b0fff'),
+                  background: (student?.user_enabled ? 'rgba(16, 185, 129, 0.12)' : 'rgba(185, 16, 16, 0.12)'),
+                }}
+              >
+                {statusLabel}
+              </span>
+            )}
             <span className="pill-chip"
               style={{ background: 'rgba(128, 128, 128, 0.25)', color: '#5a5a5aff' }}
             >
