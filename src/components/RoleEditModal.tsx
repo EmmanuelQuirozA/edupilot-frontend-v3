@@ -8,7 +8,6 @@ declare const Swal: any
 
 export interface RoleEditValues {
   role_id: number
-  role_name: string
   name_en?: string | null
   name_es?: string | null
   description_en?: string | null
@@ -17,7 +16,6 @@ export interface RoleEditValues {
 }
 
 interface RoleEditFormState {
-  role_name: string
   name_en: string
   name_es: string
   description_en: string
@@ -26,7 +24,6 @@ interface RoleEditFormState {
 }
 
 const defaultRoleEditForm: RoleEditFormState = {
-  role_name: '',
   name_en: '',
   name_es: '',
   description_en: '',
@@ -52,7 +49,6 @@ export function RoleEditModal({ isOpen, role, onClose, onUpdated }: RoleEditModa
   useEffect(() => {
     if (!role || !isOpen) return
     setFormState({
-      role_name: role.role_name ?? '',
       name_en: role.name_en ?? '',
       name_es: role.name_es ?? '',
       description_en: role.description_en ?? '',
@@ -87,7 +83,6 @@ export function RoleEditModal({ isOpen, role, onClose, onUpdated }: RoleEditModa
       setEditRoleError(null)
 
       const payload = {
-        role_name: formState.role_name.trim(),
         name_en: formState.name_en.trim(),
         name_es: formState.name_es.trim(),
         description_en: formState.description_en.trim(),
@@ -172,35 +167,6 @@ export function RoleEditModal({ isOpen, role, onClose, onUpdated }: RoleEditModa
               <div className="modal-body">
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-semibold" htmlFor="edit_role_name">
-                      {t('roleNameLabel')}
-                    </label>
-                    <input
-                      id="edit_role_name"
-                      type="text"
-                      className="form-control"
-                      value={formState.role_name}
-                      onChange={(event) => handleChange('role_name', event.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold" htmlFor="edit_role_enabled">
-                      {t('roleEnabledLabel')}
-                    </label>
-                    <div className="form-check form-switch">
-                      <input
-                        id="edit_role_enabled"
-                        className="form-check-input"
-                        type="checkbox"
-                        role="switch"
-                        checked={formState.enabled}
-                        onChange={(event) => handleChange('enabled', event.target.checked)}
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
                     <label className="form-label fw-semibold" htmlFor="edit_role_name_es">
                       {t('roleNameEsLabel')}
                     </label>
@@ -249,6 +215,22 @@ export function RoleEditModal({ isOpen, role, onClose, onUpdated }: RoleEditModa
                       value={formState.description_en}
                       onChange={(event) => handleChange('description_en', event.target.value)}
                     />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold" htmlFor="edit_role_enabled">
+                      {t('roleEnabledLabel')}
+                    </label>
+                    <div className="form-check form-switch">
+                      <input
+                        id="edit_role_enabled"
+                        className="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        checked={formState.enabled}
+                        onChange={(event) => handleChange('enabled', event.target.checked)}
+                        disabled={isSubmitting}
+                      />
+                    </div>
                   </div>
                 </div>
 

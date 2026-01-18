@@ -7,23 +7,19 @@ import { useLanguage } from '../context/LanguageContext'
 declare const Swal: any
 
 interface RoleCreateFormState {
-  role_name: string
   name_en: string
   name_es: string
   description_en: string
   description_es: string
   enabled: boolean
-  is_super_admin: boolean
 }
 
 const defaultRoleCreateForm: RoleCreateFormState = {
-  role_name: '',
   name_en: '',
   name_es: '',
   description_en: '',
   description_es: '',
   enabled: true,
-  is_super_admin: false,
 }
 
 interface RoleCreateModalProps {
@@ -67,14 +63,12 @@ export function RoleCreateModal({ isOpen, schoolId, onClose, onCreated }: RoleCr
       setCreateRoleError(null)
 
       const payload = {
-        role_name: formState.role_name.trim(),
         name_en: formState.name_en.trim(),
         name_es: formState.name_es.trim(),
         description_en: formState.description_en.trim(),
         description_es: formState.description_es.trim(),
         school_id: schoolId,
         enabled: formState.enabled ? 1 : 0,
-        is_super_admin: formState.is_super_admin ? 1 : 0,
       }
 
       const params = new URLSearchParams({ lang: locale })
@@ -152,35 +146,6 @@ export function RoleCreateModal({ isOpen, schoolId, onClose, onCreated }: RoleCr
               <div className="modal-body">
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-semibold" htmlFor="role_name">
-                      {t('roleNameLabel')}
-                    </label>
-                    <input
-                      id="role_name"
-                      type="text"
-                      className="form-control"
-                      value={formState.role_name}
-                      onChange={(event) => handleChange('role_name', event.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold" htmlFor="role_enabled">
-                      {t('roleEnabledLabel')}
-                    </label>
-                    <div className="form-check form-switch">
-                      <input
-                        id="role_enabled"
-                        className="form-check-input"
-                        type="checkbox"
-                        role="switch"
-                        checked={formState.enabled}
-                        onChange={(event) => handleChange('enabled', event.target.checked)}
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
                     <label className="form-label fw-semibold" htmlFor="role_name_es">
                       {t('roleNameEsLabel')}
                     </label>
@@ -230,19 +195,20 @@ export function RoleCreateModal({ isOpen, schoolId, onClose, onCreated }: RoleCr
                       onChange={(event) => handleChange('description_en', event.target.value)}
                     />
                   </div>
-                  <div className="col-12">
-                    <div className="form-check">
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold" htmlFor="role_enabled">
+                      {t('roleEnabledLabel')}
+                    </label>
+                    <div className="form-check form-switch">
                       <input
-                        id="role_super_admin"
+                        id="role_enabled"
                         className="form-check-input"
                         type="checkbox"
-                        checked={formState.is_super_admin}
-                        onChange={(event) => handleChange('is_super_admin', event.target.checked)}
+                        role="switch"
+                        checked={formState.enabled}
+                        onChange={(event) => handleChange('enabled', event.target.checked)}
                         disabled={isSubmitting}
                       />
-                      <label className="form-check-label" htmlFor="role_super_admin">
-                        {t('roleSuperAdminLabel')}
-                      </label>
                     </div>
                   </div>
                 </div>

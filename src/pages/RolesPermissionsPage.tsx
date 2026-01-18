@@ -453,7 +453,6 @@ export function RolesPermissionsPage({ onNavigate, embedded = false }: RolesPerm
               onClick={() => {
                 setRoleToEdit({
                   role_id: selectedRole.role_id,
-                  role_name: selectedRole.role_name,
                   name_en: selectedRole.name_en,
                   name_es: selectedRole.name_es,
                   description_en: selectedRole.description_en,

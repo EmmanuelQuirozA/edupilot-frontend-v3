@@ -375,7 +375,7 @@ export function PaymentRegistrationModal({
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        onClick={handleClose}
+        onClick={onClose}
       >
         <div
           className="modal-dialog modal-lg modal-dialog-centered"
@@ -391,7 +391,7 @@ export function PaymentRegistrationModal({
                 type="button"
                 className="btn-close"
                 aria-label="Close"
-                onClick={handleClose}
+                onClick={onClose}
                 disabled={submitting || isPrinting}
               />
             </div>
@@ -517,7 +517,7 @@ export function PaymentRegistrationModal({
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={handleClose}
+                  onClick={onClose}
                   disabled={submitting || isPrinting}
                 >
                   {t('cancel')}
