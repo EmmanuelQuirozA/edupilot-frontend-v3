@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE_URL } from '../config'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { SchoolUpdateModal } from '../components/SchoolUpdateModal'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { formatDate } from '../utils/formatDate';
 import './SchoolDetailsPage.css'
@@ -125,6 +126,8 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
   const [error, setError] = useState<string | null>(null)
   const [permissions, setPermissions] = useState<ModulePermission | null>(null)
   const [permissionsLoading, setPermissionsLoading] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -175,7 +178,7 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
     fetchDetails()
 
     return () => controller.abort()
-  }, [locale, schoolId, t, token])
+  }, [locale, refreshKey, schoolId, t, token])
 
   useEffect(() => {
     if (!token) return
@@ -307,8 +310,9 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
   }
 
   return (
-    <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
-      <div className="d-flex flex-column gap-3">
+    <>
+      <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
+        <div className="d-flex flex-column gap-3">
         {error ? (
           <div className="alert alert-danger" role="alert">
             {error}
@@ -365,20 +369,7 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
 
                 {canUpdate ? (
                   <div className="d-flex flex-wrap gap-3 align-items-center p-3">
-                    <div className="d-flex align-itmes-center gap-1">
-                      <small className="text-muted fw-semibold">{t('schoolAccessLabel')}: </small>
-                      <div className="form-check form-switch m-0">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          role="switch"
-                          checked={data.school_details.enabled}
-                          readOnly
-                        />
-                      </div>
-                    </div>
-                    <div className="h-8 w-px bg-gray-300"></div>
-                    <button type="button" className="ghost-button">
+                    <button type="button" className="ghost-button" onClick={() => setIsEditModalOpen(true)}>
                       {t('schoolEditButton')}
                     </button>
                   </div>
@@ -867,7 +858,14 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
             <p className="mb-0 text-muted fw-semibold">{t('schoolNoData')}</p>
           </div>
         )}
-      </div>
-    </Layout>
+        </div>
+      </Layout>
+      <SchoolUpdateModal
+        isOpen={isEditModalOpen}
+        school={schoolDetails ?? null}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdated={() => setRefreshKey((prev) => prev + 1)}
+      />
+    </>
   )
 }
