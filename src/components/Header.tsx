@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
+import { API_BASE_URL } from '../config'
 import LanguageSelector from './LanguageSelector'
 import type { Locale } from '../context/LanguageContext'
 import './Header.css'
@@ -20,12 +22,58 @@ function getUserInitials(name?: string, lastName?: string) {
 export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: HeaderProps) {
   const { locale, setLocale, t } = useLanguage()
   const { user, logout, token } = useAuth()
+  const [schoolName, setSchoolName] = useState<string | null>(null)
 
   const lastNameFromFullName = user?.full_name?.split(' ').at(-1)
   const initials = getUserInitials(user?.first_name, lastNameFromFullName)
   const displayName = user?.first_name || t('welcome')
   const currentPageTitle = pageTitle ?? t('portalTitle')
-  const contextText = pageContext ?? 'School the sauses'
+  const contextText = pageContext ?? schoolName ?? 'Edupilot'
+
+  useEffect(() => {
+    if (!token) {
+      setSchoolName(null)
+      return
+    }
+
+    const controller = new AbortController()
+
+    const fetchCommercialName = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/schools/commercial-name`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('failed_request')
+        }
+
+        const payload = (await response.json()) as
+          | string
+          | {
+              commercial_name?: string | null
+              name?: string | null
+              school_name?: string | null
+            }
+
+        if (typeof payload === 'string') {
+          setSchoolName(payload || null)
+          return
+        }
+
+        setSchoolName(payload.commercial_name || payload.school_name || payload.name || null)
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          setSchoolName(null)
+        }
+      }
+    }
+
+    fetchCommercialName()
+
+    return () => controller.abort()
+  }, [token])
 
   const handleLanguageChange = (nextLocale: Locale) => {
     if (nextLocale !== locale) {
