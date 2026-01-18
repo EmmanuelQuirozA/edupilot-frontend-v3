@@ -21,7 +21,6 @@ interface Role {
   role_description: string | null
   enabled: boolean
   school_id: number | null
-  is_super_admin: boolean
   name_en?: string | null
   name_es?: string | null
   description_en?: string | null
