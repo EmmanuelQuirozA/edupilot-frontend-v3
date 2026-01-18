@@ -4,9 +4,11 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE_URL } from '../config'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { NoPermission } from '../components/NoPermission'
 import { SchoolUpdateModal } from '../components/SchoolUpdateModal'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { formatDate } from '../utils/formatDate';
+import { useModulePermissions } from '../hooks/useModulePermissions'
 import './SchoolDetailsPage.css'
 
 interface SchoolDetailsPageProps {
@@ -107,25 +109,22 @@ interface SchoolDetailsResponse {
   } | null
 }
 
-interface ModulePermission {
-  enabled: boolean
-  c: boolean
-  r: boolean
-  u: boolean
-}
-
 type TabKey = 'overview' | 'details' | 'billing' | 'settings' | 'structure'
 
 export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPageProps) {
   const { locale, t } = useLanguage()
   const { token, hydrated } = useAuth()
+  const {
+    permissions,
+    loading: permissionsLoading,
+    error: permissionsError,
+    loaded: permissionsLoaded,
+  } = useModulePermissions('schools')
 
   const [data, setData] = useState<SchoolDetailsResponse | null>(null)
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [permissions, setPermissions] = useState<ModulePermission | null>(null)
-  const [permissionsLoading, setPermissionsLoading] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -180,49 +179,6 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
     return () => controller.abort()
   }, [locale, refreshKey, schoolId, t, token])
 
-  useEffect(() => {
-    if (!token) return
-
-    const controller = new AbortController()
-    const fetchPermissions = async () => {
-      setPermissionsLoading(true)
-      try {
-        const params = new URLSearchParams({ moduleKey: 'schools' })
-        const response = await fetch(`${API_BASE_URL}/permissions/module-access?${params.toString()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        })
-
-        if (!response.ok) {
-          throw new Error('failed_request')
-        }
-
-        const json = (await response.json()) as Array<ModulePermission & Record<string, unknown>>
-        const permission = json?.[0]
-        setPermissions(
-          permission
-            ? {
-                enabled: Boolean(permission.enabled),
-                c: Boolean(permission.c),
-                r: Boolean(permission.r),
-                u: Boolean(permission.u),
-              }
-            : null,
-        )
-      } catch (fetchError) {
-        if ((fetchError as Error).name !== 'AbortError') {
-          setError(t('defaultError'))
-        }
-      } finally {
-        setPermissionsLoading(false)
-      }
-    }
-
-    fetchPermissions()
-
-    return () => controller.abort()
-  }, [t, token])
-
   const childSchools = useMemo<ChildSchool[]>(() => {
     if (!data?.child_schools) return []
     return Array.isArray(data.child_schools) ? data.child_schools : [data.child_schools]
@@ -275,7 +231,7 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
   const canUpdate = permissions?.u ?? false
   const canCreate = permissions?.c ?? false
 
-  if (!hydrated) {
+  if (!hydrated || permissionsLoading || !permissionsLoaded) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
         <LoadingSkeleton variant="dashboard" cardCount={6} />
@@ -291,20 +247,20 @@ export function SchoolDetailsPage({ onNavigate, schoolId }: SchoolDetailsPagePro
     )
   }
 
-  if (permissionsLoading) {
+  if (permissionsError) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
-        <LoadingSkeleton variant="dashboard" cardCount={6} />
+        <div className="alert alert-danger" role="alert">
+          {t('defaultError')}
+        </div>
       </Layout>
     )
   }
 
-  if (!permissions || !permissions.r) {
+  if (permissionsLoaded && permissions && !permissions.r) {
     return (
       <Layout onNavigate={onNavigate} pageTitle={t('schoolsTitle')} breadcrumbItems={breadcrumbItems}>
-        <div className="alert alert-warning" role="alert">
-          {t('defaultError')}
-        </div>
+        <NoPermission />
       </Layout>
     )
   }
