@@ -89,18 +89,15 @@ export function SchoolUpdateModal({
   const [formState, setFormState] = useState<SchoolFormState>({ ...defaultFormState })
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
-  const [currentImage, setCurrentImage] = useState<string | null>(null)
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const currentImageUrl = useMemo(() => {
-    if (!currentImage) return null
-    if (currentImage.startsWith('http') || currentImage.startsWith('data:')) {
-      return currentImage
-    }
-    return `${API_BASE_URL}/${currentImage.replace(/^\/+/, '')}`
-  }, [currentImage])
+  const schoolLogoUrl = useMemo(() => {
+    if (!schoolId) return null
+    return `${API_BASE_URL}/school-logo/${schoolId}`
+  }, [schoolId])
 
   useEffect(() => {
     if (!isOpen) return
@@ -122,7 +119,7 @@ export function SchoolUpdateModal({
       phone_number: normalizeText(initialData?.phone_number),
       email: normalizeText(initialData?.email),
     })
-    setCurrentImage(initialData?.image ?? null)
+    setCurrentImageUrl(null)
     setImageFile(null)
     setErrorMessage(null)
   }, [initialData, isOpen])
@@ -150,6 +147,47 @@ export function SchoolUpdateModal({
       URL.revokeObjectURL(previewUrl)
     }
   }, [imageFile])
+
+  useEffect(() => {
+    if (!isOpen || !schoolLogoUrl || !token) {
+      setCurrentImageUrl((prev) => {
+        if (prev) {
+          URL.revokeObjectURL(prev)
+        }
+        return null
+      })
+      return
+    }
+
+    const controller = new AbortController()
+    const loadLogo = async () => {
+      try {
+        const response = await fetch(schoolLogoUrl, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        })
+
+        if (!response.ok) return
+        const blob = await response.blob()
+        const objectUrl = URL.createObjectURL(blob)
+        if (controller.signal.aborted) {
+          URL.revokeObjectURL(objectUrl)
+          return
+        }
+        setCurrentImageUrl((prev) => {
+          if (prev) {
+            URL.revokeObjectURL(prev)
+          }
+          return objectUrl
+        })
+      } catch (imageError) {
+        if ((imageError as DOMException).name === 'AbortError') return
+      }
+    }
+
+    loadLogo()
+    return () => controller.abort()
+  }, [isOpen, schoolLogoUrl, token])
 
   useEffect(() => {
     if (!isOpen || !schoolId || !token) return
@@ -194,7 +232,6 @@ export function SchoolUpdateModal({
           phone_number: normalizeText(details.phone_number) || prev.phone_number,
           email: normalizeText(details.email) || prev.email,
         }))
-        setCurrentImage((details.image as string | null) ?? null)
       } catch (fetchError) {
         if ((fetchError as Error).name !== 'AbortError') {
           setErrorMessage(t('defaultError'))
@@ -468,7 +505,7 @@ export function SchoolUpdateModal({
                           <input
                             type="file"
                             className="form-control"
-                            accept="image/*"
+                            accept="image/png"
                             onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
                           />
                         </div>
@@ -477,7 +514,7 @@ export function SchoolUpdateModal({
                       <input
                         type="file"
                         className="form-control"
-                        accept="image/*"
+                        accept="image/png"
                         onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
                       />
                     )}
