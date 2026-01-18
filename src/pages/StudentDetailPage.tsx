@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../config'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { BalanceRechargeModal } from '../components/payments/BalanceRechargeModal'
+import { SchoolUpdateModal } from '../components/SchoolUpdateModal'
 import { StudentHeader } from './StudentsDetailPage/components/StudentHeader'
 import { StudentInstitutionCard } from './StudentsDetailPage/components/StudentInstitutionCard'
 import { StudentContactCard } from './StudentsDetailPage/components/StudentContactCard'
@@ -238,6 +239,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   const [initialFormValues, setInitialFormValues] = useState<FormState>(() => buildFormState(null))
   const [formErrors] = useState<Partial<Record<keyof FormState, string>>>({})
   const [catalogs, setCatalogs] = useState<StudentCatalogs>({ schools: [], groups: [] })
+  const [isSchoolModalOpen, setIsSchoolModalOpen] = useState(false)
 
   const [activeTab, setActiveTab] = useState<TabKey>('tuition')
 
@@ -275,7 +277,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   const [paymentModal, setPaymentModal] = useState<ModalState<Payment>>({ isOpen: false })
   const [requestModal, setRequestModal] = useState<ModalState<PaymentRequest>>({ isOpen: false })
   const [isSaving, setIsSaving] = useState(false)
-  const [statusDraft, setStatusDraft] = useState<boolean | null>(null)
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -378,7 +379,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         const state = buildFormState(detail)
         setFormValues(state)
         setInitialFormValues(state)
-        setStatusDraft(null)
       } catch (fetchError) {
         if ((fetchError as Error).name !== 'AbortError') {
           setStudentError(t('defaultError'))
@@ -643,11 +643,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
       return String(currentValue ?? '') !== String(initialValue ?? '')
     })
 
-    const originalStatus = student.user_enabled ?? student.isActive
-    const nextStatus = statusDraft ?? originalStatus
-    const statusChanged = nextStatus !== originalStatus
-
-    if (!studentDataChanged && !statusChanged) {
+    if (!studentDataChanged) {
       setIsEditing(false)
       return
     }
@@ -757,34 +753,6 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         setInitialFormValues({ ...formValues })
       }
 
-      if (statusChanged) {
-        const response = await fetch(
-          `${API_BASE_URL}/users/update/${encodeURIComponent(student.user_id)}/status?lang=${locale}`,
-          {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: nextStatus ? 'Activo' : 'Inactivo' }),
-          },
-        )
-
-        if (!response.ok) {
-          throw new Error('failed_request')
-        }
-
-        const statusResponse = await response.json()
-
-        Swal.fire({
-          icon: (statusResponse as { type?: "success" | "error" })?.type,
-          title: (statusResponse as { title?: string })?.title,
-          text: (statusResponse as { message?: string })?.message,
-        })
-
-        setStudent((prev) =>
-          prev ? { ...prev, user_enabled: nextStatus, isActive: nextStatus, status: nextStatus ? 'Activo' : 'Inactivo' } : prev,
-        )
-        setStatusDraft(nextStatus)
-      }
-
       setIsEditing(false)
     } catch {
       setStudentError(t('defaultError'))
@@ -793,16 +761,10 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
     }
   }
 
-  const handleToggleStatus = () => {
-    const originalStatus = student?.user_enabled ?? student?.isActive ?? false
-    const currentStatus = statusDraft ?? originalStatus
-    setStatusDraft(!currentStatus)
-  }
-
   const emptyValue = '—'
   const enrollment = t('enrollment') || 'Matrícula'
 
-  const currentStatus = statusDraft ?? student?.user_enabled ?? student?.isActive ?? false
+  const currentStatus = student?.user_enabled ?? student?.isActive ?? false
   const statusLabel = currentStatus ? 'Activo' : 'Inactivo'
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -836,16 +798,13 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
               <StudentHeader
                 student={student}
                 isEditing={isEditing}
-                statusDraft={currentStatus}
                 statusLabel={statusLabel}
                 onEdit={() => setIsEditing(true)}
                 onCancel={() => {
                   setIsEditing(false)
                   setFormValues(buildFormState(student))
-                  setStatusDraft(null)
                 }}
                 onSave={handleSave}
-                onToggleStatus={handleToggleStatus}
               />
             </div>
           </div>
@@ -915,6 +874,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                   isEditing={isEditing}
                   catalogs={catalogs}
                   onChange={handleFieldChange}
+                  onEditSchool={() => setIsSchoolModalOpen(true)}
                 />
               </section>
             ) : (
@@ -1046,6 +1006,39 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
         } } close={function (): void {
           throw new Error('Function not implemented.')
         } }      
+      />
+
+      <SchoolUpdateModal
+        isOpen={isSchoolModalOpen}
+        schoolId={student?.school_id ?? null}
+        initialData={{
+          description_es: student?.business_name ?? student?.commercial_name ?? '',
+          description_en: student?.business_name ?? student?.commercial_name ?? '',
+          commercial_name: student?.commercial_name ?? '',
+          business_name: student?.business_name ?? '',
+          tax_id: student?.tax_id ?? '',
+          street: student?.street ?? '',
+          ext_number: student?.ext_number ?? '',
+          int_number: student?.int_number ?? '',
+          suburb: student?.suburb ?? '',
+          locality: student?.locality ?? '',
+          municipality: student?.municipality ?? '',
+          state: student?.state ?? '',
+          phone_number: student?.phone_number ?? '',
+          email: student?.email ?? '',
+        }}
+        onClose={() => setIsSchoolModalOpen(false)}
+        onUpdated={(payload) => {
+          setStudent((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  commercial_name: payload.commercial_name,
+                  business_name: payload.business_name,
+                }
+              : prev,
+          )
+        }}
       />
 
       <InlineModal
