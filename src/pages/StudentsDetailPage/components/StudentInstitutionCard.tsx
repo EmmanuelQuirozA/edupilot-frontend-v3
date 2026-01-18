@@ -10,7 +10,6 @@ interface StudentInstitutionCardProps {
   isEditing: boolean
   catalogs: StudentCatalogs
   onChange: (field: keyof FormState, value: string | number | undefined) => void
-  onEditSchool?: () => void
 }
 
 interface SelectOption {
@@ -30,7 +29,6 @@ export function StudentInstitutionCard({
   isEditing,
   catalogs,
   onChange,
-  onEditSchool,
 }: StudentInstitutionCardProps) {
   const emptyValue = '—'
   const { t } = useLanguage()
@@ -149,17 +147,10 @@ export function StudentInstitutionCard({
 
   return (
     <div className="student-card__info">
-      <div className="d-flex flex-wrap justify-content-between gap-2">
-        <div>
-          <p className="info-card__label">{t('school')}</p>
-          <h3>{student.business_name || student.commercial_name || emptyValue}</h3>
-          <p className="info-card__meta">{t('metaSchoolCard')}</p>
-        </div>
-        {onEditSchool && !isEditing ? (
-          <button type="button" className="btn btn-outline-primary btn-sm h-75" onClick={onEditSchool}>
-            {t('edit')} {t('school')}
-          </button>
-        ) : null}
+      <div>
+        <p className="info-card__label">{t('school')}</p>
+        <h3>{student.business_name || student.commercial_name || emptyValue}</h3>
+        <p className="info-card__meta">{t('metaSchoolCard')}</p>
       </div>
       {isEditing ? (
         <div className="row gy-3">
