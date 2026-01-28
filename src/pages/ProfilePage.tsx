@@ -386,19 +386,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
         </div>
 
         <div className="row gy-3">
-          <div className="col-12 col-lg-4">
-              {details ? (
-                  <section className="card h-100 gap-3">
-                    <div>
-                      <p className="student-card__label">{t('balance')}</p>
-                      <h3>{formattedBalance}</h3>
-                    </div>
-                  </section>
-              ) : (
-                <LoadingSkeleton variant="table" rowCount={4} />
-              )}
-          </div>
-          <div className="col-12 col-lg-8">
+          <div className="col-12">
             {details ? (
               <section className="card h-100">
                 <div>
@@ -424,147 +412,75 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
           </div>
         </div>
 
-        <div className="card">
-          {loadError ? <div className="profile-detail-page__feedback">{loadError}</div> : null}
+        {loadError ? <div className="profile-detail-page__feedback">{loadError}</div> : null}
 
-          {details ? (
-            <UserContactCard
-              user={details}
-              formValues={formValues}
-              formErrors={formErrors}
-              isEditing={isEditing}
-              onChange={handleProfileChange}
-            />
-          ) : (
-            <LoadingSkeleton variant="table" rowCount={6} />
-          )}
+        {details ? (
+          <UserContactCard
+            user={details}
+            formValues={formValues}
+            formErrors={formErrors}
+            isEditing={isEditing}
+            onChange={handleProfileChange}
+          />
+        ) : (
+          <LoadingSkeleton variant="table" rowCount={6} />
+        )}
 
-          <div className="profile-detail-page__grid">
-            <section className="profile-card">
-              <div className="profile-card__header">
-                <h3 className="profile-card__title">{t('profilePersonalSection')}</h3>
-              </div>
-              <div className="profile-card__grid">
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileFullName')}</span>
-                  <p className="profile-field__value">{displayValue(details?.full_name)}</p>
-                </div>
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileUsername')}</span>
-                  <p className="profile-field__value">{displayValue(details?.username)}</p>
-                </div>
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileRole')}</span>
-                  <p className="profile-field__value">{displayValue(details?.role_name)}</p>
-                </div>
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileBirthDate')}</span>
-                  <p className="profile-field__value">{displayValue(details?.birth_date)}</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="profile-card">
-              <div className="profile-card__header">
-                <h3 className="profile-card__title">{t('profileSchoolSection')}</h3>
-              </div>
-              <div className="profile-card__grid">
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileCommercialName')}</span>
-                  <p className="profile-field__value">{displayValue(details?.commercial_name)}</p>
-                </div>
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileBusinessName')}</span>
-                  <p className="profile-field__value">{displayValue(details?.business_name)}</p>
-                </div>
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileTaxId')}</span>
-                  <p className="profile-field__value">{displayValue(details?.tax_id)}</p>
-                </div>
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileSchoolStatus')}</span>
-                  <p className="profile-field__value">{displayValue(details?.school_status)}</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="profile-card">
-              <div className="profile-card__header">
-                <h3 className="profile-card__title">{t('profileAccessSection')}</h3>
-              </div>
-              <div className="profile-card__grid">
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileUserStatus')}</span>
-                  <p className="profile-field__value">{displayValue(details?.user_status)}</p>
-                </div>
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileRoleStatus')}</span>
-                  <p className="profile-field__value">{displayValue(details?.role_status)}</p>
-                </div>
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileBalance')}</span>
-                  <p className="profile-field__value">{formattedBalance}</p>
-                </div>
-              </div>
-            </section>
+        <section className="profile-card">
+          <div className="profile-card__header">
+            <h3 className="profile-card__title">{t('profilePasswordSection')}</h3>
+            <p className="profile-card__subtitle">{t('profilePasswordHelper')}</p>
           </div>
-
-          <section className="profile-card">
-            <div className="profile-card__header">
-              <h3 className="profile-card__title">{t('profilePasswordSection')}</h3>
-              <p className="profile-card__subtitle">{t('profilePasswordHelper')}</p>
+          <form className="profile-page__password-form" onSubmit={handlePasswordSubmit}>
+            <div>
+              <label className="form-label" htmlFor="oldPassword">
+                {t('profileOldPassword')}
+              </label>
+              <input
+                id="oldPassword"
+                type="password"
+                className="form-control"
+                value={passwordForm.oldPassword}
+                onChange={(event) => handlePasswordChange('oldPassword', event.target.value)}
+                required
+              />
             </div>
-            <form className="profile-page__password-form" onSubmit={handlePasswordSubmit}>
-              <div>
-                <label className="form-label" htmlFor="oldPassword">
-                  {t('profileOldPassword')}
-                </label>
-                <input
-                  id="oldPassword"
-                  type="password"
-                  className="form-control"
-                  value={passwordForm.oldPassword}
-                  onChange={(event) => handlePasswordChange('oldPassword', event.target.value)}
-                  required
-                />
+            <div>
+              <label className="form-label" htmlFor="newPassword">
+                {t('profileNewPassword')}
+              </label>
+              <input
+                id="newPassword"
+                type="password"
+                className="form-control"
+                value={passwordForm.newPassword}
+                onChange={(event) => handlePasswordChange('newPassword', event.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="form-label" htmlFor="confirmPassword">
+                {t('profileConfirmPassword')}
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                className="form-control"
+                value={passwordForm.confirmPassword}
+                onChange={(event) => handlePasswordChange('confirmPassword', event.target.value)}
+                required
+              />
+            </div>
+            {passwordError ? (
+              <div className="alert alert-danger mb-0" role="alert">
+                {passwordError}
               </div>
-              <div>
-                <label className="form-label" htmlFor="newPassword">
-                  {t('profileNewPassword')}
-                </label>
-                <input
-                  id="newPassword"
-                  type="password"
-                  className="form-control"
-                  value={passwordForm.newPassword}
-                  onChange={(event) => handlePasswordChange('newPassword', event.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="form-label" htmlFor="confirmPassword">
-                  {t('profileConfirmPassword')}
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  className="form-control"
-                  value={passwordForm.confirmPassword}
-                  onChange={(event) => handlePasswordChange('confirmPassword', event.target.value)}
-                  required
-                />
-              </div>
-              {passwordError ? (
-                <div className="alert alert-danger mb-0" role="alert">
-                  {passwordError}
-                </div>
-              ) : null}
-              <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t('profileSaving') : t('profileUpdatePassword')}
-              </button>
-            </form>
-          </section>
-        </div>
+            ) : null}
+            <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? t('profileSaving') : t('profileUpdatePassword')}
+            </button>
+          </form>
+        </section>
       </div>
     </Layout>
   )
