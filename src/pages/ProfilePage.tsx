@@ -6,6 +6,8 @@ import { API_BASE_URL } from '../config'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import './ProfilePage.css'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { useModulePermissions } from '../hooks/useModulePermissions'
+import { UserContactCard, type UserContactFormState } from './ProfilePage/components/UserContactCard'
 
 declare const Swal: any
 
@@ -60,6 +62,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
   const [details, setDetails] = useState<SelfDetails | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const { permissions: usersPermissions } = useModulePermissions('users')
   const [passwordForm, setPasswordForm] = useState<PasswordFormState>({
     oldPassword: '',
     newPassword: '',
@@ -67,6 +70,26 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
   })
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [statusDraft, setStatusDraft] = useState(false)
+  const [formValues, setFormValues] = useState<UserContactFormState>({
+    first_name: '',
+    last_name_father: '',
+    last_name_mother: '',
+    birth_date: '',
+    phone_number: '',
+    tax_id: '',
+    email: '',
+    personal_email: '',
+    street: '',
+    ext_number: '',
+    int_number: '',
+    suburb: '',
+    locality: '',
+    municipality: '',
+    state: '',
+  })
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof UserContactFormState, string>>>({})
   const emptyValue = '—'
 
   const formattedBalance = useMemo(() => {
@@ -124,6 +147,28 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
 
     return () => controller.abort()
   }, [token, t])
+
+  useEffect(() => {
+    if (!details || isEditing) return
+    setFormValues({
+      first_name: details.first_name ?? '',
+      last_name_father: details.last_name_father ?? '',
+      last_name_mother: details.last_name_mother ?? '',
+      birth_date: details.birth_date ?? '',
+      phone_number: details.phone_number ?? '',
+      tax_id: details.tax_id ?? '',
+      email: details.email ?? '',
+      personal_email: details.personal_email ?? '',
+      street: details.street ?? '',
+      ext_number: details.ext_number ?? '',
+      int_number: details.int_number ?? '',
+      suburb: details.suburb ?? '',
+      locality: details.locality ?? '',
+      municipality: details.municipality ?? '',
+      state: details.state ?? '',
+    })
+    setStatusDraft(details.user_enabled)
+  }, [details, isEditing])
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -202,28 +247,75 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
     return 'chip--muted'
   }
 
-  const fullAddress =
-    details?.street || details?.suburb || details?.municipality || details?.state
-      ? [
-          details?.street,
-          details?.ext_number,
-          details?.int_number,
-          details?.suburb,
-          details?.locality,
-          details?.municipality,
-          details?.state,
-        ]
-          .filter((item) => item && item.trim().length > 0)
-          .join(', ')
-      : t('notAvailable')
+  const canEdit = Boolean(usersPermissions?.u)
 
-    const isEditing = false;
-    const statusDraft = false;
-    const onToggleStatus = false;
-    const statusLabel = false;
-    const onCancel = false;
-    const onSave = false;
-    const canEdit = false;
+  const statusLabel = statusDraft ? t('active') : t('inactive')
+
+  const onToggleStatus = () => {
+    setStatusDraft((prev) => !prev)
+  }
+
+  const onEdit = () => {
+    if (!details) return
+    setFormErrors({})
+    setFormValues({
+      first_name: details.first_name ?? '',
+      last_name_father: details.last_name_father ?? '',
+      last_name_mother: details.last_name_mother ?? '',
+      birth_date: details.birth_date ?? '',
+      phone_number: details.phone_number ?? '',
+      tax_id: details.tax_id ?? '',
+      email: details.email ?? '',
+      personal_email: details.personal_email ?? '',
+      street: details.street ?? '',
+      ext_number: details.ext_number ?? '',
+      int_number: details.int_number ?? '',
+      suburb: details.suburb ?? '',
+      locality: details.locality ?? '',
+      municipality: details.municipality ?? '',
+      state: details.state ?? '',
+    })
+    setStatusDraft(details.user_enabled)
+    setIsEditing(true)
+  }
+
+  const onCancel = () => {
+    if (!details) return
+    setFormErrors({})
+    setFormValues({
+      first_name: details.first_name ?? '',
+      last_name_father: details.last_name_father ?? '',
+      last_name_mother: details.last_name_mother ?? '',
+      birth_date: details.birth_date ?? '',
+      phone_number: details.phone_number ?? '',
+      tax_id: details.tax_id ?? '',
+      email: details.email ?? '',
+      personal_email: details.personal_email ?? '',
+      street: details.street ?? '',
+      ext_number: details.ext_number ?? '',
+      int_number: details.int_number ?? '',
+      suburb: details.suburb ?? '',
+      locality: details.locality ?? '',
+      municipality: details.municipality ?? '',
+      state: details.state ?? '',
+    })
+    setStatusDraft(details.user_enabled)
+    setIsEditing(false)
+  }
+
+  const onSave = () => {
+    if (!details) return
+    setDetails({
+      ...details,
+      ...formValues,
+      user_enabled: statusDraft,
+    })
+    setIsEditing(false)
+  }
+
+  const handleProfileChange = (field: keyof UserContactFormState, value: string) => {
+    setFormValues((prev) => ({ ...prev, [field]: value }))
+  }
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('profileTitle')} breadcrumbItems={breadcrumbItems}>
@@ -335,6 +427,18 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
         <div className="card">
           {loadError ? <div className="profile-detail-page__feedback">{loadError}</div> : null}
 
+          {details ? (
+            <UserContactCard
+              user={details}
+              formValues={formValues}
+              formErrors={formErrors}
+              isEditing={isEditing}
+              onChange={handleProfileChange}
+            />
+          ) : (
+            <LoadingSkeleton variant="table" rowCount={6} />
+          )}
+
           <div className="profile-detail-page__grid">
             <section className="profile-card">
               <div className="profile-card__header">
@@ -356,30 +460,6 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                 <div className="profile-field">
                   <span className="profile-field__label">{t('profileBirthDate')}</span>
                   <p className="profile-field__value">{displayValue(details?.birth_date)}</p>
-                </div>
-              </div>
-            </section>
-
-            <section className="profile-card">
-              <div className="profile-card__header">
-                <h3 className="profile-card__title">{t('profileContactSection')}</h3>
-              </div>
-              <div className="profile-card__grid">
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profileEmail')}</span>
-                  <p className="profile-field__value">{displayValue(details?.email)}</p>
-                </div>
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profilePersonalEmail')}</span>
-                  <p className="profile-field__value">{displayValue(details?.personal_email)}</p>
-                </div>
-                <div className="profile-field">
-                  <span className="profile-field__label">{t('profilePhone')}</span>
-                  <p className="profile-field__value">{displayValue(details?.phone_number)}</p>
-                </div>
-                <div className="profile-field profile-field--full">
-                  <span className="profile-field__label">{t('profileAddress')}</span>
-                  <p className="profile-field__value">{fullAddress}</p>
                 </div>
               </div>
             </section>
