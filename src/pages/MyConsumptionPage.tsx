@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../config'
 import { DataTable, type DataTableColumn } from '../components/DataTable'
 import SearchInput from '../components/ui/SearchInput'
 import { formatDate } from '../utils/formatDate'
+import type { BreadcrumbItem } from '../components/Breadcrumb'
 
 interface MyConsumptionPageProps {
   onNavigate: (path: string) => void
@@ -47,6 +48,14 @@ export function MyConsumptionPage({ onNavigate }: MyConsumptionPageProps) {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
+
+  const breadcrumbItems: BreadcrumbItem[] = useMemo(
+    () => [
+      { label: t('portalTitle'), onClick: () => onNavigate(`/${locale}`) },
+      { label: 'Mi consumo' },
+    ],
+    [locale, onNavigate, t],
+  )
 
   useEffect(() => {
     if (!token) return
@@ -151,7 +160,7 @@ export function MyConsumptionPage({ onNavigate }: MyConsumptionPageProps) {
   )
 
   return (
-    <Layout onNavigate={onNavigate} pageTitle="Mi consumo">
+    <Layout onNavigate={onNavigate} pageTitle="Mi consumo" breadcrumbItems={breadcrumbItems}>
       <div className="d-flex flex-column gap-3">
         {error ? (
           <div className="alert alert-danger" role="alert">
