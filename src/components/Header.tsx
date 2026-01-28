@@ -116,8 +116,12 @@ export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: 
               </button>
               <ul className="dropdown-menu dropdown-menu-end">
                 <li>
-                  <button className="dropdown-item" type="button">
-                    Perfil
+                  <button
+                    className="dropdown-item"
+                    type="button"
+                    onClick={() => onNavigate(`/${locale}/profile`)}
+                  >
+                    {t('profileTitle')}
                   </button>
                 </li>
                 <li>

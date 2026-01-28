@@ -32,6 +32,7 @@ import { GlobalSettingsPage } from "./pages/GlobalSettingsPage";
 import { PointOfSalePage } from "./pages/PointOfSalePage";
 import { PointOfSaleMenuPage } from "./pages/PointOfSaleMenuPage";
 import { MyConsumptionPage } from "./pages/MyConsumptionPage";
+import { ProfilePage } from "./pages/ProfilePage";
 
 import { LoadingSkeleton } from "./components/LoadingSkeleton";
 import { Layout } from "./layout/Layout";
@@ -130,6 +131,7 @@ function Router() {
   const isPointOfSalePath = /^\/(es|en)\/point-of-sale$/.test(path);
   const isPointOfSaleMenuPath = /^\/(es|en)\/point-of-sale\/menu$/.test(path);
   const isMyConsumptionPath = /^\/(es|en)\/myconsumption$/.test(path);
+  const isProfilePath = /^\/(es|en)\/profile$/.test(path);
   const scheduledFinanceMatch = path.match(/^\/(es|en)\/finance\/request\/scheduled\/(\d+)$/);
   const financeMatch = path.match(
     /^\/(es|en)\/finance(?:\/(payments|request|request-upload|kitchen-sales|balance-recharges)(?:\/(\d+))?)?$/,
@@ -223,6 +225,7 @@ function Router() {
     if (isPointOfSaleMenuPath) return <PointOfSaleMenuPage onNavigate={navigate} />;
     if (isPointOfSalePath) return <PointOfSalePage onNavigate={navigate} />;
     if (isMyConsumptionPath) return <MyConsumptionPage onNavigate={navigate} />;
+    if (isProfilePath) return <ProfilePage onNavigate={navigate} />;
 
     if (isRootPath) {
       switch (role) {
