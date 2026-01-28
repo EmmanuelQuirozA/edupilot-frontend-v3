@@ -56,6 +56,7 @@ function Router() {
     if (window.location.pathname === nextPath) return;
     window.history.pushState({}, "", nextPath);
     setPath(nextPath);
+    window.dispatchEvent(new CustomEvent("app:navigate", { detail: { path: nextPath } }));
   }, []);
 
   // ---------------------------

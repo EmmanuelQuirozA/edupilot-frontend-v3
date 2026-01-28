@@ -215,14 +215,14 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
   }, [locale, t, token])
 
   const formatDate = useCallback((value?: string | null) => {
-    if (!value) return 'Sin fecha'
+    if (!value) return t('studentsNoDate')
     const targetLocale = locale === 'es' ? 'es-MX' : 'en-US'
     return new Date(value).toLocaleDateString(targetLocale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     })
-  }, [locale])
+  }, [locale, t])
 
   const totalPendingAmount = (pendingTotals?.pendingTotal ?? 0) + (pendingTotals?.lateFeeTotal ?? 0)
 
@@ -234,7 +234,7 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
 
   const renderPendingRequests = () => {
     if (isPaymentRequestsLoading) {
-      return <p className="text-muted mb-0">Cargando solicitudes...</p>
+      return <p className="text-muted mb-0">{t('studentsLoadingRequests')}</p>
     }
 
     if (paymentRequestsError) {
@@ -242,7 +242,7 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
     }
 
     if (paymentRequests.length === 0) {
-      return <p className="text-muted mb-0">No hay solicitudes pendientes.</p>
+      return <p className="text-muted mb-0">{t('studentsNoPendingRequests')}</p>
     }
 
     return (
@@ -271,7 +271,7 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
                     overdue ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning'
                   }`}
                 >
-                  {overdue ? 'Vencido' : 'Pendiente'}
+                  {overdue ? t('studentsOverdue') : t('studentsPending')}
                 </span>
               </div>
             </div>
@@ -283,7 +283,7 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
 
   const renderRecentPayments = () => {
     if (isPaymentsLoading) {
-      return <p className="text-muted mb-0">Cargando pagos recientes...</p>
+      return <p className="text-muted mb-0">{t('studentsLoadingRecentPayments')}</p>
     }
 
     if (paymentsError) {
@@ -291,7 +291,7 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
     }
 
     if (payments.length === 0) {
-      return <p className="text-muted mb-0">No hay pagos recientes.</p>
+      return <p className="text-muted mb-0">{t('studentsNoRecentPayments')}</p>
     }
 
     return (
@@ -335,11 +335,10 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
     <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')}>
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div>
-          <p className="text-uppercase text-muted mb-1">Panel de estudiantes</p>
+          <p className="text-uppercase text-muted mb-1">{t('studentsDashboardLabel')}</p>
           <h2 className="fw-bold mb-2">{t('welcome')}</h2>
-          <p className="text-muted mb-0">Consulta tus pendientes financieros y mantén tu cuenta al día.</p>
+          <p className="text-muted mb-0">{t('studentsDashboardDescription')}</p>
         </div>
-        <button className="btn btn-outline-primary" onClick={() => onNavigate(`/${locale}`)}>Home</button>
       </div>
 
       <div className="row g-3 mb-4">
@@ -350,9 +349,13 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
           >
             <div className="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
               <div>
-                <p className="text-uppercase small mb-2" style={{ color: 'rgba(255,255,255,0.8)' }}>Total a pagar</p>
+                <p className="text-uppercase small mb-2" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                  {t('studentsTotalDue')}
+                </p>
                 {isPendingLoading ? (
-                  <p className="mb-0" style={{ color: 'rgba(255,255,255,0.75)' }}>Cargando...</p>
+                  <p className="mb-0" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                    {t('studentsLoading')}
+                  </p>
                 ) : pendingError ? (
                   <p className="mb-0 text-warning">{pendingError}</p>
                 ) : (
@@ -365,7 +368,10 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
                     </div>
                     <p className="mb-0" style={{ color: 'rgba(255,255,255,0.75)' }}>
                       <i className="bi bi-info-circle me-2"/>
-                      Incluye {currencyFormatter.format(pendingTotals?.lateFeeTotal ?? 0)} por cargos de mora.
+                      {t('studentsIncludesLateFees').replace(
+                        '{amount}',
+                        currencyFormatter.format(pendingTotals?.lateFeeTotal ?? 0),
+                      )}
                     </p>
                   </>
                 )}
@@ -375,7 +381,7 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
                   className="btn btn-light text-primary fw-semibold"
                   onClick={() => onNavigate(`/${locale}/finance/request`)}
                 >
-                  Ver más
+                  {t('studentsViewMore')}
                 </button>
               </div>
             </div>
@@ -386,9 +392,9 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
           <div className="card h-100 border-0 shadow-sm">
             <div className="card-body d-flex flex-column justify-content-between">
               <div>
-                <p className="text-uppercase text-muted small mb-2">Saldo disponible</p>
+                <p className="text-uppercase text-muted small mb-2">{t('studentsAvailableBalance')}</p>
                 {isStudentInfoLoading ? (
-                  <p className="mb-0 text-muted">Cargando...</p>
+                  <p className="mb-0 text-muted">{t('studentsLoading')}</p>
                 ) : studentInfoError ? (
                   <p className="mb-0 text-danger">{studentInfoError}</p>
                 ) : (
@@ -400,53 +406,61 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
                   </div>
                 )}
               </div>
-              <p className="text-muted small mb-0">Úsalo para pagar en cafetería.</p>
+              <p className="text-muted small mb-0">{t('studentsBalanceHint')}</p>
             </div>
           </div>
         </div>
       </div>
 
       <div className="row g-3">
-        <div className="col-lg-7">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                  <p className="text-uppercase text-muted small mb-1">Solicitudes pendientes</p>
-                  <h5 className="fw-bold mb-0">Próximos pagos</h5>
+        {(isPaymentRequestsLoading || !!paymentRequestsError || paymentRequests.length > 0) && (
+          <div className="col-lg-7">
+            <div className="card h-100 border-0 shadow-sm">
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <p className="text-uppercase text-muted small mb-1">{t('studentsPendingRequestsLabel')}</p>
+                    <h5 className="fw-bold mb-0">{t('studentsUpcomingPayments')}</h5>
+                  </div>
+                  <button
+                    className="btn btn-link text-primary text-decoration-none fw-semibold"
+                    onClick={() => onNavigate(`/${locale}/finance/request`)}
+                  >
+                    {t('studentsViewAll')}
+                  </button>
                 </div>
+                {renderPendingRequests()}
+                <hr />
                 <button
-                  className="btn btn-link text-primary text-decoration-none fw-semibold"
+                  className="btn btn-outline-primary w-100"
                   onClick={() => onNavigate(`/${locale}/finance/request`)}
                 >
-                  Ver todo
+                  {t('studentsViewFullHistory')}
                 </button>
               </div>
-              {renderPendingRequests()}
-              <hr />
-              <button
-                className="btn btn-outline-primary w-100"
-                onClick={() => onNavigate(`/${locale}/finance/payments`)}
-              >
-                Ver historial completo
-              </button>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="col-lg-5">
+        <div
+          className={
+            isPaymentRequestsLoading || !!paymentRequestsError || paymentRequests.length > 0
+              ? 'col-lg-5'
+              : 'col-lg-12'
+          }
+        >
           <div className="card h-100 border-0 shadow-sm">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                  <p className="text-uppercase text-muted small mb-1">Pagos recientes</p>
-                  <h5 className="fw-bold mb-0">Últimos movimientos</h5>
+                  <p className="text-uppercase text-muted small mb-1">{t('studentsRecentPaymentsLabel')}</p>
+                  <h5 className="fw-bold mb-0">{t('studentsLatestMovements')}</h5>
                 </div>
                 <button
                   className="btn btn-link text-primary text-decoration-none fw-semibold"
                   onClick={() => onNavigate(`/${locale}/finance/payments`)}
                 >
-                  Ver más
+                  {t('studentsViewMore')}
                 </button>
               </div>
               {renderRecentPayments()}
@@ -455,7 +469,7 @@ export function DashboardStudentsPage({ onNavigate }: DashboardStudentsPageProps
                 className="btn btn-outline-primary w-100"
                 onClick={() => onNavigate(`/${locale}/finance/payments`)}
               >
-                Ver historial completo
+                {t('studentsViewFullHistory')}
               </button>
             </div>
           </div>

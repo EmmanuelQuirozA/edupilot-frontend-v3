@@ -130,8 +130,18 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
 
   useEffect(() => {
     const handlePopState = () => setCurrentPath(window.location.pathname)
+    const handleNavigate = (event: Event) => {
+      const customEvent = event as CustomEvent<{ path?: string }>
+      const nextPath = customEvent.detail?.path ?? window.location.pathname
+      setCurrentPath(nextPath)
+    }
+
     window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
+    window.addEventListener('app:navigate', handleNavigate)
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+      window.removeEventListener('app:navigate', handleNavigate)
+    }
   }, [])
 
   // Construcción de secciones SOLO si usuario autenticado
@@ -193,7 +203,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
 
   const isActivePath = (path?: string) => {
     if (!path) return false
-    return currentPath === path
+    return currentPath === path || currentPath.startsWith(`${path}/`)
   }
 
   const handleNavigation = (event: MouseEvent<HTMLAnchorElement>, path?: string) => {
