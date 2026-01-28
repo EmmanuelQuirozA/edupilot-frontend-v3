@@ -8,6 +8,7 @@ import './ProfilePage.css'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { useModulePermissions } from '../hooks/useModulePermissions'
 import { UserContactCard, type UserContactFormState } from './ProfilePage/components/UserContactCard'
+import { ProfilePasswordModal } from './ProfilePage/components/ProfilePasswordModal'
 
 declare const Swal: any
 
@@ -71,6 +72,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
   const [statusDraft, setStatusDraft] = useState(false)
   const [formValues, setFormValues] = useState<UserContactFormState>({
     first_name: '',
@@ -225,6 +227,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
       })
 
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' })
+      setIsPasswordModalOpen(false)
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
         setPasswordError(t('defaultError'))
@@ -313,6 +316,16 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
     setIsEditing(false)
   }
 
+  const openPasswordModal = () => {
+    setPasswordError(null)
+    setIsPasswordModalOpen(true)
+  }
+
+  const closePasswordModal = () => {
+    setIsPasswordModalOpen(false)
+    setPasswordError(null)
+  }
+
   const handleProfileChange = (field: keyof UserContactFormState, value: string) => {
     setFormValues((prev) => ({ ...prev, [field]: value }))
   }
@@ -374,11 +387,16 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                     </button>
                   </>
                 ) : (
-                  canEdit ?
-                  (<button type="button" className="btn btn-outline-primary" onClick={onEdit}>
-                    Editar perfil
-                  </button>)
-                  : null
+                  <>
+                    {canEdit ? (
+                      <button type="button" className="btn btn-outline-primary" onClick={onEdit}>
+                        Editar perfil
+                      </button>
+                    ) : null}
+                    <button type="button" className="btn btn-outline-secondary" onClick={openPasswordModal}>
+                      {t('profileUpdatePassword')}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -426,62 +444,23 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
           <LoadingSkeleton variant="table" rowCount={6} />
         )}
 
-        <section className="profile-card">
-          <div className="profile-card__header">
-            <h3 className="profile-card__title">{t('profilePasswordSection')}</h3>
-            <p className="profile-card__subtitle">{t('profilePasswordHelper')}</p>
-          </div>
-          <form className="profile-page__password-form" onSubmit={handlePasswordSubmit}>
-            <div>
-              <label className="form-label" htmlFor="oldPassword">
-                {t('profileOldPassword')}
-              </label>
-              <input
-                id="oldPassword"
-                type="password"
-                className="form-control"
-                value={passwordForm.oldPassword}
-                onChange={(event) => handlePasswordChange('oldPassword', event.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className="form-label" htmlFor="newPassword">
-                {t('profileNewPassword')}
-              </label>
-              <input
-                id="newPassword"
-                type="password"
-                className="form-control"
-                value={passwordForm.newPassword}
-                onChange={(event) => handlePasswordChange('newPassword', event.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className="form-label" htmlFor="confirmPassword">
-                {t('profileConfirmPassword')}
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                className="form-control"
-                value={passwordForm.confirmPassword}
-                onChange={(event) => handlePasswordChange('confirmPassword', event.target.value)}
-                required
-              />
-            </div>
-            {passwordError ? (
-              <div className="alert alert-danger mb-0" role="alert">
-                {passwordError}
-              </div>
-            ) : null}
-            <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? t('profileSaving') : t('profileUpdatePassword')}
-            </button>
-          </form>
-        </section>
       </div>
+      <ProfilePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={closePasswordModal}
+        formValues={passwordForm}
+        formError={passwordError}
+        isSubmitting={isSubmitting}
+        onChange={handlePasswordChange}
+        onSubmit={handlePasswordSubmit}
+        title={t('profilePasswordSection')}
+        subtitle={t('profilePasswordHelper')}
+        submitLabel={t('profileUpdatePassword')}
+        submittingLabel={t('profileSaving')}
+        oldPasswordLabel={t('profileOldPassword')}
+        newPasswordLabel={t('profileNewPassword')}
+        confirmPasswordLabel={t('profileConfirmPassword')}
+      />
     </Layout>
   )
 }
