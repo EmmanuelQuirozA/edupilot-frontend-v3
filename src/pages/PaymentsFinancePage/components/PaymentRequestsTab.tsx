@@ -86,11 +86,14 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
   const today = useMemo(() => new Date().toISOString().split('T')[0], [isScheduleModalOpen])
 
   const paymentRequestTabs = useMemo(
-    () => [
-      { key: 'history', label: t('historyTab') },
-      { key: 'scheduled', label: t('scheduledTab') },
-    ],
-    [t],
+    () =>
+      isStudent
+        ? []
+        : [
+            { key: 'history', label: t('historyTab') },
+            { key: 'scheduled', label: t('scheduledTab') },
+          ],
+    [isStudent, t],
   )
 
   const effectivePermissions = useMemo(
@@ -206,6 +209,12 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
 
     return () => controller.abort()
   }, [token])
+
+  useEffect(() => {
+    if (isStudent && activeTab !== 'history') {
+      setActiveTab('history')
+    }
+  }, [activeTab, isStudent])
 
   const handleOpenCreateModal = () => {
     setCreateError(null)
@@ -515,97 +524,99 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
     <>
       <div className="students-page d-flex flex-column gap-3">
 
-        <div className='d-flex justify-content-between'>
-          <Tabs
-            tabs={paymentRequestTabs}
-            activeKey={activeTab}
-            onSelect={(key) => setActiveTab(key as 'history' | 'scheduled')}
-          />
+        {!isStudent ? (
+          <div className="d-flex justify-content-between">
+            <Tabs
+              tabs={paymentRequestTabs}
+              activeKey={activeTab}
+              onSelect={(key) => setActiveTab(key as 'history' | 'scheduled')}
+            />
 
-          {canCreate ? (
-            <div className="dropdown payment-requests__create-dropdown">
-              <button
-                className="btn payment-requests__create-dropdown-toggle dropdown-toggle"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <span className="payment-requests__create-icon" aria-hidden="true">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M12 5v14M5 12h14"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-                <span className="fw-semibold">{t('createPaymentRequest')}</span>
-              </button>
+            {canCreate ? (
+              <div className="dropdown payment-requests__create-dropdown">
+                <button
+                  className="btn payment-requests__create-dropdown-toggle dropdown-toggle"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <span className="payment-requests__create-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M12 5v14M5 12h14"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                  <span className="fw-semibold">{t('createPaymentRequest')}</span>
+                </button>
 
-              <ul className="dropdown-menu dropdown-menu-end shadow-sm">
-                <li>
-                  <button
-                    type="button"
-                    className="dropdown-item payment-requests__create-option"
-                    onClick={handleOpenCreateModal}
-                  >
-                    <span
-                      className="payment-requests__option-icon payment-requests__option-icon--single"
-                      aria-hidden="true"
+                <ul className="dropdown-menu dropdown-menu-end shadow-sm">
+                  <li>
+                    <button
+                      type="button"
+                      className="dropdown-item payment-requests__create-option"
+                      onClick={handleOpenCreateModal}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
-                        <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" />
-                        <path
-                          d="M12 8v8M8 12h8"
-                          stroke="white"
-                          strokeWidth="1.6"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </span>
-                    <span className="d-flex flex-column align-items-start">
-                      <span className="fw-semibold">{t('createSingleRequest')}</span>
-                      <small className="text-muted">{t('createSingleRequestDescription')}</small>
-                    </span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    className="dropdown-item payment-requests__create-option"
-                    onClick={handleOpenScheduleModal}
-                  >
-                    <span className="payment-requests__option-icon payment-requests__option-icon--single" aria-hidden="true">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
-                        <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" />
-                        <path
-                          d="M12 7.5v5l3.5 2.5"
-                          stroke="white"
-                          strokeWidth="1.6"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </span>
-                    <span className="d-flex flex-column align-items-start">
-                      <span className="fw-semibold">{t('scheduleRequest')}</span>
-                      <small className="text-muted">{t('scheduleRequestDescription')}</small>
-                    </span>
-                  </button>
-                </li>
-              </ul>
-            </div>
-          ) : null}
-        </div>
+                      <span
+                        className="payment-requests__option-icon payment-requests__option-icon--single"
+                        aria-hidden="true"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                          <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" />
+                          <path
+                            d="M12 8v8M8 12h8"
+                            stroke="white"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                      <span className="d-flex flex-column align-items-start">
+                        <span className="fw-semibold">{t('createSingleRequest')}</span>
+                        <small className="text-muted">{t('createSingleRequestDescription')}</small>
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      className="dropdown-item payment-requests__create-option"
+                      onClick={handleOpenScheduleModal}
+                    >
+                      <span className="payment-requests__option-icon payment-requests__option-icon--single" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                          <rect x="4" y="4" width="16" height="16" rx="4" fill="currentColor" />
+                          <path
+                            d="M12 7.5v5l3.5 2.5"
+                            stroke="white"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                      <span className="d-flex flex-column align-items-start">
+                        <span className="fw-semibold">{t('scheduleRequest')}</span>
+                        <small className="text-muted">{t('scheduleRequestDescription')}</small>
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
-        {activeTab === 'history' ? (
+        {isStudent || activeTab === 'history' ? (
           <PaymentRequestsHistory
             onNavigate={onNavigate}
             schoolOptions={schoolOptions}
-            active={activeTab === 'history'}
+            active={isStudent || activeTab === 'history'}
             tabs={paymentRequestTabs}
             onTabChange={setActiveTab}
           />

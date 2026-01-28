@@ -85,13 +85,15 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
 
       if (effectivePaymentsPermissions?.r) {
         tabsList.push({ key: 'payments', label: tabLabels.payments })
-        tabsList.push({ key: 'kitchenSales', label: tabLabels.kitchenSales })
+        if (!isStudent) {
+          tabsList.push({ key: 'kitchenSales', label: tabLabels.kitchenSales })
+        }
         tabsList.push({ key: 'balanceRecharges', label: tabLabels.balanceRecharges })
       }
 
       return tabsList
     },
-    [effectivePaymentsPermissions?.r, effectiveRequestsPermissions?.r, tabLabels, effectiveTuitionsPermissions?.r],
+    [effectivePaymentsPermissions?.r, effectiveRequestsPermissions?.r, isStudent, tabLabels, effectiveTuitionsPermissions?.r],
   )
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
