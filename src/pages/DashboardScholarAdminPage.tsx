@@ -67,6 +67,7 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
   const { permissions: paymentsPermissions } = useModulePermissions('payments')
   const { permissions: balancePermissions } = useModulePermissions('balance')
   const { permissions: requestPermissions } = useModulePermissions('request')
+  const { permissions: studentPermissions } = useModulePermissions('students')
 
   const currencyFormatter = useMemo(() => createCurrencyFormatter(locale, 'MXN'), [locale])
 
@@ -162,6 +163,7 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
   const canReadPayments = paymentsPermissions?.r ?? false
   const canCreateBalance = balancePermissions?.c ?? false
   const canCreateRequest = requestPermissions?.c ?? false
+  const canCreateStudent = studentPermissions?.c ?? false
 
   const frequentActions = [
     canCreatePayments
@@ -194,13 +196,15 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
           onClick: () => setPaymentRequestModalOpen(true),
         }
       : null,
-    {
-      title: 'enrollStudent',
-      description: 'enrollStudentDescription',
-      icon: 'bi-person-plus',
-      variant: 'secondary',
-      onClick: () => setStudentModalOpen(true),
-    },
+    canCreateStudent 
+    ? {
+        title: 'enrollStudent',
+        description: 'enrollStudentDescription',
+        icon: 'bi-person-plus',
+        variant: 'secondary',
+        onClick: () => setStudentModalOpen(true),
+      }
+    : null,
   ].filter(Boolean) as Array<{
     title: string
     description: string
@@ -335,33 +339,38 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
             </div>
           </div>
 
-          <div className="card scholar-dashboard__actions-card">
-            <div className="card-body">
-              <div className="d-flex align-items-center gap-2 mb-3">
-                <span className="scholar-dashboard__eyebrow-icon" aria-hidden>⚡</span>
-                <p className="text-uppercase text-muted fw-semibold mb-0">{t('frequentActions')}</p>
-              </div>
 
-              <div className="scholar-dashboard__actions-grid">
-                {frequentActions.map((action) => (
-                  <button
-                    key={action.title}
-                    type="button"
-                    className={`scholar-dashboard__action-tile scholar-dashboard__action-tile--${action.variant}`}
-                    onClick={action.onClick}
-                    >
-                      <div className="scholar-dashboard__action-icon">
-                        <i className={`bi ${action.icon}`} aria-hidden />
-                      </div>
-                      <div>
-                        <p className="fw-semibold mb-1">{t(action.title)}</p>
-                        <p className="text-muted mb-0">{t(action.description)}</p>
-                      </div>
-                    </button>
-                ))}
+          {
+            canCreatePayments || canCreateBalance || canCreateRequest || canCreateStudent ?
+              <div className="card scholar-dashboard__actions-card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center gap-2 mb-3">
+                    <span className="scholar-dashboard__eyebrow-icon" aria-hidden>⚡</span>
+                    <p className="text-uppercase text-muted fw-semibold mb-0">{t('frequentActions')}</p>
+                  </div>
+
+                  <div className="scholar-dashboard__actions-grid">
+                    {frequentActions.map((action) => (
+                      <button
+                        key={action.title}
+                        type="button"
+                        className={`scholar-dashboard__action-tile scholar-dashboard__action-tile--${action.variant}`}
+                        onClick={action.onClick}
+                        >
+                          <div className="scholar-dashboard__action-icon">
+                            <i className={`bi ${action.icon}`} aria-hidden />
+                          </div>
+                          <div>
+                            <p className="fw-semibold mb-1">{t(action.title)}</p>
+                            <p className="text-muted mb-0">{t(action.description)}</p>
+                          </div>
+                        </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            : null
+          }
         </div>
       </div>
 
