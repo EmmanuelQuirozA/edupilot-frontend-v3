@@ -71,8 +71,23 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
 
   const currencyFormatter = useMemo(() => createCurrencyFormatter(locale, 'MXN'), [locale])
 
+  const canCreatePayments = paymentsPermissions?.c ?? false
+  const canReadPayments = paymentsPermissions?.r ?? false
+  const canCreateBalance = balancePermissions?.c ?? false
+  const canCreateRequest = requestPermissions?.c ?? false
+  const canCreateStudent = studentPermissions?.c ?? false
+
   useEffect(() => {
     if (!token) return
+
+    if (!canReadPayments) {
+      setStudentsCount(null)
+      setIncomeProgress(null)
+      setPendingTotals(null)
+      setIsLoading(false)
+      setError(null)
+      return
+    }
 
     const controller = new AbortController()
     const loadDashboardData = async () => {
@@ -119,7 +134,7 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
 
     loadDashboardData()
     return () => controller.abort()
-  }, [locale, t, token])
+  }, [canReadPayments, locale, t, token])
 
   const totalStudents = studentsCount?.total_students ?? 0
 
@@ -158,12 +173,6 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
       balance: 0,
     }
   }
-
-  const canCreatePayments = paymentsPermissions?.c ?? false
-  const canReadPayments = paymentsPermissions?.r ?? false
-  const canCreateBalance = balancePermissions?.c ?? false
-  const canCreateRequest = requestPermissions?.c ?? false
-  const canCreateStudent = studentPermissions?.c ?? false
 
   const frequentActions = [
     canCreatePayments

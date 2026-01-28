@@ -278,10 +278,13 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   const [requestModal, setRequestModal] = useState<ModalState<PaymentRequest>>({ isOpen: false })
   const [isSaving, setIsSaving] = useState(false)
   const [statusDraft, setStatusDraft] = useState<boolean | null>(null)
+  const { permissions: studentsPermissions, loading: studentsPermissionsLoading, error: studentsPermissionsError, loaded: studentsPermissionsLoaded } = useModulePermissions('students')
   const { permissions: tuitionsPermissions, loading: tuitionsPermissionsLoading, error: tuitionsPermissionsError, loaded: tuitionsPermissionsLoaded } = useModulePermissions('tuitions')
   const { permissions: requestsPermissions, loading: requestsPermissionsLoading, error: requestsPermissionsError, loaded: requestsPermissionsLoaded } = useModulePermissions('requests')
   const { permissions: paymentsPermissions, loading: paymentsPermissionsLoading, error: paymentsPermissionsError, loaded: paymentsPermissionsLoaded } = useModulePermissions('payments')
   const { permissions: balancePermissions, loading: balancePermissionsLoading, error: balancePermissionsError, loaded: balancePermissionsLoaded } = useModulePermissions('balance')
+
+  const canEditStudent = studentsPermissions?.u ?? false
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -968,16 +971,19 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   }
 
   const permissionsLoading =
+    studentsPermissionsLoading ||
     tuitionsPermissionsLoading ||
     requestsPermissionsLoading ||
     paymentsPermissionsLoading ||
     balancePermissionsLoading
   const permissionsLoaded =
+    studentsPermissionsLoaded &&
     tuitionsPermissionsLoaded &&
     requestsPermissionsLoaded &&
     paymentsPermissionsLoaded &&
     balancePermissionsLoaded
   const permissionsError =
+    studentsPermissionsError ||
     tuitionsPermissionsError ||
     requestsPermissionsError ||
     paymentsPermissionsError ||
@@ -1000,6 +1006,14 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
       </Layout>
     )
   }
+  
+  if (permissionsLoaded && studentsPermissions && !studentsPermissions.r) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle={t('students')} breadcrumbItems={breadcrumbItems}>
+        <NoPermission />
+      </Layout>
+    )
+  }
 
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('students')} breadcrumbItems={breadcrumbItems}>
@@ -1016,6 +1030,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
             <div className="col-12 ">
               <StudentHeader
                 student={student}
+                canEdit={canEditStudent}
                 isEditing={isEditing}
                 statusDraft={currentStatus}
                 statusLabel={statusLabel}
@@ -1072,18 +1087,23 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                       </div>
                     </div>
                     <div className="student-card__divider" />
-                    <div className="student-card__info">
-                      <div>
-                        <p className="student-card__label">{t('balance')}</p>
-                        <h3>{formatCurrency(studentSummary.balance)}</h3>
-                      </div>
-                    </div>
-                    <button type="button" className="ui-button btn--ghost btn--full" onClick={handleOpenBalanceModal}>
-                      {t('balance')}
-                    </button>
+                    {!balancePermissions ? 
+                      <>
+                        <div className="student-card__info">
+                          <div>
+                            <p className="student-card__label">{t('balance')}</p>
+                            <h3>{formatCurrency(studentSummary.balance)}</h3>
+                          </div>
+                        </div>
+                        <button type="button" className="ui-button btn--ghost btn--full" onClick={handleOpenBalanceModal}>
+                          {t('balance')}
+                        </button>
+                      </>
+                      : null
+                    }
                   </section>
               ) : (
-                <span className="text-muted">Sin información</span>
+                <LoadingSkeleton variant="table" rowCount={4} />
               )}
           </div>
           <div className="col-12 col-lg-8">
@@ -1128,7 +1148,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
             items={financeTabs}
           />
         ) : (
-          <NoPermission />
+          null
         )}
       </>
 

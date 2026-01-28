@@ -2,7 +2,8 @@ import type { Student } from '../types/Student'
 
 interface StudentHeaderProps {
   student: Student
-  isEditing: boolean
+  canEdit: boolean 
+  isEditing: boolean 
   statusDraft: boolean
   statusLabel: string
   onEdit: () => void
@@ -13,6 +14,7 @@ interface StudentHeaderProps {
 
 export function StudentHeader({
   student,
+  canEdit,
   isEditing,
   statusDraft,
   statusLabel,
@@ -87,9 +89,11 @@ export function StudentHeader({
             </button>
           </>
         ) : (
-          <button type="button" className="btn btn-outline-primary" onClick={onEdit}>
+          canEdit ?
+          (<button type="button" className="btn btn-outline-primary" onClick={onEdit}>
             Editar perfil
-          </button>
+          </button>)
+          : null
         )}
       </div>
     </div>
