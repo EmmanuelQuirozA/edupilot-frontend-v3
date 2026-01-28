@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
+import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react'
 import { Layout } from '../layout/Layout'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -6,6 +6,8 @@ import { API_BASE_URL } from '../config'
 import type { BreadcrumbItem } from '../components/Breadcrumb'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { BalanceRechargeModal } from '../components/payments/BalanceRechargeModal'
+import { NoPermission } from '../components/NoPermission'
+import { useModulePermissions } from '../hooks/useModulePermissions'
 import { StudentHeader } from './StudentsDetailPage/components/StudentHeader'
 import { StudentInstitutionCard } from './StudentsDetailPage/components/StudentInstitutionCard'
 import { StudentContactCard } from './StudentsDetailPage/components/StudentContactCard'
@@ -276,6 +278,10 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
   const [requestModal, setRequestModal] = useState<ModalState<PaymentRequest>>({ isOpen: false })
   const [isSaving, setIsSaving] = useState(false)
   const [statusDraft, setStatusDraft] = useState<boolean | null>(null)
+  const { permissions: tuitionsPermissions, loading: tuitionsPermissionsLoading, error: tuitionsPermissionsError, loaded: tuitionsPermissionsLoaded } = useModulePermissions('tuitions')
+  const { permissions: requestsPermissions, loading: requestsPermissionsLoading, error: requestsPermissionsError, loaded: requestsPermissionsLoaded } = useModulePermissions('requests')
+  const { permissions: paymentsPermissions, loading: paymentsPermissionsLoading, error: paymentsPermissionsError, loaded: paymentsPermissionsLoaded } = useModulePermissions('payments')
+  const { permissions: balancePermissions, loading: balancePermissionsLoading, error: balancePermissionsError, loaded: balancePermissionsLoaded } = useModulePermissions('balance')
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -339,6 +345,147 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
     }),
     [topupsPage, topupsPageSize, topupsTotalElements, topupsTotalPages],
   )
+
+  const financeTabs = useMemo(
+    () => {
+      const tabs: {
+        key: TabKey
+        label: string
+        content: ReactNode
+      }[] = []
+
+      if (tuitionsPermissions?.r) {
+        tabs.push({
+          key: 'tuition',
+          label: 'Colegiaturas',
+          content: <TuitionTable studentId={studentId} onNavigate={onNavigate} />,
+        })
+      }
+
+      if (requestsPermissions?.r) {
+        tabs.push({
+          key: 'requests',
+          label: 'Solicitudes',
+          content: (
+            <div className="d-flex flex-column gap-3">
+              {requestsError ? (
+                <div className="alert alert-danger" role="alert">
+                  {requestsError}
+                </div>
+              ) : null}
+              <RequestsTable
+                rows={requests}
+                isLoading={isRequestsLoading || isStudentLoading}
+                pagination={requestsPagination}
+                emptyMessage={t('tableNoData')}
+                sortBy={requestsSortBy}
+                sortDirection={requestsSortDirection}
+                onSort={(columnKey) => {
+                  setRequestsSortBy(columnKey)
+                  setRequestsSortDirection((prev) => (prev === 'ASC' ? 'DESC' : 'ASC'))
+                }}
+                onNavigate={onNavigate}
+              />
+            </div>
+          ),
+        })
+      }
+
+      if (paymentsPermissions?.r) {
+        tabs.push({
+          key: 'payments',
+          label: 'Pagos',
+          content: (
+            <div className="d-flex flex-column gap-3">
+              {paymentsError ? (
+                <div className="alert alert-danger" role="alert">
+                  {paymentsError}
+                </div>
+              ) : null}
+              <PaymentsTable
+                rows={payments}
+                isLoading={isPaymentsLoading || isStudentLoading}
+                pagination={paymentsPagination}
+                emptyMessage={t('tableNoData')}
+                sortBy={paymentsSortBy}
+                sortDirection={paymentsSortDirection}
+                onSort={(columnKey) => {
+                  setPaymentsSortBy(columnKey)
+                  setPaymentsSortDirection((prev) => (prev === 'ASC' ? 'DESC' : 'ASC'))
+                }}
+                onNavigate={onNavigate}
+              />
+            </div>
+          ),
+        })
+      }
+
+      if (balancePermissions?.r) {
+        tabs.push({
+          key: 'topups',
+          label: 'Recargas',
+          content: (
+            <div className="d-flex flex-column gap-3">
+              {topupsError ? (
+                <div className="alert alert-danger" role="alert">
+                  {topupsError}
+                </div>
+              ) : null}
+              <TopupsTable
+                rows={topups}
+                isLoading={isTopupsLoading || isStudentLoading}
+                pagination={topupsPagination}
+                emptyMessage={t('tableNoData')}
+                sortBy={topupsSortBy}
+                sortDirection={topupsSortDirection}
+                onSort={(columnKey) => {
+                  setTopupsSortBy(columnKey)
+                  setTopupsSortDirection((prev) => (prev === 'ASC' ? 'DESC' : 'ASC'))
+                }}
+              />
+            </div>
+          ),
+        })
+      }
+
+      return tabs
+    },
+    [
+      balancePermissions?.r,
+      isPaymentsLoading,
+      isRequestsLoading,
+      isStudentLoading,
+      isTopupsLoading,
+      onNavigate,
+      payments,
+      paymentsError,
+      paymentsPagination,
+      paymentsSortBy,
+      paymentsSortDirection,
+      paymentsPermissions?.r,
+      requests,
+      requestsError,
+      requestsPagination,
+      requestsSortBy,
+      requestsSortDirection,
+      requestsPermissions?.r,
+      studentId,
+      t,
+      topups,
+      topupsError,
+      topupsPagination,
+      topupsSortBy,
+      topupsSortDirection,
+      tuitionsPermissions?.r,
+    ],
+  )
+
+  useEffect(() => {
+    if (!financeTabs.length) return
+    if (!financeTabs.some((tab) => tab.key === activeTab)) {
+      setActiveTab(financeTabs[0].key)
+    }
+  }, [activeTab, financeTabs])
 
   useEffect(() => {
     if (!token) return
@@ -820,6 +967,40 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
     )
   }
 
+  const permissionsLoading =
+    tuitionsPermissionsLoading ||
+    requestsPermissionsLoading ||
+    paymentsPermissionsLoading ||
+    balancePermissionsLoading
+  const permissionsLoaded =
+    tuitionsPermissionsLoaded &&
+    requestsPermissionsLoaded &&
+    paymentsPermissionsLoaded &&
+    balancePermissionsLoaded
+  const permissionsError =
+    tuitionsPermissionsError ||
+    requestsPermissionsError ||
+    paymentsPermissionsError ||
+    balancePermissionsError
+
+  if (permissionsLoading || !permissionsLoaded) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle={t('students')} breadcrumbItems={breadcrumbItems}>
+        <LoadingSkeleton variant="table" rowCount={6} />
+      </Layout>
+    )
+  }
+
+  if (permissionsError) {
+    return (
+      <Layout onNavigate={onNavigate} pageTitle={t('students')} breadcrumbItems={breadcrumbItems}>
+        <div className="alert alert-danger" role="alert">
+          {t('defaultError')}
+        </div>
+      </Layout>
+    )
+  }
+
   return (
     <Layout onNavigate={onNavigate} pageTitle={t('students')} breadcrumbItems={breadcrumbItems}>
       <div className="d-flex flex-column gap-3">
@@ -933,96 +1114,22 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
           />
         ) : null}
 
-        <Tabs
-          activeKey={activeTab}
-          onChange={(key) => setActiveTab(key as TabKey)}
-          items={[
-            {
-              key: 'tuition',
-              label: 'Colegiaturas',
-              content: (
-                <TuitionTable studentId={studentId} onNavigate={onNavigate} />
-              ),
-            },
-            {
-              key: 'requests',
-              label: 'Solicitudes',
-              content: (
-                <div className="d-flex flex-column gap-3">
-                  {requestsError ? (
-                    <div className="alert alert-danger" role="alert">
-                      {requestsError}
-                    </div>
-                  ) : null}
-                  <RequestsTable
-                    rows={requests}
-                    isLoading={isRequestsLoading || isStudentLoading}
-                    pagination={requestsPagination}
-                    emptyMessage={t('tableNoData')}
-                    sortBy={requestsSortBy}
-                    sortDirection={requestsSortDirection}
-                    onSort={(columnKey) => {
-                      setRequestsSortBy(columnKey)
-                      setRequestsSortDirection((prev) => (prev === 'ASC' ? 'DESC' : 'ASC'))
-                    }}
-                    onNavigate={onNavigate}
-                  />
-                </div>
-              ),
-            },
-            {
-              key: 'payments',
-              label: 'Pagos',
-              content: (
-                <div className="d-flex flex-column gap-3">
-                  {paymentsError ? (
-                    <div className="alert alert-danger" role="alert">
-                      {paymentsError}
-                    </div>
-                  ) : null}
-                  <PaymentsTable
-                    rows={payments}
-                    isLoading={isPaymentsLoading || isStudentLoading}
-                    pagination={paymentsPagination}
-                    emptyMessage={t('tableNoData')}
-                    sortBy={paymentsSortBy}
-                    sortDirection={paymentsSortDirection}
-                    onSort={(columnKey) => {
-                      setPaymentsSortBy(columnKey)
-                      setPaymentsSortDirection((prev) => (prev === 'ASC' ? 'DESC' : 'ASC'))
-                    }}
-                    onNavigate={onNavigate}
-                  />
-                </div>
-              ),
-            },
-            {
-              key: 'topups',
-              label: 'Recargas',
-              content: (
-                <div className="d-flex flex-column gap-3">
-                  {topupsError ? (
-                    <div className="alert alert-danger" role="alert">
-                      {topupsError}
-                    </div>
-                  ) : null}
-                  <TopupsTable
-                    rows={topups}
-                    isLoading={isTopupsLoading || isStudentLoading}
-                    pagination={topupsPagination}
-                    emptyMessage={t('tableNoData')}
-                    sortBy={topupsSortBy}
-                    sortDirection={topupsSortDirection}
-                    onSort={(columnKey) => {
-                      setTopupsSortBy(columnKey)
-                      setTopupsSortDirection((prev) => (prev === 'ASC' ? 'DESC' : 'ASC'))
-                    }}
-                  />
-                </div>
-              ),
-            },
-          ]}
-        />
+        {financeTabs.length ? (
+          <Tabs
+            activeKey={activeTab}
+            onChange={(key) => {
+              const nextKey = key as TabKey
+              if (financeTabs.some((tab) => tab.key === nextKey)) {
+                setActiveTab(nextKey)
+              } else {
+                setActiveTab(financeTabs[0].key)
+              }
+            }}
+            items={financeTabs}
+          />
+        ) : (
+          <NoPermission />
+        )}
       </>
 
       <BalanceRechargeModal
