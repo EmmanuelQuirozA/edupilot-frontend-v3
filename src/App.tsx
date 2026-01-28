@@ -224,7 +224,8 @@ function Router() {
       switch (role) {
         case "ADMIN":
           return <DashboardAdminPage onNavigate={navigate} />;
-        case "SCHOOL_ADMIN":
+        case "SCHOOL_ADMIN" :
+        case "UNKNOWN" :
           return <DashboardScholarAdminPage onNavigate={navigate} />;
         case "TEACHER":
           return <DashboardTeacherPage onNavigate={navigate} />;

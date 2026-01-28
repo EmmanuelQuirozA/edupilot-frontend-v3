@@ -22,7 +22,7 @@ function getUserInitials(name?: string, lastName?: string) {
 export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: HeaderProps) {
   const { locale, setLocale, t } = useLanguage()
   const { user, logout, token } = useAuth()
-  const [schoolName, setSchoolName] = useState<string | null>(null)
+  const [schoolName, setSchoolName] = useState<string | null | undefined>(undefined)
 
   const lastNameFromFullName = user?.full_name?.split(' ').at(-1)
   const initials = getUserInitials(user?.first_name, lastNameFromFullName)
@@ -49,20 +49,9 @@ export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: 
           throw new Error('failed_request')
         }
 
-        const payload = (await response.json()) as
-          | string
-          | {
-              commercial_name?: string | null
-              name?: string | null
-              school_name?: string | null
-            }
-
-        if (typeof payload === 'string') {
-          setSchoolName(payload || null)
-          return
-        }
-
-        setSchoolName(payload.commercial_name || payload.school_name || payload.name || null)
+        const text = await response.text()
+        setSchoolName(text.trim() || null)
+        
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           setSchoolName(null)
