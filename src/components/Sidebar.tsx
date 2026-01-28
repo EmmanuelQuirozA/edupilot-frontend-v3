@@ -155,6 +155,7 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
       dashboard: `/${locale}`,
       settings: `/${locale}/settings`,
       finance: `/${locale}/finance`,
+      myconsumption: `/${locale}/myconsumption`,
     }
     if (!token) return []
 
