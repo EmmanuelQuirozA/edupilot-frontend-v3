@@ -210,14 +210,17 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
                                         {concept.description}
                                       </small>
                                     </div>
-                                    <button
-                                      type="button"
-                                      className="btn btn-sm btn-outline-secondary"
-                                      onClick={() => handleOpenEditConcept(concept)}
-                                      aria-label={t('paymentConceptUpdateTitle')}
-                                    >
-                                      <i className="bi bi-pencil" aria-hidden="true" />
-                                    </button>
+                                    {concept.school_id ?
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-secondary"
+                                        onClick={() => handleOpenEditConcept(concept)}
+                                        aria-label={t('paymentConceptUpdateTitle')}
+                                      >
+                                        <i className="bi bi-pencil" aria-hidden="true" />
+                                      </button>
+                                    : null  
+                                    }
                                   </div>
                                 ))}
                               </div>
@@ -250,14 +253,17 @@ export function GlobalSettingsPage({ onNavigate, initialTab = 'catalogs' }: Glob
                                     <div>
                                       <p className="fw-semibold mb-0">{method.name}</p>
                                     </div>
-                                    <button
-                                      type="button"
-                                      className="btn btn-sm btn-outline-secondary"
-                                      onClick={() => handleOpenEditMethod(method)}
-                                      aria-label={t('paymentMethodUpdateTitle')}
-                                    >
-                                      <i className="bi bi-pencil" aria-hidden="true" />
-                                    </button>
+                                    {method.school_id ?
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-secondary"
+                                        onClick={() => handleOpenEditMethod(method)}
+                                        aria-label={t('paymentMethodUpdateTitle')}
+                                      >
+                                        <i className="bi bi-pencil" aria-hidden="true" />
+                                      </button>
+                                    : null  
+                                    }
                                   </div>
                                 ))}
                               </div>

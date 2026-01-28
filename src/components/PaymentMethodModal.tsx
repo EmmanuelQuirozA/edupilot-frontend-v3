@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext'
 
 export interface PaymentMethod {
   id: number
+  school_id: number
   name: string
   name_es: string
   name_en: string
