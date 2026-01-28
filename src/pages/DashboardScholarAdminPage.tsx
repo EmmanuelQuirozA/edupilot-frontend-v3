@@ -13,6 +13,7 @@ import {
 } from './PaymentsFinancePage/components/CreatePaymentRequestModal'
 import { initialPaymentRequestFormState } from './PaymentsFinancePage/components/paymentRequestsFormState'
 import { StudentCreateModal } from '../components/StudentCreateModal'
+import { useModulePermissions } from '../hooks/useModulePermissions'
 import './DashboardScholarAdminPage.css'
 
 interface DashboardScholarAdminPageProps {
@@ -62,6 +63,10 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
   const [selectedRechargeUser, setSelectedRechargeUser] = useState<UsersBalanceSearchItem | null>(null)
   const [paymentRequestError, setPaymentRequestError] = useState<string | null>(null)
   const [isSavingRequest, setIsSavingRequest] = useState(false)
+
+  const { permissions: paymentsPermissions } = useModulePermissions('payments')
+  const { permissions: balancePermissions } = useModulePermissions('balance')
+  const { permissions: requestPermissions } = useModulePermissions('request')
 
   const currencyFormatter = useMemo(() => createCurrencyFormatter(locale, 'MXN'), [locale])
 
@@ -153,31 +158,42 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
     }
   }
 
+  const canCreatePayments = paymentsPermissions?.c ?? false
+  const canReadPayments = paymentsPermissions?.r ?? false
+  const canCreateBalance = balancePermissions?.c ?? false
+  const canCreateRequest = requestPermissions?.c ?? false
+
   const frequentActions = [
-    {
-      title: 'recordPayment',
-      description: 'recordPaymentDescription',
-      icon: 'bi-cash-coin',
-      variant: 'primary',
-      onClick: () => setPaymentModalOpen(true),
-    },
-    {
-      title: 'rechargeBalance',
-      description: 'rechargeBalanceDescription',
-      icon: 'bi-wallet2',
-      variant: 'success',
-      onClick: () => {
-        setSelectedRechargeUser(buildRechargeUserFromStudent(selectedStudent))
-        setRechargeModalOpen(true)
-      },
-    },
-    {
-      title: 'newPaymentRequest',
-      description: 'newPaymentRequestDescription',
-      icon: 'bi-ui-checks-grid',
-      variant: 'info',
-      onClick: () => setPaymentRequestModalOpen(true),
-    },
+    canCreatePayments
+      ? {
+          title: 'recordPayment',
+          description: 'recordPaymentDescription',
+          icon: 'bi-cash-coin',
+          variant: 'primary',
+          onClick: () => setPaymentModalOpen(true),
+        }
+      : null,
+    canCreateBalance
+      ? {
+          title: 'rechargeBalance',
+          description: 'rechargeBalanceDescription',
+          icon: 'bi-wallet2',
+          variant: 'success',
+          onClick: () => {
+            setSelectedRechargeUser(buildRechargeUserFromStudent(selectedStudent))
+            setRechargeModalOpen(true)
+          },
+        }
+      : null,
+    canCreateRequest
+      ? {
+          title: 'newPaymentRequest',
+          description: 'newPaymentRequestDescription',
+          icon: 'bi-ui-checks-grid',
+          variant: 'info',
+          onClick: () => setPaymentRequestModalOpen(true),
+        }
+      : null,
     {
       title: 'enrollStudent',
       description: 'enrollStudentDescription',
@@ -185,7 +201,13 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
       variant: 'secondary',
       onClick: () => setStudentModalOpen(true),
     },
-  ] as const
+  ].filter(Boolean) as Array<{
+    title: string
+    description: string
+    icon: string
+    variant: 'primary' | 'success' | 'info' | 'secondary'
+    onClick: () => void
+  }>
 
   const handlePaymentRequestFormChange = <K extends keyof typeof initialPaymentRequestFormState>(
     key: K,
@@ -242,45 +264,49 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
       <div className="row">
         <div className="col">
           <div className="row g-3 mb-3">
-            <div className="col-md-4">
-              <div className="scholar-dashboard__stat-card scholar-dashboard__stat-card--income">
-                <div className="d-flex justify-content-between align-items-start mb-3">
-                  <div>
-                    <p className="text-uppercase text-muted fw-semibold mb-1">{t('monthIncomeTitle')}</p>
-                    <h3 className="fw-bold mb-0">{currencyFormatter.format(monthIncome)}</h3>
+            {canReadPayments ? (
+              <div className="col-md-4">
+                <div className="scholar-dashboard__stat-card scholar-dashboard__stat-card--income">
+                  <div className="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                      <p className="text-uppercase text-muted fw-semibold mb-1">{t('monthIncomeTitle')}</p>
+                      <h3 className="fw-bold mb-0">{currencyFormatter.format(monthIncome)}</h3>
+                    </div>
+                    <span className="scholar-dashboard__stat-pill scholar-dashboard__stat-pill--success">
+                      {monthProgress}% {t('monthlyGoalProgress')}
+                    </span>
                   </div>
-                  <span className="scholar-dashboard__stat-pill scholar-dashboard__stat-pill--success">
-                    {monthProgress}% {t('monthlyGoalProgress')}
-                  </span>
-                </div>
-                <p className="text-muted small mb-3">
-                  {t('goal')}: {currencyFormatter.format(monthGoal)}
-                </p>
-                <div className="scholar-dashboard__progress">
-                  <div className="scholar-dashboard__progress-bar" style={{ width: `${monthProgress}%` }} />
+                  <p className="text-muted small mb-3">
+                    {t('goal')}: {currencyFormatter.format(monthGoal)}
+                  </p>
+                  <div className="scholar-dashboard__progress">
+                    <div className="scholar-dashboard__progress-bar" style={{ width: `${monthProgress}%` }} />
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null}
 
-            <div className="col-md-4">
-              <div className="scholar-dashboard__stat-card scholar-dashboard__stat-card--pending">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <div>
-                    <p className="text-uppercase text-muted fw-semibold mb-1">{t('overdueToCollect')}</p>
-                    <h3 className="fw-bold mb-0">{currencyFormatter.format(pendingAmount)}</h3>
+            {canReadPayments ? (
+              <div className="col-md-4">
+                <div className="scholar-dashboard__stat-card scholar-dashboard__stat-card--pending">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                      <p className="text-uppercase text-muted fw-semibold mb-1">{t('overdueToCollect')}</p>
+                      <h3 className="fw-bold mb-0">{currencyFormatter.format(pendingAmount)}</h3>
+                    </div>
+                    <span className="scholar-dashboard__stat-icon" aria-hidden>
+                      <i className="bi bi-exclamation-octagon" />
+                    </span>
                   </div>
-                  <span className="scholar-dashboard__stat-icon" aria-hidden>
-                    <i className="bi bi-exclamation-octagon" />
-                  </span>
-                </div>
-                <div className="d-flex align-items-center gap-2">
-                  <span className="scholar-dashboard__chip scholar-dashboard__chip--danger">
-                    {pendingStudents} {t('students')}
-                  </span>
-                  <span className="text-muted small">{t('studentsWithDebt')}</span>
+                  <div className="d-flex align-items-center gap-2">
+                    <span className="scholar-dashboard__chip scholar-dashboard__chip--danger">
+                      {pendingStudents} {t('students')}
+                    </span>
+                    <span className="text-muted small">{t('studentsWithDebt')}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null}
 
             <div className="col-md-4">
               <div className="scholar-dashboard__population-card">
