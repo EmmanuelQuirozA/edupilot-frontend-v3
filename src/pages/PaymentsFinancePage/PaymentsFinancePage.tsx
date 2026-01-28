@@ -28,6 +28,7 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
   const { permissions: tuitionsPermissions, loading: tuitionsPermissionsLoading, error: tuitionsPermissionsError, loaded: tuitionsPermissionsLoaded } = useModulePermissions('tuitions')
   const { permissions: requestsPermissions, loading: requestsPermissionsLoading, error: requestsPermissionsError, loaded: requestsPermissionsLoaded } = useModulePermissions('requests')
   const { permissions: paymentsPermissions, loading: paymentsPermissionsLoading, error: paymentsPermissionsError, loaded: paymentsPermissionsLoaded } = useModulePermissions('payments')
+  const { permissions: balancePermissions, loading: balancePermissionsLoading, error: balancePermissionsError, loaded: balancePermissionsLoaded } = useModulePermissions('balance')
 
   const defaultStudentPermissions = useMemo(
     () => (isStudent ? { c: false, r: true, u: false, d: false } : null),
@@ -37,18 +38,21 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
   const effectiveTuitionsPermissions = defaultStudentPermissions ?? tuitionsPermissions
   const effectiveRequestsPermissions = defaultStudentPermissions ?? requestsPermissions
   const effectivePaymentsPermissions = defaultStudentPermissions ?? paymentsPermissions
+  const effectiveBalancePermissions = defaultStudentPermissions ?? balancePermissions
 
   const tuitionsLoading = isStudent ? false : tuitionsPermissionsLoading
   const requestsLoading = isStudent ? false : requestsPermissionsLoading
   const paymentsLoading = isStudent ? false : paymentsPermissionsLoading
+  const balanceLoading = isStudent ? false : balancePermissionsLoading
 
   const tuitionsLoaded = isStudent ? true : tuitionsPermissionsLoaded
   const requestsLoaded = isStudent ? true : requestsPermissionsLoaded
   const paymentsLoaded = isStudent ? true : paymentsPermissionsLoaded
+  const balanceLoaded = isStudent ? true : balancePermissionsLoaded
 
   const permissionsError = isStudent
     ? null
-    : tuitionsPermissionsError || requestsPermissionsError || paymentsPermissionsError
+    : tuitionsPermissionsError || requestsPermissionsError || paymentsPermissionsError || balancePermissionsError
 
   const [error] = useState<string | null>(null)
 
@@ -88,12 +92,22 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
         if (!isStudent) {
           tabsList.push({ key: 'kitchenSales', label: tabLabels.kitchenSales })
         }
+      }
+
+      if (effectiveBalancePermissions?.r) {
         tabsList.push({ key: 'balanceRecharges', label: tabLabels.balanceRecharges })
       }
 
       return tabsList
     },
-    [effectivePaymentsPermissions?.r, effectiveRequestsPermissions?.r, isStudent, tabLabels, effectiveTuitionsPermissions?.r],
+    [
+      effectiveBalancePermissions?.r,
+      effectivePaymentsPermissions?.r,
+      effectiveRequestsPermissions?.r,
+      effectiveTuitionsPermissions?.r,
+      isStudent,
+      tabLabels,
+    ],
   )
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
@@ -156,7 +170,8 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
     if (
       tuitionsLoading || !tuitionsLoaded ||
       requestsLoading || !requestsLoaded ||
-      paymentsLoading || !paymentsLoaded
+      paymentsLoading || !paymentsLoaded ||
+      balanceLoading || !balanceLoaded
     ) {
       return (
         <>
@@ -181,6 +196,8 @@ export function PaymentsFinancePage({ onNavigate, currentPath }: PaymentsFinance
       (requestsLoaded && effectiveRequestsPermissions && !effectiveRequestsPermissions.r)
       &&
       (paymentsLoaded && effectivePaymentsPermissions && !effectivePaymentsPermissions.r)
+      &&
+      (balanceLoaded && effectiveBalancePermissions && !effectiveBalancePermissions.r)
     ) {
       return (
         <Layout onNavigate={onNavigate} pageTitle={t('portalTitle')} breadcrumbItems={breadcrumbItems}>
