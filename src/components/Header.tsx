@@ -3,6 +3,7 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE_URL } from '../config'
 import LanguageSelector from './LanguageSelector'
+import StudentSearchInput from './StudentSearchInput'
 import type { Locale } from '../context/LanguageContext'
 import './Header.css'
 
@@ -21,7 +22,7 @@ function getUserInitials(name?: string, lastName?: string) {
 
 export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: HeaderProps) {
   const { locale, setLocale, t } = useLanguage()
-  const { user, logout, token } = useAuth()
+  const { user, logout, token, role } = useAuth()
   const [schoolName, setSchoolName] = useState<string | null | undefined>(undefined)
 
   const lastNameFromFullName = user?.full_name?.split(' ').at(-1)
@@ -93,10 +94,7 @@ export function Header({ onNavigate, onToggleSidebar, pageTitle, pageContext }: 
         </div>
 
         <div className="header-actions">
-          <div className="header-search">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.471 6.471 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0A4.5 4.5 0 1 1 14 9.5 4.505 4.505 0 0 1 9.5 14Z" fill="currentColor"></path></svg>
-            <input className="form-control header-search-input" placeholder="Buscar" type="search" />
-          </div>
+          {role !== 'STUDENT' ? <StudentSearchInput onNavigate={onNavigate} /> : null}
 
           <button className="notification-pill" type="button" aria-label="Notifications">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a5 5 0 0 0-5 5v2.17c0 .7-.28 1.37-.77 1.86L4.6 13.65A1 1 0 0 0 5.3 15h13.4a1 1 0 0 0 .7-1.35l-1.63-1.62a2.63 2.63 0 0 1-.77-1.86V8a5 5 0 0 0-5-5Zm0 18a2.5 2.5 0 0 1-2.45-2h4.9A2.5 2.5 0 0 1 12 21Z" fill="currentColor"></path></svg>

@@ -1,0 +1,74 @@
+.header-search {
+  position: relative;
+}
+
+.header-student-search {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+
+.header-student-search__input {
+  width: 100%;
+}
+
+.header-student-search__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: -2.4rem;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+  max-height: 360px;
+  overflow-y: auto;
+  z-index: 20;
+  min-width: 320px;
+}
+
+.header-student-search__option {
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-bottom: 1px solid #f1f3f5;
+  transition: background-color 0.15s ease;
+}
+
+.header-student-search__option:last-child {
+  border-bottom: none;
+}
+
+.header-student-search__option:hover,
+.header-student-search__option:focus-visible {
+  background-color: #f8f9fa;
+  outline: none;
+}
+
+.header-student-search__name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.header-student-search__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.header-student-search__message {
+  padding: 12px 14px;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .header-student-search__dropdown {
+    left: -2rem;
+    min-width: 260px;
+  }
+}
