@@ -63,6 +63,8 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
   const { locale, t } = useLanguage()
   const { permissions: studentsPermissions, loading: studentsPermissionsLoading, error: studentsPermissionsError, loaded: studentsPermissionsLoaded } = useModulePermissions('students')
   const { permissions: groupsPermissions, loading: groupsPermissionsLoading, error: groupsPermissionsError, loaded: groupsPermissionsLoaded } = useModulePermissions('classes')
+  const canReadStudents = studentsPermissions?.r ?? false
+  const canReadGroups = groupsPermissions?.r ?? false
   const canCreateStudents = studentsPermissions?.c ?? false
   const canCreateGroups = groupsPermissions?.c ?? false
 
@@ -103,10 +105,29 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
 
   // Tabs
   const [activeTab, setActiveTab] = useState<'students' | 'groups'>('students');
-  const tabs = [
-    { key: 'students', label: t('students') },
-    { key: 'groups', label: t('classes') }
-  ];
+  const tabs = useMemo(() => {
+    const availableTabs: Array<{ key: 'students' | 'groups'; label: string }> = []
+    if (canReadStudents) {
+      availableTabs.push({ key: 'students', label: t('students') })
+    }
+    if (canReadGroups) {
+      availableTabs.push({ key: 'groups', label: t('classes') })
+    }
+    return availableTabs
+  }, [canReadGroups, canReadStudents, t])
+
+  useEffect(() => {
+    if (!studentsPermissionsLoaded || !groupsPermissionsLoaded) return
+
+    if (activeTab === 'students' && canReadStudents) return
+    if (activeTab === 'groups' && canReadGroups) return
+
+    if (canReadStudents) {
+      setActiveTab('students')
+    } else if (canReadGroups) {
+      setActiveTab('groups')
+    }
+  }, [activeTab, canReadGroups, canReadStudents, groupsPermissionsLoaded, studentsPermissionsLoaded])
 
   const breadcrumbItems: BreadcrumbItem[] = useMemo(
     () => [
@@ -121,7 +142,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
 
   // Students
   useEffect(() => {
-    if (!token) return
+    if (!token || !canReadStudents || activeTab !== 'students') return
 
     const controller = new AbortController()
 
@@ -170,7 +191,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
     fetchStudents()
 
     return () => controller.abort()
-  }, [appliedStudentSearch, locale, orderBy, orderDir, studentsPage, studentsPageSize, t, token, studentsReloadCounter])
+  }, [activeTab, appliedStudentSearch, canReadStudents, locale, orderBy, orderDir, studentsPage, studentsPageSize, t, token, studentsReloadCounter])
 
   const handleStudentSearchSubmit = () => {
     setAppliedSearch(studentSearchTerm)
@@ -406,14 +427,16 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
 
           <div className="students-page__header  border-0">
             <div className="card-body d-flex flex-column gap-3 flex-lg-row align-items-lg-center justify-content-lg-between">
-              <Tabs
-                tabs={tabs}
-                activeKey={activeTab}
-                onSelect={(key) => setActiveTab(key as 'students' | 'groups')}
-              />
+              {tabs.length > 1 ? (
+                <Tabs
+                  tabs={tabs}
+                  activeKey={activeTab}
+                  onSelect={(key) => setActiveTab(key as 'students' | 'groups')}
+                />
+              ) : null}
             </div>
           </div>
-          {activeTab === 'students' && (
+          {activeTab === 'students' && canReadStudents && (
           <>
             <div className="card shadow-sm border-0">
               <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
@@ -487,7 +510,7 @@ export function StudentsPage({ onNavigate }: StudentsPageProps) {
             />
           </>
         )}
-        {activeTab === 'groups' && (
+        {activeTab === 'groups' && canReadGroups && (
           <>
             <div className="card shadow-sm border-0">
               <div className="card-body d-flex flex-column gap-3 flex-md-row align-items-md-center justify-content-between">
