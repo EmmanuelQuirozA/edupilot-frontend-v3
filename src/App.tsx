@@ -33,6 +33,7 @@ import { PointOfSalePage } from "./pages/PointOfSalePage";
 import { PointOfSaleMenuPage } from "./pages/PointOfSaleMenuPage";
 import { MyConsumptionPage } from "./pages/MyConsumptionPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 
 import { LoadingSkeleton } from "./components/LoadingSkeleton";
 import { Layout } from "./layout/Layout";
@@ -246,13 +247,17 @@ function Router() {
     }
 
     // Default
-    return <HomePage onNavigate={navigate} />;
+    return <NotFoundPage onNavigate={navigate} variant="app" />;
   }
 
   // ------------------------------------------------------
   // PUBLIC ROUTES
   // ------------------------------------------------------
-  return <HomePage onNavigate={navigate} />;
+  if (isRootPath) {
+    return <HomePage onNavigate={navigate} />;
+  }
+
+  return <NotFoundPage onNavigate={navigate} variant="public" />;
 }
 
 export default function App() {
