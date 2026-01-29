@@ -139,17 +139,12 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
   const totalStudents = studentsCount?.total_students ?? 0
 
   const scholarLevels = useMemo(() => {
-    const DEFAULT_LEVELS = ['Primaria', 'Secundaria', 'Preparatoria']
-    const levelMap = new Map<string, number>()
-
-    studentsCount?.by_scholar_level?.forEach((level) => {
-      levelMap.set(level.scholar_level_name, level.student_count)
-    })
-
-    return DEFAULT_LEVELS.map((level) => ({
-      name: level,
-      count: levelMap.get(level) ?? 0,
-    }))
+    return (
+      studentsCount?.by_scholar_level?.map((level) => ({
+        name: level.scholar_level_name,
+        count: level.student_count,
+      })) ?? []
+    )
   }, [studentsCount])
 
   const monthIncome = incomeProgress?.monthIncomeTotal ?? 0
