@@ -1087,7 +1087,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                       </div>
                     </div>
                     <div className="student-card__divider" />
-                    {!balancePermissions ? 
+                    {balancePermissions && balancePermissions.r ? 
                       <>
                         <div className="student-card__info">
                           <div>
@@ -1095,6 +1095,11 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
                             <h3>{formatCurrency(studentSummary.balance)}</h3>
                           </div>
                         </div>
+                      </>
+                      : null
+                    }
+                    {balancePermissions && balancePermissions.c ? 
+                      <>
                         <button type="button" className="ui-button btn--ghost btn--full" onClick={handleOpenBalanceModal}>
                           {t('balance')}
                         </button>
