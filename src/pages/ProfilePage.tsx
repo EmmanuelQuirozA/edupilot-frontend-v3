@@ -61,7 +61,6 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
   const { token } = useAuth()
   const { locale, t } = useLanguage()
   const [details, setDetails] = useState<SelfDetails | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const { permissions: usersPermissions } = useModulePermissions('users')
   const [passwordForm, setPasswordForm] = useState<PasswordFormState>({
@@ -122,7 +121,6 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
     const controller = new AbortController()
     const fetchDetails = async () => {
       try {
-        setIsLoading(true)
         setLoadError(null)
 
         const response = await fetch(`${API_BASE_URL}/users/self-details`, {
@@ -140,8 +138,6 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
         if ((error as Error).name !== 'AbortError') {
           setLoadError(t('defaultError'))
         }
-      } finally {
-        setIsLoading(false)
       }
     }
 

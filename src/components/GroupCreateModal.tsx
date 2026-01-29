@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import ScholarLevelSelect from './catalog/ScholarLevelSelect'
 import { API_BASE_URL } from '../config'
 import { useAuth } from '../context/AuthContext'
@@ -292,4 +293,3 @@ export function GroupCreateModal({ isOpen, onClose, onCreated }: GroupCreateModa
     </>
   )
 }
-

@@ -1,7 +1,7 @@
 export type PaymentRequestScheduleFormState = {
   rule_name_es: string
   rule_name_en: string
-  payment_concept_id: string | number
+  payment_concept_id: number | ''
   amount: string | number
   fee_type: '$' | '%'
   late_fee: string | number

@@ -44,7 +44,7 @@ export function RequestsTable({
         sortable: true,
         render: (row) => (
           <small 
-            className={'cell-chip px-4 text-nowrap ' + (row.paymentStatusId === 7 ? 'bg-success' : row.payment_status_id === 8 ? 'bg-danger' : 'bg-warning')}
+            className={'cell-chip px-4 text-nowrap ' + (row.paymentStatusId === 7 ? 'bg-success' : row.paymentStatusId === 8 ? 'bg-danger' : 'bg-warning')}
           > {row.status} </small>
         ),
       },

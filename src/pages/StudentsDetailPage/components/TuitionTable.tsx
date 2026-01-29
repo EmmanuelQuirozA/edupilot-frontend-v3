@@ -52,8 +52,6 @@ export function TuitionTable({ studentId, onNavigate }: TuitionTableProps) {
   const [rows, setRows] = useState<ResultsColumns[]>([])
   const [page, setPage] = useState(0)
   const [pageSize] = useState(10)
-  const [totalPages, setTotalPages] = useState(0)
-  const [totalElements, setTotalElements] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -135,8 +133,6 @@ export function TuitionTable({ studentId, onNavigate }: TuitionTableProps) {
         })
 
         setMonthColumns(dynamicColumns)
-        setTotalElements(data.totalElements ?? 0)
-        setTotalPages(data.totalPages ?? 0)
       } catch (fetchError) {
         if ((fetchError as Error).name !== 'AbortError') {
           setError(t('defaultError'))

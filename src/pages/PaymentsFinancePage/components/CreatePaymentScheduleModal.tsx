@@ -1,6 +1,7 @@
 import type React from 'react'
 import PaymentConceptSelect from '../../../components/catalog/PaymentConceptSelect'
 import StudentSearchDropdown from '../../../components/StudentSearchDropdown'
+import type { StudentSearchItem } from '../../../components/StudentSearchDropdown'
 import type { FilterField } from '../../../components/FilterSidebar'
 import type { ApplyScope, SelectedStudent, TranslationFunction } from './CreatePaymentRequestModal'
 import type { PaymentRequestScheduleFormState } from './paymentRequestsScheduleFormState'
@@ -17,7 +18,7 @@ interface CreatePaymentScheduleModalProps {
     key: Key,
     value: PaymentRequestScheduleFormState[Key],
   ) => void
-  onStudentSelect: (student: SelectedStudent) => void
+  onStudentSelect: (student: StudentSearchItem) => void
   onSubmit: React.FormEventHandler<HTMLFormElement>
   paymentRequestForm: PaymentRequestScheduleFormState
   schoolOptions: FilterField['options']

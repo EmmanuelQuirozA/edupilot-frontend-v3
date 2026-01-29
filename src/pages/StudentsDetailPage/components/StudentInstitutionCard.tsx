@@ -77,10 +77,18 @@ export function StudentInstitutionCard({
   const selectedSchool = schoolOptions.find((item) => String(item.value) === String(selectedSchoolId))
   const selectedGroup = groupOptions.find((item) => String(item.value) === String(selectedGroupId))
 
+  type EditableFieldOptions = {
+    placeholder?: string
+    type?: string
+    valueOverride?: string | number
+    errorOverride?: string
+    inputClassName?: string
+  }
+
   const renderEditableField = (
     label: string,
     name: keyof FormState,
-    { placeholder = '', type = 'text', valueOverride, errorOverride, inputClassName = 'input' } = {},
+    { placeholder = '', type = 'text', valueOverride, errorOverride, inputClassName = 'input' }: EditableFieldOptions = {},
   ) => {
     const value = valueOverride ?? formValues[name] ?? ''
     const error = errorOverride ?? formErrors[name]

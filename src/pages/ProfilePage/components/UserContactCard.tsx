@@ -102,10 +102,17 @@ export function UserContactCard({
     }
   }, [normalizedEmail])
 
+  type EditableFieldOptions = {
+    placeholder?: string
+    type?: string
+    valueOverride?: string
+    inputClassName?: string
+  }
+
   const renderEditableField = (
     label: string,
     name: keyof UserContactFormState,
-    { placeholder = '', type = 'text', valueOverride, inputClassName = 'input' } = {},
+    { placeholder = '', type = 'text', valueOverride, inputClassName = 'input' }: EditableFieldOptions = {},
   ) => {
     const value = valueOverride ?? formValues[name] ?? ''
     const error = formErrors[name]

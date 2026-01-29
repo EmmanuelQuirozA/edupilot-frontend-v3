@@ -418,7 +418,7 @@ export function TuitionTab({ onNavigate }: TuitionTabProps) {
     )
   }
     
-  if (permissionsLoaded && permissions && !effectiveTuitionsPermissions.r) {
+  if (permissionsLoaded && permissions && !effectiveTuitionsPermissions?.r) {
     return (
       <>
         <NoPermission />
