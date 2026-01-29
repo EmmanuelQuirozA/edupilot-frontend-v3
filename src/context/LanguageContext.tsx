@@ -11,6 +11,10 @@ const translations: TranslationMap = {
     homeSubtitle:
       'Una plataforma moderna preparada para múltiples dashboards y accesos basados en roles.',
     homeCta: 'Iniciar sesión',
+    notFoundTitle: 'Página no encontrada',
+    notFoundSubtitle: 'No pudimos encontrar la página que buscas. Verifica la URL o vuelve al inicio.',
+    notFoundCta: 'Volver al inicio',
+    notFoundBack: 'Regresar',
     languageLabel: 'Idioma',
     loginTitle: 'Iniciar sesión',
     loginSubtitle: 'Accede con tu usuario o correo electrónico para continuar.',
@@ -622,6 +626,10 @@ const translations: TranslationMap = {
     homeSubtitle:
       'A modern platform prepared for multiple dashboards and role-based access.',
     homeCta: 'Log in',
+    notFoundTitle: 'Page not found',
+    notFoundSubtitle: "We couldn't find the page you're looking for. Check the URL or return home.",
+    notFoundCta: 'Back to home',
+    notFoundBack: 'Go back',
     languageLabel: 'Language',
     loginTitle: 'Sign in',
     loginSubtitle: 'Use your username or email address to continue.',
