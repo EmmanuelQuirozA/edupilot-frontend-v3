@@ -1,6 +1,7 @@
 import type React from 'react'
 import PaymentConceptSelect from '../../../components/catalog/PaymentConceptSelect'
 import StudentSearchDropdown from '../../../components/StudentSearchDropdown'
+import type { StudentSearchItem } from '../../../components/StudentSearchDropdown'
 import type { FilterField } from '../../../components/FilterSidebar'
 import { initialPaymentRequestFormState } from './paymentRequestsFormState'
 
@@ -31,7 +32,7 @@ interface CreatePaymentRequestModalProps {
     key: Key,
     value: (typeof initialPaymentRequestFormState)[Key],
   ) => void
-  onStudentSelect: (student: SelectedStudent) => void
+  onStudentSelect: (student: StudentSearchItem) => void
   onSubmit: React.FormEventHandler<HTMLFormElement>
   paymentRequestForm: typeof initialPaymentRequestFormState
   schoolOptions: FilterField['options']

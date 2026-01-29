@@ -44,8 +44,8 @@ export function StudentContactCard({
     onChange(name as keyof FormState, value)
   }
 
-  const studentPhone = student?.phone_number;
-  const normalizedStudentPhone = typeof studentPhone === 'string' ? student?.phone_number.trim() : '';
+  const studentPhone = student?.phone_number
+  const normalizedStudentPhone = typeof studentPhone === 'string' ? studentPhone.trim() : ''
   const whatsappPhoneNumber = normalizedStudentPhone.replace(/\D+/g, '');
   const whatsappLink = whatsappPhoneNumber ? `https://wa.me/${whatsappPhoneNumber}` : '';
 
@@ -63,10 +63,17 @@ export function StudentContactCard({
     }
   }, [normalizedEmail]);
 
+  type EditableFieldOptions = {
+    placeholder?: string
+    type?: string
+    valueOverride?: string | number
+    inputClassName?: string
+  }
+
   const renderEditableField = (
     label: string,
     name: keyof FormState,
-    { placeholder = '', type = 'text', valueOverride, inputClassName = 'input' } = {},
+    { placeholder = '', type = 'text', valueOverride, inputClassName = 'input' }: EditableFieldOptions = {},
   ) => {
     const value = valueOverride ?? formValues[name] ?? ''
     const error = formErrors[name]

@@ -131,7 +131,9 @@ export function UsersBalanceRechargeModal({
       })
 
       if (payload?.newBalance !== undefined) {
-        setSelectedUser((prev) => (prev ? { ...prev, balance: payload.newBalance } : prev))
+        setSelectedUser((prev) =>
+          prev ? { ...prev, balance: payload.newBalance ?? prev.balance } : prev,
+        )
         onSuccess?.({ newBalance: payload.newBalance, rechargeId: payload.rechargeId })
         onClose()
       }

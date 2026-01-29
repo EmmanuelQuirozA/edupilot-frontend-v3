@@ -214,7 +214,7 @@ export function StudentsBulkUploadPage({ onNavigate }: { onNavigate: (path: stri
         }
 
         const json = (await response.json()) as GroupCatalogItem[]
-        setGroups(json.content ?? [])
+        setGroups(json ?? [])
       } catch (error) {
         if ((error as DOMException).name !== 'AbortError') {
           setFileError(t('defaultError'))

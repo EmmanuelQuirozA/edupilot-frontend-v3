@@ -1175,9 +1175,7 @@ export function StudentDetailPage({ onNavigate, studentId }: StudentDetailPagePr
             paymentReference: prev?.paymentReference,
           }))
           setStudent((prev) => (prev ? { ...prev, balance: payload.newBalance } : prev))
-        } } close={function (): void {
-          throw new Error('Function not implemented.')
-        } }      
+        }}
       />
 
       <InlineModal

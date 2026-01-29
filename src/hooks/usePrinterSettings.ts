@@ -516,13 +516,13 @@ export const usePrinterSettings = (): UsePrinterSettingsResult => {
     }
   }, [])
 
-  const save = useCallback(() => {
+  const save = useCallback(async () => {
     actionTargetRef.current?.dispatchEvent(
       new CustomEvent('printer-action', { detail: { type: 'save' } }),
     )
   }, [])
 
-  const testPrint = useCallback(() => {
+  const testPrint = useCallback(async () => {
     actionTargetRef.current?.dispatchEvent(
       new CustomEvent('printer-action', { detail: { type: 'test' } }),
     )

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import { usePrinterSettings } from '../hooks/usePrinterSettings'
-import { DEFAULT_CUT_PADDING_MM, DEFAULT_PAPER_WIDTH_MM, PAPER_WIDTH_OPTIONS_MM } from '../utils/pos'
+import { DEFAULT_PAPER_WIDTH_MM, PAPER_WIDTH_OPTIONS_MM } from '../utils/pos'
 
 const AvailabilityMessage: Record<string, (fallback: string) => string> = {
   browser: (fallback) => fallback,

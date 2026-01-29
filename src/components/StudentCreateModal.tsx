@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import { API_BASE_URL } from '../config'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
@@ -167,7 +168,7 @@ export function StudentCreateModal({ isOpen, onClose, onCreated }: StudentCreate
         }
 
         const groupsData = (await response.json()) as GroupCatalogItem[]
-        setGroupsCatalog(groupsData.content ?? [])
+        setGroupsCatalog(groupsData ?? [])
       } catch (fetchError) {
         if ((fetchError as Error).name !== 'AbortError') {
           setCreateStudentError(t('defaultError'))

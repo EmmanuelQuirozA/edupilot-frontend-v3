@@ -4,7 +4,8 @@ import { useLanguage } from '../context/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE_URL } from '../config'
 import { createCurrencyFormatter } from '../utils/currencyFormatter'
-import UsersBalanceRechargeModal, { type UsersBalanceSearchItem } from '../components/payments/UsersBalanceRechargeModal'
+import UsersBalanceRechargeModal from '../components/payments/UsersBalanceRechargeModal'
+import type { UsersBalanceSearchItem } from '../components/UsersBalanceSearchDropdown'
 import { ManualPaymentModal } from './PaymentsFinancePage/components/ManualPaymentModal'
 import {
   CreatePaymentRequestModal,
@@ -393,7 +394,6 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
         }}
         user={selectedRechargeUser}
         onSuccess={() => setRechargeModalOpen(false)}
-        lang={locale}
       />
 
       <CreatePaymentRequestModal
@@ -406,8 +406,17 @@ export function DashboardScholarAdminPage({ onNavigate }: DashboardScholarAdminP
         onClose={handlePaymentRequestClose}
         onFormChange={handlePaymentRequestFormChange}
         onStudentSelect={(student) => {
-          setSelectedStudent(student)
-          handlePaymentRequestFormChange('student_id', student.student_id)
+          setSelectedStudent({
+            id: String(student.student_id),
+            name: student.full_name,
+            student_id: String(student.student_id),
+            full_name: student.full_name,
+            register_id: String(student.register_id),
+            grade_group: String(student.grade_group),
+            generation: String(student.generation),
+            scholar_level_name: String(student.scholar_level_name),
+          })
+          handlePaymentRequestFormChange('student_id', String(student.student_id))
         }}
         onSubmit={handlePaymentRequestSubmit}
         paymentRequestForm={paymentRequestForm}

@@ -10,6 +10,7 @@ import {
   type ApplyScope,
   type SelectedStudent,
 } from './CreatePaymentRequestModal'
+import type { StudentSearchItem } from '../../../components/StudentSearchDropdown'
 import { CreatePaymentScheduleModal } from './CreatePaymentScheduleModal'
 import {
   createInitialPaymentRequestScheduleFormState,
@@ -78,10 +79,10 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
     createInitialPaymentRequestScheduleFormState(),
   )
   const [periodOptions, setPeriodOptions] = useState<FilterField['options']>([
-    { label: 'Anual', value: 4 },
-    { label: 'Mensual', value: 3 },
-    { label: 'Semanal', value: 2 },
-    { label: 'Diario', value: 1 },
+    { label: 'Anual', value: '4' },
+    { label: 'Mensual', value: '3' },
+    { label: 'Semanal', value: '2' },
+    { label: 'Diario', value: '1' },
   ])
   const today = useMemo(() => new Date().toISOString().split('T')[0], [isScheduleModalOpen])
 
@@ -194,7 +195,7 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
         const data = (await response.json()) as Array<{ id?: number | string; name?: string }>
         setPeriodOptions(
           data.map((item) => ({
-            value: item.id ?? '',
+            value: String(item.id ?? ''),
             label: item.name ?? '',
           })),
         )
@@ -490,11 +491,13 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
     }
   }
 
-  const handleScheduleStudentSelect = (student: SelectedStudent) => {
+  const handleScheduleStudentSelect = (student: StudentSearchItem) => {
     handleScheduleFormChange('student_id', String(student.student_id))
     setScheduleSelectedStudent({
       id: String(student.student_id),
       name: student.full_name,
+      student_id: String(student.student_id),
+      full_name: student.full_name,
       register_id: String(student.register_id),
       grade_group: String(student.grade_group),
       generation: String(student.generation),
@@ -667,6 +670,8 @@ export function PaymentRequestsTab({ onNavigate, isStudent = false }: PaymentReq
           setSelectedStudent({
             id: String(student.student_id),
             name: student.full_name,
+            student_id: String(student.student_id),
+            full_name: student.full_name,
             register_id: String(student.register_id),
             grade_group: String(student.grade_group),
             generation: String(student.generation),

@@ -133,7 +133,7 @@ const StudentTableCell = ({
 
   if (interactive) {
     return (
-      <div className={'d-flex gap-2'}>
+      <div className={["d-flex gap-2", wrapperClassName].filter(Boolean).join(" ")}>
         <span className="avatar-circle" aria-hidden="true">
           {avatarContent}
         </span>
@@ -142,7 +142,7 @@ const StudentTableCell = ({
           {linkHref ? (
             <a
               href={linkHref}
-              className={'btn d-flex text-start p-0 gap-3 text-uppercase'}
+              className={['btn d-flex text-start p-0 gap-3 text-uppercase', buttonClassName].filter(Boolean).join(" ")}
               aria-disabled={isButtonDisabled}
               onClick={handleLinkClick}
               {...restButtonProps}
@@ -152,7 +152,7 @@ const StudentTableCell = ({
           ) : (
             <button
               type={type ?? "button"}
-              className={'btn d-flex text-start p-0 gap-3 text-uppercase'}
+              className={['btn d-flex text-start p-0 gap-3 text-uppercase', buttonClassName].filter(Boolean).join(" ")}
               disabled={isButtonDisabled}
               onClick={
                 onClick as unknown as React.MouseEventHandler<HTMLButtonElement>
@@ -171,7 +171,7 @@ const StudentTableCell = ({
 
   // Versión no interactiva
   return (
-    <div className="d-flex align-items-center gap-3">
+    <div className={["d-flex align-items-center gap-3", wrapperClassName].filter(Boolean).join(" ")}>
       <div className="avatar-circle">{avatarContent}</div>
 
       <div className="d-flex flex-column">

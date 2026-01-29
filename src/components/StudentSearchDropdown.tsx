@@ -30,8 +30,8 @@ type StudentSearchValue =
     scholar_level_name?: string
   }
 
-  interface StudentSearchDropdownProps {
-    onSelect: (student: StudentSearchValue) => void
+interface StudentSearchDropdownProps {
+  onSelect: (student: StudentSearchItem) => void
   placeholder?: string
   label?: string
   lang?: string

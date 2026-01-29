@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { API_BASE_URL } from '../../config'
 import { useAuth } from '../../context/AuthContext'
 import { createCurrencyFormatter } from '../../utils/currencyFormatter'
@@ -24,7 +24,6 @@ interface RechargeResponse {
 
 export interface BalanceRechargeModalProps {
   isOpen: boolean
-  close: () => void
   onClose: () => void
   user?: RechargeUserSummary | null
   currency?: string
@@ -34,7 +33,6 @@ export interface BalanceRechargeModalProps {
 
 export function BalanceRechargeModal({
   isOpen,
-  close,
   onClose,
   user,
   currency = 'MXN',
@@ -46,16 +44,6 @@ export function BalanceRechargeModal({
   const [amount, setAmount] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-
-  const handleClose = useCallback(() => {
-    if (isSubmitting) {
-      return;
-    }
-    close();
-  }, [close, isSubmitting]);
-  
   const currencyFormatter = useMemo(
     () => createCurrencyFormatter('es-MX', currency),
     [currency],
@@ -96,8 +84,7 @@ export function BalanceRechargeModal({
 
     setSubmitting(true)
     try {
-      setIsSubmitting(true);
-      setError('');
+      setError('')
       const result = await fetch(`${API_BASE_URL}/balances/recharge`, {
         method: 'POST',
         headers: {
@@ -202,7 +189,7 @@ export function BalanceRechargeModal({
                         value={amount}
                         onChange={(event) => setAmount(event.target.value)}
                         placeholder='0'
-                        disabled={isSubmitting}
+                        disabled={submitting}
                         inputMode="decimal"
                       />
                       <span>MXN</span>
