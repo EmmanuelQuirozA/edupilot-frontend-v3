@@ -137,22 +137,9 @@ export function UserContactCard({
         <div className="info-card__header">
           <div>
             <p className="info-card__label">{t('profileContactSection')}</p>
-            <h3>{user.full_name || emptyValue}</h3>
             <p className="info-card__meta">
               {user.email || t('profileEmail')}
             </p>
-          </div>
-          <div className="info-card__status">
-            <span className="profile-detail-page__chip chip--info">
-              {user.role_name || emptyValue}
-            </span>
-            <span
-              className={`profile-detail-page__chip ${
-                user.user_enabled ? 'chip--success' : 'chip--warning'
-              }`}
-            >
-              {user.user_status || emptyValue}
-            </span>
           </div>
         </div>
 

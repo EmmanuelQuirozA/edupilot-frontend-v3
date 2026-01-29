@@ -198,13 +198,14 @@ export function Sidebar({ isOpen, onClose, onNavigate }: SidebarProps) {
         items: [
           { key: 'myconsumption', label: 'Mi consumo', path: modulePaths.myconsumption }
         ]
-      },
-      {
-        label: 'Ajustes',
-        items: [
-          { key: 'settings', label: 'Configuración', path: modulePaths.settings }
-        ]
       }
+      // ,
+      // {
+      //   label: 'Ajustes',
+      //   items: [
+      //     { key: 'settings', label: 'Configuración', path: modulePaths.settings }
+      //   ]
+      // }
     ]
   }, [locale, modules, role, token])
 

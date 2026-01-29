@@ -53,9 +53,10 @@ export function StudentSearchInput({ onNavigate, pageSize = 10 }: StudentSearchI
     }
 
     const controller = new AbortController()
+    setLoading(true)
+    setError(null)
+    
     const timer = setTimeout(() => {
-      setLoading(true)
-      setError(null)
 
       fetch(fetchUrl, {
         headers: { Authorization: `Bearer ${token}` },
